@@ -54,7 +54,7 @@
       "teams": 1,
       "slot": 3,
       "members_required": 3,
-      "base_power": 583,
+      "base_power": 620,
       "routes": [
         {
           "id": "force",
@@ -82,7 +82,7 @@
       "teams": 1,
       "slot": 3,
       "members_required": 3,
-      "base_power": 597,
+      "base_power": 635,
       "routes": [
         {
           "id": "force",
@@ -99,7 +99,7 @@
       "teams": 1,
       "slot": 3,
       "members_required": 3,
-      "base_power": 611,
+      "base_power": 650,
       "routes": [
         {
           "id": "force",
@@ -116,7 +116,7 @@
       "teams": 1,
       "slot": 3,
       "members_required": 3,
-      "base_power": 626,
+      "base_power": 666,
       "routes": [
         {
           "id": "force",
@@ -133,7 +133,7 @@
       "teams": 1,
       "slot": 3,
       "members_required": 3,
-      "base_power": 640,
+      "base_power": 681,
       "routes": [
         {
           "id": "force",
@@ -150,7 +150,7 @@
       "teams": 1,
       "slot": 4,
       "members_required": 4,
-      "base_power": 856,
+      "base_power": 898,
       "routes": [
         {
           "id": "force",
@@ -189,7 +189,7 @@
       "teams": 1,
       "slot": 4,
       "members_required": 4,
-      "base_power": 927,
+      "base_power": 1012,
       "routes": [
         {
           "id": "force",
@@ -206,7 +206,7 @@
       "teams": 1,
       "slot": 4,
       "members_required": 4,
-      "base_power": 947,
+      "base_power": 1033,
       "routes": [
         {
           "id": "force",
@@ -223,7 +223,7 @@
       "teams": 1,
       "slot": 4,
       "members_required": 4,
-      "base_power": 967,
+      "base_power": 1055,
       "routes": [
         {
           "id": "force",
@@ -240,7 +240,7 @@
       "teams": 1,
       "slot": 4,
       "members_required": 4,
-      "base_power": 987,
+      "base_power": 1077,
       "routes": [
         {
           "id": "force",
@@ -268,7 +268,7 @@
       "teams": 2,
       "slot": 5,
       "members_required": 10,
-      "base_power": 2348,
+      "base_power": 2440,
       "routes": [
         {
           "id": "force",
@@ -307,7 +307,7 @@
       "teams": 1,
       "slot": 5,
       "members_required": 5,
-      "base_power": 1395,
+      "base_power": 1553,
       "routes": [
         {
           "id": "force",
@@ -324,7 +324,7 @@
       "teams": 1,
       "slot": 5,
       "members_required": 5,
-      "base_power": 1422,
+      "base_power": 1583,
       "routes": [
         {
           "id": "force",
@@ -341,7 +341,7 @@
       "teams": 1,
       "slot": 5,
       "members_required": 5,
-      "base_power": 1501,
+      "base_power": 1747,
       "routes": [
         {
           "id": "force",
@@ -358,7 +358,7 @@
       "teams": 1,
       "slot": 5,
       "members_required": 5,
-      "base_power": 1528,
+      "base_power": 1780,
       "routes": [
         {
           "id": "force",
@@ -375,7 +375,7 @@
       "teams": 3,
       "slot": 5,
       "members_required": 15,
-      "base_power": 4013,
+      "base_power": 4269,
       "routes": [
         {
           "id": "force",
@@ -425,7 +425,7 @@
       "teams": 1,
       "slot": 5,
       "members_required": 5,
-      "base_power": 1774,
+      "base_power": 2041,
       "routes": [
         {
           "id": "force",
@@ -442,7 +442,7 @@
       "teams": 1,
       "slot": 5,
       "members_required": 5,
-      "base_power": 1805,
+      "base_power": 2077,
       "routes": [
         {
           "id": "force",
@@ -459,7 +459,7 @@
       "teams": 1,
       "slot": 5,
       "members_required": 5,
-      "base_power": 1858,
+      "base_power": 2113,
       "routes": [
         {
           "id": "force",
@@ -476,7 +476,7 @@
       "teams": 1,
       "slot": 5,
       "members_required": 5,
-      "base_power": 2132,
+      "base_power": 2439,
       "routes": [
         {
           "id": "force",
@@ -526,7 +526,7 @@
       "teams": 2,
       "slot": 5,
       "members_required": 10,
-      "base_power": 3694,
+      "base_power": 4243,
       "routes": [
         {
           "id": "force",
@@ -554,7 +554,7 @@
       "teams": 1,
       "slot": 5,
       "members_required": 5,
-      "base_power": 2203,
+      "base_power": 2521,
       "routes": [
         {
           "id": "force",
@@ -571,7 +571,7 @@
       "teams": 1,
       "slot": 5,
       "members_required": 5,
-      "base_power": 2239,
+      "base_power": 2561,
       "routes": [
         {
           "id": "force",
@@ -588,7 +588,7 @@
       "teams": 1,
       "slot": 5,
       "members_required": 5,
-      "base_power": 2274,
+      "base_power": 2602,
       "routes": [
         {
           "id": "force",
@@ -627,7 +627,7 @@
       "teams": 1,
       "slot": 5,
       "members_required": 5,
-      "base_power": 2589,
+      "base_power": 2962,
       "routes": [
         {
           "id": "force",
@@ -644,7 +644,7 @@
       "teams": 3,
       "slot": 5,
       "members_required": 15,
-      "base_power": 5803,
+      "base_power": 6496,
       "routes": [
         {
           "id": "force",
