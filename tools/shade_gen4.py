@@ -3,7 +3,7 @@
    손으로 쓴 전승 캐릭터와 같은 밀도(삶·최후·특성·외형·생업)를 절차 생성한다."""
 import sys, hashlib
 sys.path.insert(0,'tools')
-from trades import TRADES
+from trades import TRADES, STRATA, BY_CLS
 
 ERAS={"종말기":(1,20),"붕괴기":(21,40),"균열기":(41,60),"황금기":(61,80),"여명기":(81,99)}
 ERA_OPEN={
@@ -60,6 +60,17 @@ DTL=["한쪽 소매만 짧다","신발 한 짝이 다르다","손등에 오래�
 COL=["#7A7168","#6D7A84","#8B8467","#5F8AA6","#A6552F","#6E7A5E","#8A7B4F","#9A7A88","#4E7A6B","#7E8288",
      "#6F6A5C","#9C7B4E","#5A6B78","#7C7A6E","#B8894A","#4A5A6B","#6B7FA8","#8C93A6","#5B6E5A","#93705E"]
 PULL={1:.20,2:.25,3:.28,4:.20,5:.07}
+# 등급(선명도)이 계층을 편향시킨다 — 탑은 기록이 많이 남은 사람을 또렷하게 기억한다.
+# 그러나 본디(실제 그릇)는 계층과 무관하다. 걸인으로 나온 ★1이 본디 10일 수 있다.
+CLS_BY_RARITY={
+ 5:{"왕실":.20,"귀족":.30,"성직":.15,"관리":.12,"상인":.08,"장인":.06,"병졸":.05,"농어민":.02,"하인":.01,"유랑":.01},
+ 4:{"왕실":.03,"귀족":.18,"성직":.15,"관리":.18,"상인":.15,"장인":.15,"병졸":.08,"농어민":.05,"하인":.02,"유랑":.01},
+ 3:{"귀족":.05,"성직":.10,"관리":.12,"상인":.13,"장인":.28,"병졸":.12,"농어민":.12,"하인":.06,"유랑":.02},
+ 2:{"성직":.03,"관리":.04,"상인":.07,"장인":.22,"병졸":.12,"농어민":.25,"하인":.18,"유랑":.09},
+ 1:{"장인":.10,"병졸":.06,"농어민":.28,"하인":.26,"유랑":.30}}
+# 이름이 남았는가 — 계층이 결정한다. 기록이 없는 계층은 버릇으로 불린다.
+ALWAYS_NAMED={"왕실","귀족","성직","관리","상인"}
+RARELY_NAMED={"하인","유랑"}
 BONDI={1:{1:.35,2:.30,3:.15,4:.08,5:.05,6:.03,7:.02,8:.01,9:.007,10:.003},
  2:{2:.35,3:.28,4:.15,5:.09,6:.06,7:.035,8:.02,9:.01,10:.005},
  3:{3:.38,4:.28,5:.16,6:.09,7:.05,8:.025,9:.01,10:.005},
@@ -98,14 +109,16 @@ class R:
 
 def make(seed, world=1, rarity=None):
     r=R((seed*0x9E3779B97F4A7C15 ^ (world*0xBF58476D1CE4E5B9))&0xFFFFFFFFFFFFFFFF)
-    t=r.pick(TRADES)
+    rar_pre=rarity or r.wpick(PULL)
+    cls=r.wpick(CLS_BY_RARITY[rar_pre])
+    t=r.pick(BY_CLS[cls])
     eras=[e for e in ERAS if t["eras"]=="*" or e in t["eras"]]
     era=r.pick(eras); lo,hi=ERAS[era]; floor=lo+r.i(hi-lo+1)
     role=r.pick(ROLES)
-    rar=rarity or r.wpick(PULL); bondi=r.wpick(BONDI[rar])
+    rar=rar_pre; bondi=r.wpick(BONDI[rar])   # 본디는 계층과 무관하게 뽑는다
     daily=r.pick([d for d,ok in t["daily"] if ok is None or era in ok])
     habit,asname=r.pick(t["habit"])
-    named=rar>=3
+    named=(cls in ALWAYS_NAMED) or (rar>=4 if cls in RARELY_NAMED else rar>=3)
     name=(r.pick(A)+r.pick(M)+r.pick(B)) if named else f"{r.pick(QUAL)} {asname} {r.pick(CALL)}"
     title=f"{era}의 {t['n']}" if named else f"{floor}층 · 이름이 남지 않음"
     life=f"{r.pick(ERA_OPEN[era])}. {daily}. {habit}."
@@ -127,7 +140,7 @@ def make(seed, world=1, rarity=None):
                        "note":r.pick(BNOTE[bl]).format(cond=cond)})
     visual={"silhouette":r.pick(SIL),"key_color":r.pick(COL),"symbol":t["obj"],"detail":r.pick(DTL)}
     return {"seed":seed,"world":world,"name":name,"title":title,"rarity":rar,"bondi":bondi,"role":role,
-            "era":era,"floor":floor,"trade":t["n"],"garden":t["g"],"life":life,"death":death,
+            "era":era,"floor":floor,"trade":t["n"],"cls":cls,"garden":t["g"],"life":life,"death":death,
             "stats":st,"growth":gr,"skills":skills,"visual":visual}
 
 def ident(s):
@@ -138,7 +151,7 @@ def ident(s):
 def show(s,i=None):
     tag=f"[{i}] " if i else ""
     print(f"\n{tag}{'★'*s['rarity']}{'☆'*(5-s['rarity'])}  {s['name']}  — {s['title']}")
-    print(f"    {s['floor']}층 {s['era']} · {s['role']} · 생업 {s['trade']} · 본디 {s['bondi']} · 시드 {s['seed']}")
+    print(f"    {s['floor']}층 {s['era']} · [{s['cls']}] {s['trade']} · {s['role']} · 본디 {s['bondi']} · 시드 {s['seed']}")
     print(f"    생전 | {s['life']}")
     print(f"    최후 | {s['death']}")
     print(f"    외형 | {s['visual']['silhouette']} · {s['visual']['detail']} · {s['visual']['symbol']}")
