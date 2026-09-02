@@ -1,6 +1,9 @@
 {
   "world": 1,
-  "act": 1,
+  "acts": [
+    1,
+    2
+  ],
   "floors": [
     {
       "floor": 1,
@@ -60,17 +63,6 @@
           "id": "force",
           "power": 1.0,
           "conditions": []
-        },
-        {
-          "id": "guard",
-          "power": 0.75,
-          "conditions": [
-            {
-              "type": "역할",
-              "value": "수호",
-              "count": 1
-            }
-          ]
         }
       ]
     },
@@ -173,8 +165,8 @@
           "power": 0.7,
           "conditions": [
             {
-              "type": "역할",
-              "value": "약체",
+              "type": "약체",
+              "value": "평균 선명도 3 이하",
               "count": 3
             }
           ]
@@ -223,7 +215,7 @@
       "teams": 1,
       "slot": 4,
       "members_required": 4,
-      "base_power": 1055,
+      "base_power": 1152,
       "routes": [
         {
           "id": "force",
@@ -240,7 +232,7 @@
       "teams": 1,
       "slot": 4,
       "members_required": 4,
-      "base_power": 1077,
+      "base_power": 1175,
       "routes": [
         {
           "id": "force",
@@ -268,7 +260,7 @@
       "teams": 2,
       "slot": 5,
       "members_required": 10,
-      "base_power": 2440,
+      "base_power": 2540,
       "routes": [
         {
           "id": "force",
@@ -293,7 +285,7 @@
             {
               "type": "역할",
               "value": "수호",
-              "count": 2
+              "count": 1
             }
           ]
         }
@@ -307,7 +299,7 @@
       "teams": 1,
       "slot": 5,
       "members_required": 5,
-      "base_power": 1553,
+      "base_power": 1656,
       "routes": [
         {
           "id": "force",
@@ -324,7 +316,7 @@
       "teams": 1,
       "slot": 5,
       "members_required": 5,
-      "base_power": 1583,
+      "base_power": 1688,
       "routes": [
         {
           "id": "force",
@@ -389,7 +381,7 @@
             {
               "type": "역할",
               "value": "수호",
-              "count": 2
+              "count": 1
             }
           ]
         },
@@ -409,8 +401,8 @@
           "power": 0.65,
           "conditions": [
             {
-              "type": "역할",
-              "value": "약체",
+              "type": "약체",
+              "value": "평균 선명도 3 이하",
               "count": 3
             }
           ]
@@ -489,7 +481,7 @@
           "conditions": [
             {
               "type": "시대",
-              "value": "24",
+              "value": "붕괴기",
               "count": 1
             }
           ]
@@ -501,7 +493,7 @@
             {
               "type": "역할",
               "value": "수호",
-              "count": 2
+              "count": 1
             }
           ]
         },
@@ -612,7 +604,7 @@
           "conditions": [
             {
               "type": "시대",
-              "value": "24",
+              "value": "붕괴기",
               "count": 1
             }
           ]
@@ -678,8 +670,837 @@
           "power": 0.62,
           "conditions": [
             {
+              "type": "약체",
+              "value": "평균 선명도 3 이하",
+              "count": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "floor": 31,
+      "world": 1,
+      "era": "붕괴기",
+      "name": "이긴 쪽 없음",
+      "teams": 1,
+      "slot": 5,
+      "members_required": 5,
+      "base_power": 3187,
+      "routes": [
+        {
+          "id": "force",
+          "power": 1.0,
+          "conditions": []
+        }
+      ]
+    },
+    {
+      "floor": 32,
+      "world": 1,
+      "era": "붕괴기",
+      "name": "색 빠진 깃발",
+      "teams": 1,
+      "slot": 5,
+      "members_required": 5,
+      "base_power": 3235,
+      "routes": [
+        {
+          "id": "force",
+          "power": 1.0,
+          "conditions": []
+        }
+      ]
+    },
+    {
+      "floor": 33,
+      "world": 1,
+      "era": "붕괴기",
+      "name": "벽의 이름",
+      "teams": 1,
+      "slot": 5,
+      "members_required": 5,
+      "base_power": 3287,
+      "routes": [
+        {
+          "id": "force",
+          "power": 1.0,
+          "conditions": []
+        },
+        {
+          "id": "era",
+          "power": 0.5,
+          "conditions": [
+            {
+              "type": "시대",
+              "value": "붕괴기",
+              "count": 1
+            }
+          ]
+        },
+        {
+          "id": "seek",
+          "power": 0.72,
+          "conditions": [
+            {
               "type": "역할",
-              "value": "약체",
+              "value": "탐구",
+              "count": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "floor": 34,
+      "world": 1,
+      "era": "붕괴기",
+      "name": "먼 종소리",
+      "teams": 1,
+      "slot": 5,
+      "members_required": 5,
+      "base_power": 3335,
+      "routes": [
+        {
+          "id": "force",
+          "power": 1.0,
+          "conditions": []
+        }
+      ]
+    },
+    {
+      "floor": 35,
+      "world": 1,
+      "era": "붕괴기",
+      "name": "같은 방향",
+      "teams": 2,
+      "slot": 5,
+      "members_required": 10,
+      "base_power": 5786,
+      "routes": [
+        {
+          "id": "force",
+          "power": 1.0,
+          "conditions": []
+        },
+        {
+          "id": "guard",
+          "power": 0.7,
+          "conditions": [
+            {
+              "type": "역할",
+              "value": "수호",
+              "count": 2
+            }
+          ]
+        },
+        {
+          "id": "devote",
+          "power": 0.74,
+          "conditions": [
+            {
+              "type": "역할",
+              "value": "헌신",
+              "count": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "floor": 36,
+      "world": 1,
+      "era": "붕괴기",
+      "name": "두 갈래",
+      "teams": 1,
+      "slot": 5,
+      "members_required": 5,
+      "base_power": 3430,
+      "routes": [
+        {
+          "id": "force",
+          "power": 1.0,
+          "conditions": []
+        }
+      ]
+    },
+    {
+      "floor": 37,
+      "world": 1,
+      "era": "붕괴기",
+      "name": "멈춘 종",
+      "teams": 1,
+      "slot": 5,
+      "members_required": 5,
+      "base_power": 3478,
+      "routes": [
+        {
+          "id": "force",
+          "power": 1.0,
+          "conditions": []
+        }
+      ]
+    },
+    {
+      "floor": 38,
+      "world": 1,
+      "era": "붕괴기",
+      "name": "표식의 수",
+      "teams": 1,
+      "slot": 5,
+      "members_required": 5,
+      "base_power": 3526,
+      "routes": [
+        {
+          "id": "force",
+          "power": 1.0,
+          "conditions": []
+        },
+        {
+          "id": "seek",
+          "power": 0.62,
+          "conditions": [
+            {
+              "type": "역할",
+              "value": "탐구",
+              "count": 2
+            }
+          ]
+        },
+        {
+          "id": "era",
+          "power": 0.55,
+          "conditions": [
+            {
+              "type": "시대",
+              "value": "붕괴기",
+              "count": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "floor": 39,
+      "world": 1,
+      "era": "붕괴기",
+      "name": "아직 선 성",
+      "teams": 1,
+      "slot": 5,
+      "members_required": 5,
+      "base_power": 3797,
+      "routes": [
+        {
+          "id": "force",
+          "power": 1.0,
+          "conditions": []
+        },
+        {
+          "id": "trade",
+          "power": 0.55,
+          "conditions": [
+            {
+              "type": "생업",
+              "value": "망루",
+              "count": 1
+            }
+          ]
+        },
+        {
+          "id": "resist",
+          "power": 0.66,
+          "conditions": [
+            {
+              "type": "역할",
+              "value": "저항",
+              "count": 2
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "floor": 40,
+      "world": 1,
+      "era": "붕괴기",
+      "name": "경계",
+      "teams": 3,
+      "slot": 5,
+      "members_required": 15,
+      "base_power": 8880,
+      "routes": [
+        {
+          "id": "force",
+          "power": 1.0,
+          "conditions": []
+        },
+        {
+          "id": "guard",
+          "power": 0.7,
+          "conditions": [
+            {
+              "type": "역할",
+              "value": "수호",
+              "count": 2
+            }
+          ]
+        },
+        {
+          "id": "seek",
+          "power": 0.72,
+          "conditions": [
+            {
+              "type": "역할",
+              "value": "탐구",
+              "count": 1
+            }
+          ]
+        },
+        {
+          "id": "weak",
+          "power": 0.62,
+          "conditions": [
+            {
+              "type": "약체",
+              "value": "평균 선명도 3 이하",
+              "count": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "floor": 41,
+      "world": 1,
+      "era": "균열기",
+      "name": "서쪽 종탑",
+      "teams": 1,
+      "slot": 5,
+      "members_required": 5,
+      "base_power": 4117,
+      "routes": [
+        {
+          "id": "force",
+          "power": 1.0,
+          "conditions": []
+        },
+        {
+          "id": "trade",
+          "power": 0.5,
+          "conditions": [
+            {
+              "type": "생업",
+              "value": "종탑",
+              "count": 1
+            }
+          ]
+        },
+        {
+          "id": "devote",
+          "power": 0.66,
+          "conditions": [
+            {
+              "type": "역할",
+              "value": "헌신",
+              "count": 2
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "floor": 42,
+      "world": 1,
+      "era": "균열기",
+      "name": "다시 선 종탑",
+      "teams": 1,
+      "slot": 5,
+      "members_required": 5,
+      "base_power": 4171,
+      "routes": [
+        {
+          "id": "force",
+          "power": 1.0,
+          "conditions": []
+        }
+      ]
+    },
+    {
+      "floor": 43,
+      "world": 1,
+      "era": "균열기",
+      "name": "하루 두 번",
+      "teams": 1,
+      "slot": 5,
+      "members_required": 5,
+      "base_power": 4225,
+      "routes": [
+        {
+          "id": "force",
+          "power": 1.0,
+          "conditions": []
+        }
+      ]
+    },
+    {
+      "floor": 44,
+      "world": 1,
+      "era": "균열기",
+      "name": "소리만 남다",
+      "teams": 1,
+      "slot": 5,
+      "members_required": 5,
+      "base_power": 4278,
+      "routes": [
+        {
+          "id": "force",
+          "power": 1.0,
+          "conditions": []
+        }
+      ]
+    },
+    {
+      "floor": 45,
+      "world": 1,
+      "era": "균열기",
+      "name": "첫 균열",
+      "teams": 2,
+      "slot": 5,
+      "members_required": 10,
+      "base_power": 7401,
+      "routes": [
+        {
+          "id": "force",
+          "power": 1.0,
+          "conditions": []
+        },
+        {
+          "id": "seek",
+          "power": 0.7,
+          "conditions": [
+            {
+              "type": "역할",
+              "value": "탐구",
+              "count": 1
+            }
+          ]
+        },
+        {
+          "id": "flee",
+          "power": 0.74,
+          "conditions": [
+            {
+              "type": "역할",
+              "value": "도피",
+              "count": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "floor": 46,
+      "world": 1,
+      "era": "균열기",
+      "name": "기록관",
+      "teams": 1,
+      "slot": 5,
+      "members_required": 5,
+      "base_power": 4386,
+      "routes": [
+        {
+          "id": "force",
+          "power": 1.0,
+          "conditions": []
+        }
+      ]
+    },
+    {
+      "floor": 47,
+      "world": 1,
+      "era": "균열기",
+      "name": "삼급 서기",
+      "teams": 1,
+      "slot": 5,
+      "members_required": 5,
+      "base_power": 4439,
+      "routes": [
+        {
+          "id": "force",
+          "power": 1.0,
+          "conditions": []
+        },
+        {
+          "id": "trade",
+          "power": 0.55,
+          "conditions": [
+            {
+              "type": "생업",
+              "value": "서고",
+              "count": 1
+            }
+          ]
+        },
+        {
+          "id": "seek",
+          "power": 0.64,
+          "conditions": [
+            {
+              "type": "역할",
+              "value": "탐구",
+              "count": 2
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "floor": 48,
+      "world": 1,
+      "era": "균열기",
+      "name": "일곱 장",
+      "teams": 1,
+      "slot": 5,
+      "members_required": 5,
+      "base_power": 4493,
+      "routes": [
+        {
+          "id": "force",
+          "power": 1.0,
+          "conditions": []
+        }
+      ]
+    },
+    {
+      "floor": 49,
+      "world": 1,
+      "era": "균열기",
+      "name": "끊긴 문장",
+      "teams": 1,
+      "slot": 5,
+      "members_required": 5,
+      "base_power": 4547,
+      "routes": [
+        {
+          "id": "force",
+          "power": 1.0,
+          "conditions": []
+        }
+      ]
+    },
+    {
+      "floor": 50,
+      "world": 1,
+      "era": "균열기",
+      "name": "사본",
+      "teams": 3,
+      "slot": 5,
+      "members_required": 15,
+      "base_power": 10768,
+      "routes": [
+        {
+          "id": "force",
+          "power": 1.0,
+          "conditions": []
+        },
+        {
+          "id": "trade",
+          "power": 0.55,
+          "conditions": [
+            {
+              "type": "생업",
+              "value": "서고",
+              "count": 2
+            }
+          ]
+        },
+        {
+          "id": "seek",
+          "power": 0.62,
+          "conditions": [
+            {
+              "type": "역할",
+              "value": "탐구",
+              "count": 2
+            }
+          ]
+        },
+        {
+          "id": "weak",
+          "power": 0.6,
+          "conditions": [
+            {
+              "type": "약체",
+              "value": "평균 선명도 3 이하",
+              "count": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "floor": 51,
+      "world": 1,
+      "era": "균열기",
+      "name": "열 손가락",
+      "teams": 1,
+      "slot": 5,
+      "members_required": 5,
+      "base_power": 4654,
+      "routes": [
+        {
+          "id": "force",
+          "power": 1.0,
+          "conditions": []
+        }
+      ]
+    },
+    {
+      "floor": 52,
+      "world": 1,
+      "era": "균열기",
+      "name": "웃는 시장",
+      "teams": 1,
+      "slot": 5,
+      "members_required": 5,
+      "base_power": 4708,
+      "routes": [
+        {
+          "id": "force",
+          "power": 1.0,
+          "conditions": []
+        }
+      ]
+    },
+    {
+      "floor": 53,
+      "world": 1,
+      "era": "균열기",
+      "name": "삭감된 예산",
+      "teams": 1,
+      "slot": 5,
+      "members_required": 5,
+      "base_power": 4761,
+      "routes": [
+        {
+          "id": "force",
+          "power": 1.0,
+          "conditions": []
+        },
+        {
+          "id": "devote",
+          "power": 0.68,
+          "conditions": [
+            {
+              "type": "역할",
+              "value": "헌신",
+              "count": 2
+            }
+          ]
+        },
+        {
+          "id": "trade",
+          "power": 0.62,
+          "conditions": [
+            {
+              "type": "생업",
+              "value": "악기",
+              "count": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "floor": 54,
+      "world": 1,
+      "era": "균열기",
+      "name": "또 표식",
+      "teams": 1,
+      "slot": 5,
+      "members_required": 5,
+      "base_power": 4815,
+      "routes": [
+        {
+          "id": "force",
+          "power": 1.0,
+          "conditions": []
+        }
+      ]
+    },
+    {
+      "floor": 55,
+      "world": 1,
+      "era": "균열기",
+      "name": "이어 붙인 자리",
+      "teams": 2,
+      "slot": 5,
+      "members_required": 10,
+      "base_power": 8498,
+      "routes": [
+        {
+          "id": "force",
+          "power": 1.0,
+          "conditions": []
+        },
+        {
+          "id": "seek",
+          "power": 0.6,
+          "conditions": [
+            {
+              "type": "역할",
+              "value": "탐구",
+              "count": 2
+            }
+          ]
+        },
+        {
+          "id": "era",
+          "power": 0.58,
+          "conditions": [
+            {
+              "type": "시대",
+              "value": "균열기",
+              "count": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "floor": 56,
+      "world": 1,
+      "era": "균열기",
+      "name": "두 번째",
+      "teams": 1,
+      "slot": 5,
+      "members_required": 5,
+      "base_power": 4922,
+      "routes": [
+        {
+          "id": "force",
+          "power": 1.0,
+          "conditions": []
+        }
+      ]
+    },
+    {
+      "floor": 57,
+      "world": 1,
+      "era": "균열기",
+      "name": "묻지 못함",
+      "teams": 1,
+      "slot": 5,
+      "members_required": 5,
+      "base_power": 4976,
+      "routes": [
+        {
+          "id": "force",
+          "power": 1.0,
+          "conditions": []
+        }
+      ]
+    },
+    {
+      "floor": 58,
+      "world": 1,
+      "era": "균열기",
+      "name": "삼킨 골목",
+      "teams": 1,
+      "slot": 5,
+      "members_required": 5,
+      "base_power": 5030,
+      "routes": [
+        {
+          "id": "force",
+          "power": 1.0,
+          "conditions": []
+        },
+        {
+          "id": "trade",
+          "power": 0.55,
+          "conditions": [
+            {
+              "type": "생업",
+              "value": "채석",
+              "count": 1
+            }
+          ]
+        },
+        {
+          "id": "resist",
+          "power": 0.66,
+          "conditions": [
+            {
+              "type": "역할",
+              "value": "저항",
+              "count": 2
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "floor": 59,
+      "world": 1,
+      "era": "균열기",
+      "name": "피난 준비",
+      "teams": 1,
+      "slot": 5,
+      "members_required": 5,
+      "base_power": 5083,
+      "routes": [
+        {
+          "id": "force",
+          "power": 1.0,
+          "conditions": []
+        }
+      ]
+    },
+    {
+      "floor": 60,
+      "world": 1,
+      "era": "균열기",
+      "name": "균열기의 끝",
+      "teams": 3,
+      "slot": 5,
+      "members_required": 15,
+      "base_power": 12218,
+      "routes": [
+        {
+          "id": "force",
+          "power": 1.0,
+          "conditions": []
+        },
+        {
+          "id": "seek",
+          "power": 0.66,
+          "conditions": [
+            {
+              "type": "역할",
+              "value": "탐구",
+              "count": 2
+            }
+          ]
+        },
+        {
+          "id": "devote",
+          "power": 0.68,
+          "conditions": [
+            {
+              "type": "역할",
+              "value": "헌신",
+              "count": 2
+            }
+          ]
+        },
+        {
+          "id": "weak",
+          "power": 0.6,
+          "conditions": [
+            {
+              "type": "약체",
+              "value": "평균 선명도 3 이하",
               "count": 3
             }
           ]
