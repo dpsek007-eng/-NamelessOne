@@ -23,3 +23,7 @@ Thumbs.db
 .vscode/
 .idea/
 *.swp
+
+# .NET 빌드 산출물
+bin/
+obj/

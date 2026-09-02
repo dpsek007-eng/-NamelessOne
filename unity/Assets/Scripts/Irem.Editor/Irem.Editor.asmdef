@@ -1,0 +1,6 @@
+{
+  "name": "Irem.Editor",
+  "rootNamespace": "Irem.Editor",
+  "references": ["Irem.Data", "Irem.Sim", "Irem.Game"],
+  "includePlatforms": ["Editor"]
+}

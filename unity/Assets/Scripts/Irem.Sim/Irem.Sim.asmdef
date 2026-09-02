@@ -1,0 +1,6 @@
+{
+  "name": "Irem.Sim",
+  "rootNamespace": "Irem.Sim",
+  "references": ["Irem.Data"],
+  "noEngineReferences": true
+}

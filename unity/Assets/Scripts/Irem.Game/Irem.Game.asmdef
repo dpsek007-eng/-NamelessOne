@@ -1,0 +1,5 @@
+{
+  "name": "Irem.Game",
+  "rootNamespace": "Irem.Game",
+  "references": ["Irem.Data", "Irem.Sim"]
+}
