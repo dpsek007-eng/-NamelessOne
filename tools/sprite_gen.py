@@ -91,7 +91,8 @@ def sprite(cls, trade, role, color, fade=0.12, scale=6):
 
     # ── 소품 (강조색) ──
     ox,oy=hand[0]-38,hand[1]-24
-    if role in("저항","탐구"): oy+=6      # 든 팔은 손이 높다. 소품을 아래로 내려 잡는다
+    # 든 팔(저항·탐구)은 손이 높아 소품이 허공에 뜬다. 몸통 옆 범위로 묶는다.
+    oy=max(-4, min(oy+8, 6)); ox=max(-6, min(ox, 4))
     def _n(a,b,c,e):   # 좌표 순서 정규화 — 오프셋 후 뒤집혀도 안전하게
         return [min(a,c),min(b,e),max(a,c),max(b,e)]
     def R(x0,y0,x1,y1,f): d.rectangle(_n(x0+ox,y0+oy,x1+ox,y1+oy),fill=f)

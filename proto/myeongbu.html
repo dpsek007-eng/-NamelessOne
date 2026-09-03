@@ -1,0 +1,765 @@
+<title>이렘 명부</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700;800&family=IBM+Plex+Sans+KR:wght@300;400;500;600&family=Nanum+Gothic+Coding:wght@400;700&display=swap">
+<style>
+:root{
+ --ground:#E5E7E9;--surface:#EFF1F2;--sunk:#DADDDF;
+ --ink:#15181B;--body:#333940;--muted:#6B737B;--faint:#98A0A7;
+ --line:#C4C9CD;--hair:#D6DADD;
+ --slate:#3F566B;--ember:#9C6B2F;
+ --std:#5B7488;--early:#8A7546;--late:#7A4F3A;--cond:#4E6B5A;
+}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){
+ --ground:#131619;--surface:#1B1F23;--sunk:#0E1114;
+ --ink:#E6E8EA;--body:#C2C8CD;--muted:#8B939B;--faint:#69727A;
+ --line:#2B3137;--hair:#232930;
+ --slate:#8FAAC1;--ember:#C9954F;
+ --std:#7E9BB4;--early:#C0A468;--late:#C08464;--cond:#79A88E;
+}}
+:root[data-theme="dark"]{
+ --ground:#131619;--surface:#1B1F23;--sunk:#0E1114;
+ --ink:#E6E8EA;--body:#C2C8CD;--muted:#8B939B;--faint:#69727A;
+ --line:#2B3137;--hair:#232930;
+ --slate:#8FAAC1;--ember:#C9954F;
+ --std:#7E9BB4;--early:#C0A468;--late:#C08464;--cond:#79A88E;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ground);color:var(--body);
+ font-family:"IBM Plex Sans KR",system-ui,sans-serif;font-weight:300;font-size:15.5px;line-height:1.75;
+ -webkit-font-smoothing:antialiased}
+h1,h2,h3,h4{font-family:"Nanum Myeongjo",Georgia,serif;color:var(--ink);margin:0;text-wrap:balance}
+p{margin:0}
+.mono,.num,.meta,.bl,h4,.sub em{font-family:"Nanum Gothic Coding",ui-monospace,monospace}
+.wrap{max-width:60rem;margin:0 auto;padding:0 clamp(1rem,4vw,2.5rem)}
+
+header.top{border-bottom:1px solid var(--line);padding:clamp(3rem,8vw,5.5rem) 0 2.2rem}
+header.top .eye{font-family:"Nanum Gothic Coding",monospace;font-size:.7rem;letter-spacing:.24em;color:var(--faint)}
+header.top h1{font-size:clamp(2.2rem,6vw,3.4rem);font-weight:800;letter-spacing:-.02em;margin:.5rem 0 0}
+header.top .lede{margin-top:1.2rem;max-width:34rem;font-size:1rem;line-height:1.85}
+.count{display:flex;gap:2rem;margin-top:1.8rem;flex-wrap:wrap}
+.count div{font-family:"Nanum Gothic Coding",monospace}
+.count b{display:block;font-size:1.6rem;color:var(--ink);font-weight:700;line-height:1.2}
+.count span{font-size:.72rem;color:var(--faint);letter-spacing:.1em}
+
+.actline{display:flex;align-items:baseline;gap:1rem;margin:4rem 0 1.6rem;
+ padding-bottom:.6rem;border-bottom:1px solid var(--line)}
+.actline span{font-size:1.35rem;font-weight:700}
+.actline i{font-family:"Nanum Gothic Coding",monospace;font-style:normal;font-size:.72rem;color:var(--faint);letter-spacing:.1em}
+
+.entry{border-bottom:1px solid var(--hair);padding:2.2rem 0}
+.entry header{display:grid;grid-template-columns:6.2rem 1fr;gap:1.3rem;align-items:start}
+.numcol{display:flex;flex-direction:column;align-items:center;gap:.5rem}
+.sp{display:block;width:6rem;height:8rem;image-rendering:pixelated;
+ background:var(--sunk);border:1px solid var(--hair);border-radius:2px}
+.num{font-size:1.05rem;color:var(--faint);font-variant-numeric:tabular-nums;letter-spacing:.06em;padding-top:.15rem}
+.stars{font-size:.86rem;letter-spacing:.08em;line-height:1}
+.stars .on{color:var(--ember)}.stars .off{color:var(--line)}
+.idhead h3{font-size:1.5rem;line-height:1.3;margin-top:.3rem}
+.title{font-size:.8rem;color:var(--muted);margin-top:.15rem}
+.tagline{font-family:"Nanum Myeongjo",serif;font-size:1.08rem;color:var(--ink);
+ margin:.9rem 0 0;line-height:1.7}
+.meta{display:flex;flex-wrap:wrap;gap:.4rem;margin:.9rem 0 0;font-size:.68rem;letter-spacing:.05em}
+.meta span{border:1px solid var(--line);padding:.1rem .45rem;border-radius:2px;color:var(--muted);white-space:nowrap}
+.meta .cls{border-color:var(--slate);color:var(--slate)}
+.meta .role{border-color:var(--ember);color:var(--ember)}
+.meta .pw{border-style:dashed}
+
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:0 2.2rem}
+.block{margin:1.5rem 0 0 7.5rem}
+.cols .block{margin-left:0}
+.cols{margin-left:7.5rem}
+h4{font-size:.68rem;letter-spacing:.16em;color:var(--faint);font-weight:400;margin-bottom:.5rem;text-transform:uppercase}
+.block p{font-size:.94rem;line-height:1.8}
+.sub{font-size:.82rem;color:var(--muted);margin-top:.4rem}
+.sw{display:inline-block;width:.7rem;height:.7rem;border-radius:2px;vertical-align:-1px;border:1px solid var(--line)}
+.mem{margin:0;padding-left:1.3rem;font-size:.9rem;line-height:1.85}
+.mem li{margin-bottom:.15rem}
+.mem li::marker{color:var(--faint);font-family:"Nanum Gothic Coding",monospace;font-size:.78rem}
+.stats{display:flex;gap:1.6rem;flex-wrap:wrap}
+.stats div{font-family:"Nanum Gothic Coding",monospace;font-variant-numeric:tabular-nums}
+.stats span{font-size:.68rem;color:var(--faint);display:block;letter-spacing:.08em}
+.stats b{font-size:1.1rem;color:var(--ink)}
+.stats i{font-style:normal;font-size:.72rem;color:var(--muted);margin-left:.25rem}
+.sk{display:grid;grid-template-columns:auto auto 1fr;gap:.5rem;align-items:baseline;
+ padding:.4rem 0;border-top:1px solid var(--hair);font-size:.9rem}
+.sk:first-of-type{border-top:0}
+.sk b{color:var(--ink);font-weight:500;white-space:nowrap}
+.sk i{font-family:"Nanum Gothic Coding",monospace;font-style:normal;font-size:.64rem;
+ color:var(--faint);border:1px solid var(--line);padding:0 .3rem;border-radius:2px;white-space:nowrap}
+.tal{border-left:2px solid var(--hair);padding:.5rem 0 .5rem 1rem;margin-bottom:1rem}
+.talhead{display:flex;gap:.6rem;align-items:baseline;margin-bottom:.4rem}
+.talhead b{font-family:"Nanum Myeongjo",serif;color:var(--ink);font-size:1rem}
+.bl{font-style:normal;font-size:.62rem;letter-spacing:.1em;padding:.1rem .4rem;border-radius:2px;
+ border:1px solid currentColor;white-space:nowrap}
+.b-std{color:var(--std)}.b-early{color:var(--early)}.b-late{color:var(--late)}.b-cond{color:var(--cond)}
+.tal dl{display:grid;grid-template-columns:3.6rem 1fr;gap:.15rem .8rem;margin:0;font-size:.85rem}
+.tal dt{font-family:"Nanum Gothic Coding",monospace;font-size:.66rem;color:var(--faint);padding-top:.28rem}
+.tal dd{margin:0;line-height:1.7}
+.note{font-size:.8rem;color:var(--muted);margin-top:.5rem;padding-left:.2rem}
+.say{font-family:"Nanum Myeongjo",serif;font-size:.98rem;color:var(--ink);line-height:1.9}
+.say em{font-family:"Nanum Gothic Coding",monospace;font-style:normal;font-size:.64rem;
+ color:var(--faint);margin-right:.6rem;letter-spacing:.1em}
+.dnote{margin:1.4rem 0 0 7.5rem;padding:.7rem .9rem;background:var(--sunk);border-left:2px solid var(--slate);
+ font-size:.8rem;color:var(--muted);line-height:1.7}
+
+.gap{display:grid;grid-template-columns:6.2rem 1fr;gap:1.1rem;align-items:center;
+ padding:1.1rem 0;border-bottom:1px solid var(--hair);color:var(--faint)}
+.gap span:last-child{font-family:"Nanum Gothic Coding",monospace;font-size:.8rem;letter-spacing:.14em}
+.gap .num{color:var(--line)}
+
+footer{border-top:1px solid var(--line);margin-top:3.5rem;padding:2.5rem 0 4rem;color:var(--faint);font-size:.8rem;line-height:1.9}
+
+@media(max-width:720px){
+ body{font-size:15px}
+ .cols{grid-template-columns:1fr;margin-left:0}
+ .block,.tagline,.meta,.dnote{margin-left:0}
+ .entry header{grid-template-columns:4.6rem 1fr;gap:.8rem}
+ .sp{width:4.5rem;height:6rem}
+ .gap{grid-template-columns:4.6rem 1fr;gap:.8rem}
+ .tal dl{grid-template-columns:1fr}
+ .tal dt{padding-top:.5rem}
+}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<header class="top"><div class="wrap">
+ <div class="eye">이렘의 탑 · WORLD 001</div>
+ <h1>명부</h1>
+ <p class="lede">탑이 아직 기억하고 있는 사람들이다. 여기 적힌 것은 그들이 살았다는 사실과, 어떻게 끝났는가 하는 것뿐이다.</p>
+ <div class="count">
+  <div><b>23</b><span>확인된 잔상</span></div>
+  <div><b>47</b><span>생업</span></div>
+  <div><b>11</b><span>계층</span></div>
+  <div><b>—</b><span>본디 · 불명</span></div>
+ </div>
+</div></header>
+
+<main class="wrap">
+<h2 class=actline><span>특수</span><i>1명 확인</i></h2>
+<article class=entry id="s000">
+ <header>
+  <div class=numcol><div class=num>000</div><img class=sp src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJAAAADACAYAAADryOpPAAACXElEQVR42u3dMUpDQRQF0BhchSBEAllEKjvXbJcqiwiIgmCdHSSFIFP4wW/mM/PmnVPZBEK4vMv7mYyrFQAAAAAAAAAAAAAAJHXnI/j28Ph0+e9rvz7f036Oa9FBgFBh0WpLnZlACBAqbIDaylxnJhAChAAhQAgQ2MLabl7ZNjITCAFCgBAgBAgECAFCgBAgECAEiI45kbggJxJBgBAgBAgBAlvY0huZnzaDAKHCAtWZC6ZAgBAgBAgBAgFCgBAgRhf+AVgPN2/UEvGBpAmEACFACBACBBm2sP3zy6+b18fbyeZlAiFACBAIEAKEACFAIEAs4N5H0Fb5UPR4eHWcAxUGOStss939/N3z92Ll+zSBUGEwfIVNHeGwkZlAqDBUGOrMBEKAUGHkqTMTCAFChVXX2/di5e+/NtvdMA9FTSAECBVG0I3MBEKAaCfMIe65xznK8d7DPYpTt3DUOqbSqs5MIAQIFVa9wno+VF+rzmxhqDBy8yAxGMc5UGEw5BY20jW/DtWjwsAWZtsygRAgbGE2r1YbmQmECgMBQoAQIAYS8kHiSJtXqTz8H2UjM4EQIFTYLH+56X3qu6S5vxErq+SW15pAIEAIEAKEAEH/W1jEfwFpAoEAIUAIEAIEAoQAIUAIEAgQAoQAIUAgQAgQAoQAkVLGOxLPjV5rAoEAocJUmAmEAIEKU2EmEAKEClNhJhAIECpMhZlACBCoMBVmAiFAqDAVpsJMIAQIFabCTCAQIFSYCjOBECBUmApTYSYQAoQKU2EmEAgQKkyFmUAIEKgwFWYCIUAAAADADa5UYKIKr2pzmwAAAABJRU5ErkJggg==' alt='' width=96 height=128 loading=lazy></div>
+  <div class=idhead>
+   <div class=stars><span class=on>★</span><span class=off>☆☆☆☆</span></div><h3>이름 없는 자</h3><p class=title>명부 000</p>
+   <p class=tagline>「어느 층에서도 발견되고, 어떤 기록에도 없다.」</p>
+   <div class=meta><span>—층</span><span>불명</span><span class=cls>—</span>
+    <span>없음</span><span class=role>미상</span>
+    <span class=pw>전투력 174</span><span class=pw>본디 ?</span></div>
+  </div>
+ </header>
+ <div class=cols><section class=block><h4>생전</h4><p>이렘의 어떤 명부에도 없다. 그런데 모든 층에서 목격된다. 종말기의 폐허에도, 여명기의 첫 마을에도 같은 형상이 서 있다.</p></section>
+  <section class=block><h4>최후</h4><p>죽은 기록이 없다. 살았던 기록도 없다.</p></section></div>
+ <section class=block><h4>기억 · 각성 단계별 해금</h4><ol class=mem><li>각성 1: 그는 항상 플레이어 쪽을 보고 있다.</li><li>각성 2: 다른 잔상들은 그를 인식하지 못한다.</li><li>각성 3: 그가 서 있던 자리는 전부 사람이 죽은 자리였다.</li><li>각성 4: 100층에도 그가 있다.</li><li>각성 5: —</li></ol></section>
+ <section class=block><h4>스탯</h4><div class=stats><div><span>잔존</span><b>346</b><i>+19.98</i></div><div><span>의지</span><b>35</b><i>+1.73</i></div><div><span>자취</span><b>29</b><i>+1.47</i></div><div><span>공명</span><b>67</b><i>+1.0</i></div></div></section>
+ <section class=block><h4>스킬</h4><div class=sk><b>「목격」</b><i>패시브</i><span>편성되어 있는 동안 해당 층의 미획득 잔상 발견 확률이 상승한다.</span></div><div class=sk><b>「—」</b><i>잠금</i><span>각성 5에서 해금된다.</span></div></section>
+ <section class=block><h4>개화 1갈래</h4><div class=tal><div class=talhead><em class='bl b-std'>미상</em><b>「미상」</b></div><dl><dt>물주기</dt><dd>불명. 어떤 육성에도 반응하지 않는다.</dd><dt>초반</dt><dd>재능이 표시되지 않는다. 슬롯 자체가 비어 있다.</dd><dt>전환점</dt><dd>100층 도달</dd><dt>개화</dt><dd>—</dd></dl><p class=note>의도적으로 육성이 막혀 있다. 플레이어가 포기하게 만든 뒤 회수한다. 각성 5는 스토리 진행으로만 열린다.</p></div></section>
+ <div class=cols><section class=block><h4>뜰 · 없음</h4><p>아무 일도 하지 않는다. 뜰 한가운데 서서 플레이어 쪽을 본다.</p>
+   <p class=sub>산출 없음 · 없음 (각성 5에서 변경됨)</p><p class=say>「…」</p></section>
+  <section class=block><h4>외형</h4><p>특징 없음. 정면 응시</p><p class=sub>특징이 없다. 볼 때마다 조금씩 다르게 보인다</p>
+   <p class=sub>상징 · 없음 <span class=sw style="background:#3A3A3E"></span> #3A3A3E</p></section></div>
+ <section class=block><h4>음성</h4>
+  <p class=say><em>소환</em>「…」</p>
+  <p class=say><em>승리</em>「…」</p>
+  <p class=say><em>흐려질 때</em>「…」</p></section>
+ <p class=dnote>메인 스토리 반전용. 튜토리얼에서 무료로 지급하고 플레이어가 약하다고 방치하게 만든 뒤, 후반에 회수한다.</p>
+</article><h2 class=actline><span>1막 · 폐허</span><i>11명 확인</i></h2><div class=gap><span class=num>002</span><span>─ 기억나지 않음 ─</span></div>
+<article class=entry id="s005">
+ <header>
+  <div class=numcol><div class=num>005</div><img class=sp src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJAAAADACAYAAADryOpPAAACdUlEQVR42u3dsUrzUBiA4UR6FYJgEdxdnbp5K66uXkBXV2/FrZOruyAVBGfvoB1cIiXlxDTkfOc8z/QvQtr/5fs4aY1NAwAAAAAAAAAAAAAAlWq9Bb/OL5a7//7s99e22vfxTDoICCss2tqyzkwgBIQVVsDaqnmdmUAICAEhIAQETmHznrxqO5GZQAgIASEgBAQCQkAIiDosvAWxPD7cD7opun56nvQGpgmEgLDCJtX9HMo3Ek0gBISAQEAICKewkk5kfrUZBIQVFmidecAUCAgBISAEBAJCQAiI0oW/kZjDkzdOdQ0Rb0iaQAgIASEgBAQlncJuV3eDTjefH+/h/gMur667/95Fu34TCAFhhXHE6mZpAmGFgYAQEAJCQCAgBMSsirqR2P1cKefPxbrXaQJhhYGAEBACQkAgIASEgBAQCIjJFPul+rn+RljK9UT8/S8TCAEhIAQEAsIp7NDr5qWNdp0pTyDZvG2zfY0mEALCCmuGjPQUOdw87LueMY/z7b4/OawzEwgBISAEhIAg+imspJNX9Os0gRAQAkJAICCcwg5F/AMrfdcf8cFTJhACQkAICAFBDaew6Cevkk5kJhACwgobpG+8p3zJfOhXKcY85SPly/On+iUCEwgBISAQEAJCQAgIBMSU2tpecG43Ek0grDAQEAJCQAgIBISAEBACAgEhIASEgOCvRYWv+WemnzWBQEBYYVaYCYSAwAqzwkwgBIQVZoWZQCAgrDArzARCQGCFWWEmEALCCrPCrDATCAFhhVlhJhAICCvMCjOBEBBWmBVmhZlACAgrzAozgUBAWGFWmAmEgMAKs8JMIAQEAAAAjLAHGxaRrrnqfkQAAAAASUVORK5CYII=' alt='' width=96 height=128 loading=lazy></div>
+  <div class=idhead>
+   <div class=stars><span class=on>★★★</span><span class=off>☆☆</span></div><h3>재를 쓸던 사람</h3><p class=title>5층 · 이름이 남지 않음</p>
+   <p class=tagline>「길이 보여야 사람이 오지요.」</p>
+   <div class=meta><span>5층</span><span>종말기</span><span class=cls>장인</span>
+    <span>담장</span><span class=role>수호</span>
+    <span class=pw>전투력 294</span><span class=pw>본디 ?</span></div>
+  </div>
+ </header>
+ <div class=cols><section class=block><h4>생전</h4><p>종말기의 이렘에는 쓸어야 할 길이 없었다. 재는 쓸어도 다음 날 다시 쌓였다. 그는 매일 같은 구간만 쓸었다. 스무 걸음 남짓이었다.</p></section>
+  <section class=block><h4>최후</h4><p>쓸던 자리에서 발견되었다. 비질 자국이 그날 아침 것까지 남아 있었다.</p></section></div>
+ <section class=block><h4>기억 · 각성 단계별 해금</h4><ol class=mem><li>쓸어 둔 길로 지나간 사람은 없었다.</li><li>그 길이 어디로 이어지는지 그는 알고 있었다. 우물이었다.</li><li>우물은 이미 말라 있었다.</li></ol></section>
+ <section class=block><h4>스탯</h4><div class=stats><div><span>잔존</span><b>726</b><i>+40.1</i></div><div><span>의지</span><b>57</b><i>+2.81</i></div><div><span>자취</span><b>79</b><i>+4.33</i></div><div><span>공명</span><b>66</b><i>+0.8</i></div></div></section>
+ <section class=block><h4>스킬</h4><div class=sk><b>「스무 걸음」</b><i>액티브</i><span>아군 전체가 다음 1턴간 받는 피해를 줄인다.</span></div><div class=sk><b>「비질 자국」</b><i>패시브</i><span>같은 층에서 전투를 반복할수록 아군 전체의 자취가 누적 상승한다.</span></div></section>
+ 
+ <div class=cols><section class=block><h4>뜰 · 담장</h4><p>뜰의 길을 쓴다. 재가 없는데도 쓴다.</p>
+   <p class=sub>산출 유품 · 뜰 전체 시설의 소모 감소</p><p class=say>「오늘은 깨끗합니다.」</p></section>
+  <section class=block><h4>외형</h4><p>긴 비를 옆으로 든 자세</p><p class=sub>손잡이가 손 모양대로 닳아 있다. 늘 같은 곳을 쥐었다</p>
+   <p class=sub>상징 · 닳은 비 <span class=sw style="background:#7A7168"></span> #7A7168</p></section></div>
+ <section class=block><h4>음성</h4>
+  <p class=say><em>소환</em>「…길을 좀 내어 두었습니다.」</p>
+  <p class=say><em>승리</em>「이쪽입니다. 발밑을 보세요.」</p>
+  <p class=say><em>흐려질 때</em>「아직 다 못 쓸었는데.」</p></section>
+ <p class=dnote>첫 동료. 튜토리얼 확정 지급.</p>
+</article><div class=gap><span class=num>007</span><span>─ 기억나지 않음 ─</span></div><div class=gap><span class=num>009</span><span>─ 기억나지 않음 ─</span></div>
+<article class=entry id="s011">
+ <header>
+  <div class=numcol><div class=num>011</div><img class=sp src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJAAAADACAYAAADryOpPAAACrUlEQVR42u3dMUokQRgF4FI8hSAogocwMjPXzMQTmHkMM+/gHcyMPIQgCoKxN9BAGAqlceye7qq/6vvinWUZHu9t9XTPpAQAAAAAAAAAAAAAAJ3a8hZ82907+Bz72ve3l27fx23RQYAwYdFmy5xpIAQIE9bAbPU8ZxoIAUKAECAECJzCyp68ejuRaSAEiHJ2vAVxHZ+crqb58eG+yERqIAQIpzCnsBGzNWTJOdNACBBOYcx0Opt72jQQAoRTWJMnsiVPXqVOZBoIAcIpjA3OlgbChGHCmpSfjFp9tNlnYZgwTJg5W3i2opy8NBAChAkj6MlLAyFAmDBS3bdqaCAEiLqFvyOxhme+NmX/8MiEYcLAKaxVNcyWBkKAMGGjDV18e31+av7kpYEwYeAU1vnJ6+b2bvXfgOuri9F/vwbChGHCmDhDGggThgljYWfnl+v8mWpvWdFACBAmbCPyz5Vq/lzsx6PQoe+o1EAIECbsTxG/uUIDgQAhQAgQAgQChAAhQLSi2ds5avtcbO5vsJ9yY7wGwoRhwqqSP0sV5UuoSs2QBkKAMGF0MlsaCAHChM2qtpNX/u+p4WcxNRAChAAhQCBAOIX95lkwDYQAQdAJ+68o31Tf0kVFDYQAIUAIEAIEAoQAIUD0IfyFxIg/c5mLflFRAyFAlBP+5u4ojy2vw4RhwqD5CWtptqLPmQZCgBAgBAgBAgFCgBAg+hDmQmIPFw+H1HxRUQMhQAgQAoQAQaunsFKnufwENOW1GggECAFCgBAgSCn1+XthH4Veq4FAgDBhJkwDIUBgwkyYBkKAMGEmTAOBAGHCTJgGQoDAhJkwDYQAYcJMmAnTQAgQJsyEaSAQIEyYCdNACBAmzISZMA2EAGHCTJgGAgHChJkwDYQAgQkzYRoIAQIAAAAm+AIlxq/iFzij/QAAAABJRU5ErkJggg==' alt='' width=96 height=128 loading=lazy></div>
+  <div class=idhead>
+   <div class=stars><span class=on>★★★</span><span class=off>☆☆</span></div><h3>셈하던 아이</h3><p class=title>11층 · 이름이 남지 않음</p>
+   <p class=tagline>「세면 안 잊어버려요.」</p>
+   <div class=meta><span>11층</span><span>종말기</span><span class=cls>관리</span>
+    <span>서고</span><span class=role>탐구</span>
+    <span class=pw>전투력 294</span><span class=pw>본디 ?</span></div>
+  </div>
+ </header>
+ <div class=cols><section class=block><h4>생전</h4><p>글은 못 읽었다. 대신 셌다. 집집마다 남은 사람 수를 세어 벽에 그어 두었다.</p></section>
+  <section class=block><h4>최후</h4><p>마지막으로 센 수는 둘이었다. 자기를 포함한 수였다.</p></section></div>
+ <section class=block><h4>기억 · 각성 단계별 해금</h4><ol class=mem><li>처음 셀 때는 예순셋이었다.</li><li>숫자가 줄어드는 속도를 알고 있었다.</li><li>둘이 되었을 때 그릇을 두 개 놓았다.</li><li>하나는 채워 두었다.</li></ol></section>
+ <section class=block><h4>스탯</h4><div class=stats><div><span>잔존</span><b>577</b><i>+31.32</i></div><div><span>의지</span><b>73</b><i>+3.79</i></div><div><span>자취</span><b>48</b><i>+2.39</i></div><div><span>공명</span><b>102</b><i>+1.98</i></div></div></section>
+ <section class=block><h4>스킬</h4><div class=sk><b>「예순셋」</b><i>액티브</i><span>적 하나의 남은 잔존을 표시하고 약점을 노출시킨다.</span></div><div class=sk><b>「줄어드는 속도」</b><i>패시브</i><span>적의 잔존이 줄어들수록 아군 전체의 의지가 상승한다.</span></div></section>
+ 
+ <div class=cols><section class=block><h4>뜰 · 서고</h4><p>뜰의 잔상 수를 매일 센다. 줄지 않는 것을 확인한다.</p>
+   <p class=sub>산출 기억 조각 · 명부 완성 보상 증가</p><p class=say>「오늘도 그대로예요.」</p></section>
+  <section class=block><h4>외형</h4><p>작은 체구, 손에 든 숯 조각</p><p class=sub>손가락 끝이 검다. 숯으로 세다 보니 지워지지 않았다</p>
+   <p class=sub>상징 · 벽에 그은 금 <span class=sw style="background:#8C93A6"></span> #8C93A6</p></section></div>
+ <section class=block><h4>음성</h4>
+  <p class=say><em>소환</em>「몇 명이에요? 세어 둘게요.」</p>
+  <p class=say><em>승리</em>「하나도 안 줄었어요.」</p>
+  <p class=say><em>흐려질 때</em>「…하나, 둘.」</p></section>
+ <p class=dnote>1막 유일한 초반 탐구. 11층 「그릇 두 개」 회수.</p>
+</article>
+<article class=entry id="s013">
+ <header>
+  <div class=numcol><div class=num>013</div><img class=sp src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJAAAADACAYAAADryOpPAAACjUlEQVR42u3czUlzQRiG4ShpIoKgCJaQRXDhzhpsxCJSih24cyEpQhAFwbVgAbpwkQRyQHPmZOY973Xtvg8Ef27mYfI3mQAAAAAAAAAAAAAAQFJHfgW/Tk7Pv/f92o/317S/x2PpICBMWLTZMmdOIASECRvBbGWeMycQAkJACAgBgVtY3ZtXthuZEwgBISAEhIBAQAgIASEgEBAComFekTggr0gEASEgBISAwC1s6BuZtzaDgDBhgebMB0yBgBAQAkJAICAEhIAYu/APgLXwyRulRHxA0gmEgBAQAkJAkO0WFv1GFv2lIE4gBISAEBACAgEhIAREDiEfxFpc3+x8wPDt5Tncz3J2cbnz/1ePDyH+Nk4gBIQJ23u2urQ8Z12z1aXlOXMCISDqmUafqrFazr/W/5gvivxOrpar4lPoBEJAJL+FDTFbUW5hW1NVSZ9pcwJhwkgyYYe8YbU8Yfe3s2a/t//OmRMIE0Y9B30gcfM5nSHmrOs5oxbeL7b9/q/ZaB4sdQIhIJJM2NCziBMIAZFJmOfC+kxVe7ewtae7RfXvzXNhmDBMWJEJK3WravnDpv7yoVJDTJtXJGLCMGEhRJ8wJxAmDFJNmI/5dQIhIAQEAkJAuIW5eY37RuYEQkAICAEhIMhwCxvTzSv6jcwJhIAwYc3O3+aU9PlaJxAICAEhIAQEAkJACAgBISAQEAJCQAgIBISAEBACAgEhIASEgEBAFDJN+DN/VvpaJxAICBNmwpxACAhMmAlzAiEgTJgJcwKBgDBhJswJhIDAhJkwJxACwoSZMBPmBEJAmDAT5gQCAWHCTJgTCAFhwkyYCXMCISBMmAlzAoGAMGEmzAmEgMCEmTAnEAICAAAAevgBWtuevhWennAAAAAASUVORK5CYII=' alt='' width=96 height=128 loading=lazy></div>
+  <div class=idhead>
+   <div class=stars><span class=on>★★★</span><span class=off>☆☆</span></div><h3>빵을 굽던 사람</h3><p class=title>13층 · 이름이 남지 않음</p>
+   <p class=tagline>「다들 배가 고팠으니까요.」</p>
+   <div class=meta><span>13층</span><span>종말기</span><span class=cls>장인</span>
+    <span>화덕</span><span class=role>헌신</span>
+    <span class=pw>전투력 293</span><span class=pw>본디 ?</span></div>
+  </div>
+ </header>
+ <div class=cols><section class=block><h4>생전</h4><p>종말기의 이렘에는 더 이상 밀이 없었다. 이 사람은 무엇으로 빵을 구웠는지 아무도 묻지 않았다.</p></section>
+  <section class=block><h4>최후</h4><p>마지막 사흘 동안 화덕에 불을 꺼뜨리지 않았다. 사람들이 오지 않게 된 뒤에도 계속 구웠다. 화덕 앞에서 앉은 채로 발견되었다.</p></section></div>
+ <section class=block><h4>기억 · 각성 단계별 해금</h4><ol class=mem><li>하루에 서른일곱 개를 구웠다. 항상 서른일곱 개였다.</li><li>값을 받지 않은 지 오래되었다.</li><li>마지막 날에도 서른일곱 개를 구웠다. 가지러 온 사람은 없었다.</li></ol></section>
+ <section class=block><h4>스탯</h4><div class=stats><div><span>잔존</span><b>735</b><i>+41.02</i></div><div><span>의지</span><b>60</b><i>+3.08</i></div><div><span>자취</span><b>58</b><i>+3.08</i></div><div><span>공명</span><b>82</b><i>+1.2</i></div></div></section>
+ <section class=block><h4>스킬</h4><div class=sk><b>「서른일곱 개」</b><i>액티브</i><span>아군 전체의 잔존을 소량 회복하고, 다음 턴 받는 피해를 감소시킨다.</span></div><div class=sk><b>「꺼지지 않은 불」</b><i>패시브</i><span>전투 중 매 턴 아군 전체가 잔존을 조금씩 회복한다.</span></div></section>
+ 
+ <div class=cols><section class=block><h4>뜰 · 화덕</h4><p>서른일곱 개를 굽는다. 뜰에는 서른일곱 명이 없는데도.</p>
+   <p class=sub>산출 식량 · 뜰 잔상 전체의 잔존 회복 속도 증가</p><p class=say>「오늘은 여덟 개가 남았습니다.」</p></section>
+  <section class=block><h4>외형</h4><p>앞치마, 팔에 남은 화상 자국</p><p class=sub>팔뚝 안쪽에 화상 자국이 줄지어 있다. 화덕에 손을 넣은 횟수만큼</p>
+   <p class=sub>상징 · 식은 화덕 <span class=sw style="background:#C4763A"></span> #C4763A</p></section></div>
+ <section class=block><h4>음성</h4>
+  <p class=say><em>소환</em>「아직 따뜻할 겁니다.」</p>
+  <p class=say><em>승리</em>「드시고 가세요. 남았습니다.」</p>
+  <p class=say><em>흐려질 때</em>「불이… 꺼졌네요.」</p></section>
+ 
+</article>
+<article class=entry id="s016">
+ <header>
+  <div class=numcol><div class=num>016</div><img class=sp src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJAAAADACAYAAADryOpPAAACxklEQVR42u3dMUoDURQF0CiuQhAU0UVY2YjgEmyyAlsbaxtbV2DjHsTGykUIEiGQ2h3EwmbUGRjn5zP/zzunDEST8fIub5xJZjMAAAAAAAAAAAAAAAhqyyH4trt3sB763NVyEfY4bosOAoQKq6221JkJhAChwiZQW5HrzARCgBAgBAgBAlvYuJtXtI3MBEKAECAECAECAUKAECAECAQIAaJgrkjMyBWJIEAIEAKEAIEtLPdG5tZmECBUWEV15gOmQIAQIAQIAQIBQoAQIKau+hNgJXzyxqbUeELSBEKAECAECAGCaFtY7RtZ7ZeCmEAIEAKEACFAIEAIEAJEDFWexDo5PW89Yfjx/lbde9k/PG59/PXlqYq/jQmEAKHCBtdWl5LrrKu2upRcZyYQAsR4dmqvqgi6jkkJ1WYCIUAErzC1lX7cxqozEwgBIkiFqaq/ji7mrY8/39/86+f0uaHg7Oq29fGH68vB9WcCocIIUmHNTSFHnXVtIiXcL9a8/2u1XDQrbN1WW111kyLHzzeBECDGM9r/UjZVYX1OoJVWYV2vLUdt9amzlNurTSBUGEG2sJSNrJaLzBOrrbpvlDaBECACVljuqirtw6aar2dK3y9mAiFABK+wqW5YJhAIEKG2sCltXhE2MhMIAUKAECAECKJtYbV/5WXtr98EQoAYj29tLkjzpOL87nHj7yvlFmYTCBWGLUxtTex9mUAIECps8LaSuyaavyvluQNUUWcmEAKECuOXHCf9TCAECAECAUKAECAECAECAUKAECAECAQIAUKAECAQIAQIAUKA4KeIF9V/jvRcEwgECBWmwkwgBAhUmAozgRAgVJgKM4FAgFBhKswEQoBAhakwEwgBQoWpMBVmAiFAqDAVZgKBAKHCVJgJhAChwlSYCjOBECBUmAozgUCAUGEqzARCgECFqTATCAECAAAAEnwBhCC5kdjPCwMAAAAASUVORK5CYII=' alt='' width=96 height=128 loading=lazy></div>
+  <div class=idhead>
+   <div class=stars><span class=on>★★★★</span><span class=off>☆</span></div><h3>마지막 물장수</h3><p class=title>16층 · 이름이 남지 않음</p>
+   <p class=tagline>「마르면 더 깊이 파면 됩니다.」</p>
+   <div class=meta><span>16층</span><span>종말기</span><span class=cls>하인</span>
+    <span>물장수</span><span class=role>헌신</span>
+    <span class=pw>전투력 384</span><span class=pw>본디 ?</span></div>
+  </div>
+ </header>
+ <div class=cols><section class=block><h4>생전</h4><p>우물이 마른 뒤에도 매일 같은 시각에 물통을 지고 나왔다. 어디서 물을 구했는지 아무도 묻지 않았다.</p></section>
+  <section class=block><h4>최후</h4><p>두레박을 내린 채 멈춰 있었다. 줄은 끊어지지 않았다. 당길 사람이 없었을 뿐이다.</p></section></div>
+ <section class=block><h4>기억 · 각성 단계별 해금</h4><ol class=mem><li>물통 손잡이를 천으로 감아 두었다.</li><li>값을 받은 마지막 날을 기억하지 못한다.</li><li>우물 바닥까지 내려가 본 적이 있다.</li><li>거기서 무엇을 보았는지는 말하지 않았다.</li></ol></section>
+ <section class=block><h4>스탯</h4><div class=stats><div><span>잔존</span><b>977</b><i>+52.67</i></div><div><span>의지</span><b>88</b><i>+4.6</i></div><div><span>자취</span><b>71</b><i>+3.64</i></div><div><span>공명</span><b>102</b><i>+1.82</i></div></div></section>
+ <section class=block><h4>스킬</h4><div class=sk><b>「같은 시각」</b><i>액티브</i><span>아군 전체를 회복시킨다. 전투가 길어질수록 회복량이 증가한다.</span></div><div class=sk><b>「마르지 않는 통」</b><i>패시브</i><span>잔존이 20% 이하인 아군이 생기면 즉시 회복시킨다. 전투당 2회.</span></div></section>
+ 
+ <div class=cols><section class=block><h4>뜰 · 물장수</h4><p>뜰의 우물에서 물을 긷는다. 아무도 마시지 않아도 긷는다.</p>
+   <p class=sub>산출 식량 · 뜰 잔상 전체의 잔존 회복 속도 증가</p><p class=say>「오늘 것은 맑습니다.」</p></section>
+  <section class=block><h4>외형</h4><p>양어깨에 통 두 개</p><p class=sub>양쪽 어깨의 옷이 똑같이 해졌다. 한쪽으로 지지 않았다</p>
+   <p class=sub>상징 · 천 감은 물통 <span class=sw style="background:#5F8AA6"></span> #5F8AA6</p></section></div>
+ <section class=block><h4>음성</h4>
+  <p class=say><em>소환</em>「…드시겠습니까?」</p>
+  <p class=say><em>승리</em>「아직 남았습니다.」</p>
+  <p class=say><em>흐려질 때</em>「바닥이 보이네요.」</p></section>
+ <p class=dnote>16층 「두레박」 회수. 우물 바닥 기억은 회수하지 않고 남겨 둔다.</p>
+</article>
+<article class=entry id="s018">
+ <header>
+  <div class=numcol><div class=num>018</div><img class=sp src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJAAAADACAYAAADryOpPAAACw0lEQVR42u3dMUoDURQF0CiuQhAUwUWk0spVCFa6BbFKJW5BW1dhZ+UiBIkQSO0OYmEz6gyM8/OZ/+edUwaiyXh5lzfOJLMZAAAAAAAAAAAAAAAEteMQfNs/ONoMfe56tQx7HHdFBwFChdVWW+rMBEKAUGETqK3IdWYCIUAIEAKEAIEtbNzNK9pGZgIhQAgQAoQAgQAhQAgQAgQChABRMFckZuSKRBAgBAgBQoDAFpZ7I3NrMwgQKqyiOvMBUyBACBAChACBACFACBBTV/0JsBI+eWNbajwhaQIhQAgQAoQAQbQtrPaNrPZLQUwgBAgBQoAQIBAgBAgBIoYqT2LNT89bTxh+vL9V914Oj09aH399ea7ib2MCIUCosMG11aXkOuuqrS4l15kJhAAxnr3aqyqCrmNSQrWZQAgQwStMbaUft7HqzARCgAhSYarqr8v5Wevji6eHf/2cPjcULC6uWx+/ursZXH8mECqMIBXW3BRy1FnXJlLC/WLN+7/Wq2WzwjZttdVVNyly/HwTCAFiPKP9L2VbFdbnBFppFdb12nLUVp86S7m92gRChRFkC0vZyGq5yDyx2qr7RmkTCAEiYIXlrqrSPmyq+Xqm9P1iJhACRPAKm+qGZQKBABFqC5vS5hVhIzOBECAECAFCgCDaFlb7V17W/vpNIASI8fjW5oI0Tyo+3t5v/X2l3MJsAqHCsIWprYm9LxMIAUKFDd5WctdE83elPHeAKurMBEKAUGH8kuOknwmEACFAIEAIEAKEACFAIEAIEAKEAIEAIUAIEAIEAoQAIUAIEPwU8aL6z5GeawKBAKHCVJgJhACBClNhJhAChApTYSYQCBAqTIWZQAgQqDAVZgIhQKgwFabCTCAECBWmwkwgECBUmAozgRAgVJgKU2EmEAKEClNhJhAIECpMhZlACBCoMBVmAiFAAAAAQIIvV3m5kZjn8RAAAAAASUVORK5CYII=' alt='' width=96 height=128 loading=lazy></div>
+  <div class=idhead>
+   <div class=stars><span class=on>★★</span><span class=off>☆☆☆</span></div><h3>누군가의 어머니</h3><p class=title>편린</p>
+   <p class=tagline>「…이름을 부르는 소리만 남았다.」</p>
+   <div class=meta><span>18층</span><span>종말기</span><span class=cls>하인</span>
+    <span>물장수</span><span class=role>헌신</span>
+    <span class=pw>전투력 225</span><span class=pw>본디 ?</span></div>
+  </div>
+ </header>
+ <div class=cols><section class=block><h4>생전</h4><p>탑에 남은 기록은 두 가지뿐이다. 여자였다는 것과, 아이의 이름을 계속 불렀다는 것.</p></section>
+  <section class=block><h4>최후</h4><p>18층 잔해 아래에서 아이를 감싼 자세로 발견되었다. 품 안은 비어 있었다. 처음부터 없었는지, 빠져나갔는지는 알 수 없다.</p></section></div>
+ <section class=block><h4>기억 · 각성 단계별 해금</h4><ol class=mem><li>부르던 이름은 두 음절이었다.</li><li>이 층에서는 지금도 가끔 그 소리가 들린다.</li></ol></section>
+ <section class=block><h4>스탯</h4><div class=stats><div><span>잔존</span><b>548</b><i>+31.33</i></div><div><span>의지</span><b>42</b><i>+2.19</i></div><div><span>자취</span><b>44</b><i>+2.35</i></div><div><span>공명</span><b>70</b><i>+0.94</i></div></div></section>
+ <section class=block><h4>스킬</h4><div class=sk><b>「감싸기」</b><i>액티브</i><span>아군 하나에게 보호막을 부여한다. 보호막이 유지되는 동안 그 아군은 흐려지지 않는다.</span></div><div class=sk><b>「두 음절」</b><i>패시브</i><span>잔존이 30% 이하인 아군이 있을 때 자신의 회복량이 크게 증가한다.</span></div></section>
+ 
+ <div class=cols><section class=block><h4>뜰 · 물장수</h4><p>우물가에 앉아 있다. 물을 긷지는 않는다.</p>
+   <p class=sub>산출 기억 조각 · ★1~★2 잔상의 생산량 증가</p><p class=say>「…아까 누가 지나갔니?」</p></section>
+  <section class=block><h4>외형</h4><p>웅크린 자세, 비어 있는 두 팔</p><p class=sub>두 팔이 무언가를 감싼 모양 그대로 굳어 있다</p>
+   <p class=sub>상징 · 없음 <span class=sw style="background:#9A7A88"></span> #9A7A88</p></section></div>
+ <section class=block><h4>음성</h4>
+  <p class=say><em>소환</em>「…거기 있니?」</p>
+  <p class=say><em>승리</em>「다행이야. 다행이야.」</p>
+  <p class=say><em>흐려질 때</em>「조금만 더 부르면…」</p></section>
+ 
+</article>
+<article class=entry id="s021">
+ <header>
+  <div class=numcol><div class=num>021</div><img class=sp src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJAAAADACAYAAADryOpPAAACo0lEQVR42u3dMUozQRgG4Ch7CkFQBFt7KztPYOMBbTyBnZW9rSARAqm9QSwCyxQGstnZ3W9mnqf6EfK7hpfvZXYmm9UKAAAAAAAAAAAAAAAadeYt2Lu4vN6d+trtZt3s+3guOggQKqy02lJnJhAChAqroLbG1NnL091u6ffk+fXz5ByYQKgwBAgBQoBgoM7Ka57fW+sNRhMIAUKAECAECAQIAUKAECAQIASIwJrYC0v3oaKdSDSBUGFwKofqC6uwodd/dXPb//vj/S379ZhACBAqrJo6m3rlNabCUrnqzARCgFBhRdfZnDcMc1VYrjozgVBhLKfzFsR3//DY19bP91eW/9MqDBWGCmOiqpqCvTBUGCoslKWevBHtGuasLRMIAUKAECAECFpbhR264ZZrn2hOxxy3MIFQYSBACBAChACBACFALM2JxAKkRzKiHR0xgRAgVFgW6b5S5H2x9KPQ2826/3m6xzf1SUITCAFChc1m6s9MRVttmUCoMBAgBAgBQoBAgBAgIinmxtWYG4kR9sVq/e4wEwgBYjnVnkiMfIrPBAIBQoAQIAQIq7D6RFt5pddT001FEwgBQoAQIAQIWl6FlfKY35pWZCYQAoQK+1cLH2c2gRAgaHYVVuIXrNS0IjOBECAECAFCgKCFVVjpK6+aVmQmEAKEChvkmG86PvTI3KGH7dMqGfNaEwgEiKYqrMQnt5tAIEAIEAKEAIEAIUAIEAIEAoQAIUAIEAgQAoQAIUAIEAgQAkQ5ugb/5t+FXmsCgQChwlSYCYQAgQpTYSYQAoQKU2EmEAgQKkyFmUAIEKgwFWYCIUCoMBWmwkwgBAgVpsJMIBAgVJgKM4EQIFSYClNhJhAChApTYSYQCBAqTIWZQAgQqDAVZgIhQAAAAMAIf+r/qGnbsSdhAAAAAElFTkSuQmCC' alt='' width=96 height=128 loading=lazy></div>
+  <div class=idhead>
+   <div class=stars><span class=on>★★★★</span><span class=off>☆</span></div><h3>도른</h3><p class=title>붕괴기의 대장장이</p>
+   <p class=tagline>「농기구는 이제 안 만듭니다.」</p>
+   <div class=meta><span>21층</span><span>붕괴기</span><span class=cls>장인</span>
+    <span>대장간</span><span class=role>저항</span>
+    <span class=pw>전투력 383</span><span class=pw>본디 ?</span></div>
+  </div>
+ </header>
+ <div class=cols><section class=block><h4>생전</h4><p>스무 해 동안 낫과 보습을 벼렸다. 전쟁이 시작된 해부터는 창날만 벼렸다. 하루 열두 자루였던 것이 마흔 자루가 되었다.</p></section>
+  <section class=block><h4>최후</h4><p>마지막으로 벼린 것은 자기 몫이었다. 그것을 들고 나갔고, 돌아오지 않았다.</p></section></div>
+ <section class=block><h4>기억 · 각성 단계별 해금</h4><ol class=mem><li>창날은 낫보다 만들기 쉬웠다. 그 사실을 인정하는 데 오래 걸렸다.</li><li>언제부턴가 벼린 수를 세지 않게 되었다.</li><li>자기 것에만 표식을 남겼다. 처음이자 마지막이었다.</li><li>그 표식은 성문 밖에서 발견되었다.</li></ol></section>
+ <section class=block><h4>스탯</h4><div class=stats><div><span>잔존</span><b>719</b><i>+37.86</i></div><div><span>의지</span><b>140</b><i>+7.38</i></div><div><span>자취</span><b>64</b><i>+3.22</i></div><div><span>공명</span><b>93</b><i>+1.51</i></div></div></section>
+ <section class=block><h4>스킬</h4><div class=sk><b>「마흔 자루」</b><i>액티브</i><span>적 전체에게 피해를 준다. 아군 수가 적을수록 피해가 증가한다.</span></div><div class=sk><b>「자기 몫」</b><i>패시브</i><span>자신의 잔존이 절반 이하일 때 의지가 크게 상승한다.</span></div></section>
+ 
+ <div class=cols><section class=block><h4>뜰 · 대장간</h4><p>뜰의 대장간에서 벼린다. 무엇을 벼리는지는 묻지 않는다.</p>
+   <p class=sub>산출 유품 · 아군 전체의 의지 소폭 상승</p><p class=say>「쓸 만한 게 나왔습니다.」</p></section>
+  <section class=block><h4>외형</h4><p>한쪽 팔이 두꺼운 체구, 어깨에 걸친 창</p><p class=sub>오른팔이 왼팔보다 눈에 띄게 두껍다. 스무 해의 차이다</p>
+   <p class=sub>상징 · 표식이 새겨진 창날 <span class=sw style="background:#A6552F"></span> #A6552F</p></section></div>
+ <section class=block><h4>음성</h4>
+  <p class=say><em>소환</em>「…쓸 것이 필요합니까.」</p>
+  <p class=say><em>승리</em>「아직 날이 섰습니다.」</p>
+  <p class=say><em>흐려질 때</em>「이것도 내가 만든 겁니다.」</p></section>
+ <p class=dnote>1막 주력 딜러. 저항 역할 확정 지급.</p>
+</article>
+<article class=entry id="s022">
+ <header>
+  <div class=numcol><div class=num>022</div><img class=sp src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJAAAADACAYAAADryOpPAAACuklEQVR42u3dPUrEUBgF0FHcgJUQCBgEV2A1INi5i3EHLsBGbFyAS3AXdlZTuQJBIgQG7NyBFsIQwYD5m7yXd05loTM6XL7Llz8XCwAAAAAAAAAAAAAASNSej+BHlhdfXX92U5XJfo77ooMAocJiqy11ZgIhQKiwGdRWynVmAiFACBAChACBLWzazSu1jcwEQoAQIAQIAQIBQoAQIAQIBAgBImCuSByRKxJBgBAgBAgBAlvY2BuZW5tBgFBhEdWZB0yBACFACBACBAKEACFAzF30B8BCePLGUGI8IGkCIUAIEAKEAEEKW9jy4vLPzev97dXmZQIhQAgQCBAChAAhQCBAjODARzCt+kHR9fOTyzlQYZBmhR2fnG6/Dvm8WP33NIFQYTD7Cmu6hMNG1t/1zWr7vg/3j63e1wRChaHC6FBn9eoxgVBhqDB24Gx51PL7V8FuoCYQAoQKG1xo58V+3/91PpuDoiYQAoQKo6e257BMIFQYKixY9fNHIT9H8WX9YQKhwqCTaO5DantFYsgX1Tc9VKrt3xjCfWQmEAKELYyIassEQoCwhQ2+hc3pMb+xPLXDBEKAsIUR+LZlAiFA2MJsXh02MhMIFQYChAAhQMxIlAcS57R51dUv/o9lIzOBECBUWCv/edJ707mktveI1aukz8+aQCBAqLCe2w0mEAKECtuBGP8FpAkEAoQKm9BQBwBjPLdlAiFACBACBAKEACFACBAIEAKEACFAIEAIEFNL5XKOz8BexwQCAUKFNcnyohy6ejZVedjw+iYQCBAqLMDNy0ZmAiFAqDAVZgKBAKHCVJgJhAChwlSYCjOBECBUmAozgUCAUGG7r5hNVd6N+fpZXtz2eC8TCBUGKswWZgIhQKiwAGV5caXCTCAECBVm81JhJhAChApTYSYQCBAqTIWZQAgQAAAAMIFvhHKyXndMgXoAAAAASUVORK5CYII=' alt='' width=96 height=128 loading=lazy></div>
+  <div class=idhead>
+   <div class=stars><span class=on>★★</span><span class=off>☆☆☆</span></div><h3>짐을 두고 온 사람</h3><p class=title>22층 · 이름이 남지 않음</p>
+   <p class=tagline>「무거운 것부터 버렸어요. 순서대로.」</p>
+   <div class=meta><span>22층</span><span>붕괴기</span><span class=cls>장인</span>
+    <span>목공</span><span class=role>도피</span>
+    <span class=pw>전투력 228</span><span class=pw>본디 ?</span></div>
+  </div>
+ </header>
+ <div class=cols><section class=block><h4>생전</h4><p>목수였다. 피난 행렬에서 자기 연장을 전부 지고 갔다.</p></section>
+  <section class=block><h4>최후</h4><p>대패, 톱, 끌 순으로 버렸다. 마지막에 버린 것은 아버지의 먹통이었다. 그것을 버린 자리에서 멈췄다.</p></section></div>
+ <section class=block><h4>기억 · 각성 단계별 해금</h4><ol class=mem><li>연장은 다시 사면 된다고 생각했다.</li><li>먹통은 다시 살 수 없다는 것을 알고 있었다.</li><li>버린 자리로 돌아가려 했다.</li></ol></section>
+ <section class=block><h4>스탯</h4><div class=stats><div><span>잔존</span><b>404</b><i>+21.51</i></div><div><span>의지</span><b>56</b><i>+2.87</i></div><div><span>자취</span><b>29</b><i>+1.37</i></div><div><span>공명</span><b>93</b><i>+1.96</i></div></div></section>
+ <section class=block><h4>스킬</h4><div class=sk><b>「순서대로」</b><i>액티브</i><span>자신의 자취를 버리고 그만큼 공명을 얻는다. 되돌릴 수 없다.</span></div><div class=sk><b>「돌아가려 함」</b><i>패시브</i><span>회피에 성공할 때마다 아군 전체의 공명이 소폭 상승한다.</span></div></section>
+ 
+ <div class=cols><section class=block><h4>뜰 · 목공</h4><p>뜰에서 연장을 만든다. 만들고 나면 어딘가에 두고 온다.</p>
+   <p class=sub>산출 유품 · 목공 계열 시설 생산량 증가</p><p class=say>「하나 더 만들었습니다.」</p></section>
+  <section class=block><h4>외형</h4><p>빈 등짐, 두 손에 아무것도 없음</p><p class=sub>등짐 끈만 남아 있고 짐이 없다. 끈은 아직 어깨에 걸려 있다</p>
+   <p class=sub>상징 · 먹통 (소지하지 않음) <span class=sw style="background:#6E7A5E"></span> #6E7A5E</p></section></div>
+ <section class=block><h4>음성</h4>
+  <p class=say><em>소환</em>「…아직 거기 있을까요.」</p>
+  <p class=say><em>승리</em>「이번엔 안 버렸어요.」</p>
+  <p class=say><em>흐려질 때</em>「먹통만이라도.」</p></section>
+ <p class=dnote>1막 유일한 도피 역할.</p>
+</article>
+<article class=entry id="s023">
+ <header>
+  <div class=numcol><div class=num>023</div><img class=sp src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJAAAADACAYAAADryOpPAAAClUlEQVR42u3dMUozQRgG4CgWnkEQFMFDmMbOMjlNGus03ialnZWHECRCILU30EIIW7iYTWbcmfmep/wh4B9e3pfZTTaTCQAAAAAAAAAAAAAABHXiLfhxcXn9dehrt5t12PfxVHQQIExYbbNlzjQQAoQJa2C2Is+ZBkKAECAECAECp7BxT17RTmQaCAFCgBAgBAgECAFCgIjhzFtQl6fH2aCLoovlKusFTA2EAGHCsureh/KJRA2EAGHCqMLd/cNusl9fnpNPqgZCgDBhzZzISj555ZgzDYQAYcKqnrMaLximmjMNhAnDhLHn3KTiFIYJw4RR+FTlmC0NhABhwpIo4ckbJfwN/zlbGggBQoAQIAQIop3C+i64fby/Vfd/ubq51UCYMIgzYdHMp+caCBMGAoQAIUAIEAgQAsSomrqQ2L2vVPJ9se5Xobeb9e7f+75uPJ/Oiv3EowZCgDBhf8r9nakS5P4AvAZCgBAgECAECAFCgBAgOFSzH6ov7b5Yq78dpoEQIExYct37SiU/AEoDIUBgwhq2WK6KPcFpIAQIE5ZcaSev7t/T0kVFDYQAIUAIEAIEkU9htTzmt6UTmQZCgDBhv4rwdWYNhABB2FNYjT+w0tKJTAMhQAgQAoQAQYRTWO0nr5ZOZBoIAcKEDbLPLx33PTJ36Iftu1NyzGs1EAgQoSasxie3ayAQIAQIAUKAQIAQIAQIAQIBQoAQIAQIBAgBQoAQIAQIBAgBoh4Rfy/sc6TXaiAQIEyYCdNACBCYMBOmgRAgTJgJ00AgQJgwE6aBECAwYSZMAyFAmDATZsI0EAKECTNhGggECBNmwjQQAoQJM2EmTAMhQJgwE6aBQIAwYSZMAyFAYMJMmAZCgAAAAIAjfAMfNqUFtnCNPgAAAABJRU5ErkJggg==' alt='' width=96 height=128 loading=lazy></div>
+  <div class=idhead>
+   <div class=stars><span class=on>★★★</span><span class=off>☆☆</span></div><h3>수레를 밀던 사람</h3><p class=title>23층 · 이름이 남지 않음</p>
+   <p class=tagline>「비켜서 가면 되잖습니까. 왜 다들.」</p>
+   <div class=meta><span>23층</span><span>붕괴기</span><span class=cls>장인</span>
+    <span>채석</span><span class=role>저항</span>
+    <span class=pw>전투력 292</span><span class=pw>본디 ?</span></div>
+  </div>
+ </header>
+ <div class=cols><section class=block><h4>생전</h4><p>채석장에서 돌을 나르던 사람이다. 피난길에 바퀴가 부러진 수레를 밀었다. 수레에는 사람이 타고 있었다.</p></section>
+  <section class=block><h4>최후</h4><p>길을 막고 있다는 말을 들었다. 밀기를 멈추지 않았다. 돌아서 간 발자국이 수레 양옆으로 많이 남아 있다.</p></section></div>
+ <section class=block><h4>기억 · 각성 단계별 해금</h4><ol class=mem><li>수레에 탄 사람은 걷지 못했다.</li><li>이름은 몰랐다. 그날 아침에 처음 본 사람이었다.</li><li>바퀴는 고칠 수 있었다. 시간이 없었을 뿐이다.</li><li>마지막까지 수레는 길 한가운데에 있었다.</li></ol></section>
+ <section class=block><h4>스탯</h4><div class=stats><div><span>잔존</span><b>675</b><i>+36.04</i></div><div><span>의지</span><b>86</b><i>+4.45</i></div><div><span>자취</span><b>66</b><i>+3.37</i></div><div><span>공명</span><b>57</b><i>+0.92</i></div></div></section>
+ <section class=block><h4>스킬</h4><div class=sk><b>「한가운데」</b><i>액티브</i><span>적 진형 정중앙에 피해를 주고 1턴간 밀어낸다.</span></div><div class=sk><b>「멈추지 않음」</b><i>패시브</i><span>행동을 방해받을 때마다 의지가 누적 상승한다.</span></div></section>
+ 
+ <div class=cols><section class=block><h4>뜰 · 채석</h4><p>뜰로 돌을 나른다. 쓸 곳이 정해지지 않은 돌이다.</p>
+   <p class=sub>산출 유품 · 시설 복원 속도 증가</p><p class=say>「어디에 놓을까요.」</p></section>
+  <section class=block><h4>외형</h4><p>앞으로 기운 자세, 두 팔이 앞을 향함</p><p class=sub>양 손바닥이 앞을 향해 펴져 있다. 미는 자세에서 굳었다</p>
+   <p class=sub>상징 · 부러진 수레바퀴 <span class=sw style="background:#8A7B4F"></span> #8A7B4F</p></section></div>
+ <section class=block><h4>음성</h4>
+  <p class=say><em>소환</em>「…밀 것이 있습니까?」</p>
+  <p class=say><em>승리</em>「비켰습니다. 다들.」</p>
+  <p class=say><em>흐려질 때</em>「아직 길 한가운데인데.」</p></section>
+ <p class=dnote>23층 「수레」 회수.</p>
+</article>
+<article class=entry id="s024">
+ <header>
+  <div class=numcol><div class=num>024</div><img class=sp src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJAAAADACAYAAADryOpPAAACgklEQVR42u3dPUozURSA4USyCkFICKS2FgQ7IUtwC67HLbiEgJ0gWFsLoiBYu4NYpBmRgRlndM6953nqT74xvpzDzc9kNgMAAAAAAAAAAAAAgKTmHoKD45PV/rc/+/H+mvZxPJIOAsIKK21tWWcmEALCCqtgbWVeZyYQAmI6Cw/B/9heXe8jXc/u9maU9WoCISCssGpOXhH+XxMIASEgEBACQkAICATE2FK8nSPCE3q1vrXDBEJAWGFVrjPvSAQBISAEhIDAKeyvT2Q+2gwCwgoraJ25wRQICAEhIAQEAkJACIjaFf8EWE13wCjxCUkTCAEhIASEgKCmU9jZxWWvE9bby3Nxf4DletPr3z/e34X6m5lACAgBISAEBAJCQAiIHFJ82crp+Xbya3h62JlAICCssDbN15Uivy7W9/UvEwgrDASEgBAQTmFlqfVJPBMIASEgEBACwiksjuadLqJ95eVyvanmjiImEAJCQAgIAUHmU1i0O1d0uc6+dyAxgbDCIOwKG2ukR7v9b/N6htzOt/n4RFjZJhACQkAICAFB6aewmk5epV+nCYSAEBACAgHhFPZTiV+w0nb9Jd54ygRCQAgIASEgyHAKK/3kVdOJzARCQAgIASEgyHAKazuhdPmcVN93Aw65UVWXz3/5aDNWGAgIASEgkpln+4WjncJMIKwwEBACQkAICASEgBAQAgIBISAEhIDgu0XC3/lzop81gUBAWGFWmAmEgMAKs8JMIASEFWaFmUAgIKwwK8wEQkBghVlhJhACwgqzwqwwEwgBYYVZYSYQCAgrzAozgRAQVpgVZoWZQAgIK8wKM4FAQFhhVpgJhIDACrPCTCAEBAAAAAzwBXO0i+AUlg2RAAAAAElFTkSuQmCC' alt='' width=96 height=128 loading=lazy></div>
+  <div class=idhead>
+   <div class=stars><span class=on>★★★★★</span><span class=off></span></div><h3>카브릴</h3><p class=title>성문을 닫은 자</p>
+   <p class=tagline>「명령은 옳았다. 나는 그것을 따랐다.」</p>
+   <div class=meta><span>24층</span><span>붕괴기</span><span class=cls>병졸</span>
+    <span>문지기</span><span class=role>수호</span>
+    <span class=pw>전투력 515</span><span class=pw>본디 ?</span></div>
+  </div>
+ </header>
+ <div class=cols><section class=block><h4>생전</h4><p>북문 수비대장. 열아홉에 입대해 마흔에 대장이 되었다. 규정을 어긴 적이 한 번도 없다는 것이 부대 안의 농담이자 자랑이었다.</p></section>
+  <section class=block><h4>최후</h4><p>피난민 절반이 들어온 시점에 성문을 닫으라는 명령이 내려왔다. 그는 명령을 따랐다. 남은 절반은 문 앞에서 죽었다. 카브릴은 문을 등지고 서서 그 소리를 전부 들었고, 사흘 뒤 같은 자리에서 발견되었다. 이렘의 기록은 그를 영웅으로도, 죄인으로도 적어두었다.</p></section></div>
+ <section class=block><h4>기억 · 각성 단계별 해금</h4><ol class=mem><li>닫으라는 명령을 두 번 되물었다. 기록에는 한 번으로 적혀 있다.</li><li>빗장을 내리는 데 걸린 시간은 사 초였다.</li><li>등 뒤에서 이름을 부르는 소리가 있었다. 아는 이름이었다.</li><li>사흘 동안 문을 열지 않았다. 열 수 있었는데 열지 않았다.</li><li>그는 자신이 옳았다고 믿었다. 지금도 믿고 있다. 그래서 이 층을 떠나지 못한다.</li></ol></section>
+ <section class=block><h4>스탯</h4><div class=stats><div><span>잔존</span><b>1501</b><i>+82.45</i></div><div><span>의지</span><b>101</b><i>+4.44</i></div><div><span>자취</span><b>131</b><i>+7.19</i></div><div><span>공명</span><b>93</b><i>+1.16</i></div></div></section>
+ <section class=block><h4>스킬</h4><div class=sk><b>「빗장」</b><i>액티브</i><span>3턴 동안 아군이 받는 모든 피해를 자신이 대신 받는다.</span></div><div class=sk><b>「등 뒤의 소리」</b><i>패시브</i><span>아군이 흐려질 때마다 자취가 영구히 상승한다. 전투당 5회까지.</span></div></section>
+ 
+ <div class=cols><section class=block><h4>뜰 · 문지기</h4><p>뜰 입구에 선다. 아무도 들어오지 않는데도 선다.</p>
+   <p class=sub>산출 유품 · 새 잔상 영입 시 초기 호감도 상승</p><p class=say>「…들어오십시오. 닫지 않습니다.」</p></section>
+  <section class=block><h4>외형</h4><p>정면을 향한 넓은 어깨, 등에 걸친 문의 빗장</p><p class=sub>등이 문 쪽을 향해 굳어 있다. 돌아선 적이 없는 자세다</p>
+   <p class=sub>상징 · 부러진 철 빗장 <span class=sw style="background:#4A5A6B"></span> #4A5A6B</p></section></div>
+ <section class=block><h4>음성</h4>
+  <p class=say><em>소환</em>「…또 문을 지키라는 겁니까.」</p>
+  <p class=say><em>승리</em>「이번에는 아무도 두고 오지 않았다.」</p>
+  <p class=say><em>흐려질 때</em>「열어야 했나. 지금도 모르겠다.」</p></section>
+ 
+</article>
+<article class=entry id="s024">
+ <header>
+  <div class=numcol><div class=num>024</div><img class=sp src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJAAAADACAYAAADryOpPAAACd0lEQVR42u3dQUrrUBSA4US6CkFoEQS34MiZe3DkEroUl+DIPThz5BYEQQwIjt1BO3BypUQS05B77v2+0ZsIad/POdy0xqYBAAAAAAAAAAAAAIBKtd6CH6dnm91/f/br86Pa9/FEOggIKyza2rLOTCAEhBVWwNqqeZ2ZQAgIASEgBAROYcuevGo7kZlACAgBISAEBAJCQAiIOqy8BbHc3m1H3RR9fLif9QamCYSAsMJmlX4O5RuJJhACQkAgIASEU1hJJzK/2gwCwgoLtM48YAoEhIAQEAICASEgBETpwt9IzOHJG8e6hog3JE0gBISAEBACgpJOYVfXN6NON937W7j/gPX5RfrvXbTrN4EQEFYYf6259aUJhBUGAkJACAgBgYAQEIsq6kZi+rlSzp+LpddpAmGFgYAQEAJCQCAgBISAEBAIiNkU+6X6pf5G2JDrifj7XyYQAkJACAgEhFPYoZfnpzbadQ55AknXvWb7Gk0gBIQV1owZ6UPkcPOw73qmPM43fX9yWGcmEAJCQAgIAUH0U1hJJ6/o12kCISAEhIBAQDiFHYr4B1b6rj/ig6dMIASEgBAQAoIaTmHRT14lnchMIASEFTZK33gf8iXzsV+lmPKUjyFfnj/WLxGYQAgIAYGAEBACQkAgIObU1vaCc7uRaAJhhYGAEBACQkAgIASEgBAQCAgBISAEBL+tKnzN3wv9rAkEAsIKs8JMIAQEVpgVZgIhIKwwK8wEAgFhhVlhJhACAivMCjOBEBBWmBVmhZlACAgrzAozgUBAWGFWmAmEgLDCrDArzARCQFhhVpgJBALCCrPCTCAEBFaYFWYCISAAAABggj1TvZGuwHlAIQAAAABJRU5ErkJggg==' alt='' width=96 height=128 loading=lazy></div>
+  <div class=idhead>
+   <div class=stars><span class=on>★★★</span><span class=off>☆☆</span></div><h3>북문의 수문장</h3><p class=title>이름이 남지 않음</p>
+   <p class=tagline>「대장은 문을 닫으라고 했다. 나는 문 앞에 있었다.」</p>
+   <div class=meta><span>24층</span><span>붕괴기</span><span class=cls>장인</span>
+    <span>담장</span><span class=role>수호</span>
+    <span class=pw>전투력 292</span><span class=pw>본디 ?</span></div>
+  </div>
+ </header>
+ <div class=cols><section class=block><h4>생전</h4><p>북문 수비대 소속. 나이도 고향도 기록되지 않았다. 이렘의 병적부는 붕괴기에 소실되었다.</p></section>
+  <section class=block><h4>최후</h4><p>성문이 닫힐 때 문 바깥에 있었다. 안으로 들어가는 대신 문을 등지고 서서 사람들을 문 옆 배수로로 밀어 넣었다. 열한 명이 그 길로 살아남았고, 그중 누구도 그의 이름을 몰랐다.</p></section></div>
+ <section class=block><h4>기억 · 각성 단계별 해금</h4><ol class=mem><li>빗장 소리가 났을 때 그는 이미 바깥에 있었다.</li><li>배수로 입구를 아는 사람은 수비대뿐이었다.</li><li>열한 번째 사람을 밀어 넣고 나서 뒤를 돌아보았다.</li><li>이 층에는 그를 기억하는 사람이 하나 있다. 카브릴이다.</li></ol></section>
+ <section class=block><h4>스탯</h4><div class=stats><div><span>잔존</span><b>738</b><i>+40.85</i></div><div><span>의지</span><b>58</b><i>+2.67</i></div><div><span>자취</span><b>75</b><i>+4.08</i></div><div><span>공명</span><b>66</b><i>+0.71</i></div></div></section>
+ <section class=block><h4>스킬</h4><div class=sk><b>「배수로」</b><i>액티브</i><span>가장 잔존이 낮은 아군 하나를 즉시 전열에서 빼내고 피해를 대신 받는다.</span></div><div class=sk><b>「이름 없는 자리」</b><i>패시브</i><span>24층에서 전투 시 모든 스탯이 크게 상승한다.</span></div></section>
+ 
+ <div class=cols><section class=block><h4>뜰 · 담장</h4><p>무너진 담을 고친다. 고쳐도 다음 날 또 무너져 있다.</p>
+   <p class=sub>산출 유품 · 인접 시설 내구 소모 감소</p><p class=say>「여기 틈이 있었네요. 막아 두겠습니다.」</p></section>
+  <section class=block><h4>외형</h4><p>낡은 수비대 외투, 한 팔을 옆으로 뻗은 자세</p><p class=sub>외투 한쪽이 젖어 있다. 배수로에 들어갔던 쪽이다</p>
+   <p class=sub>상징 · 배수로 격자 <span class=sw style="background:#5A6070"></span> #5A6070</p></section></div>
+ <section class=block><h4>음성</h4>
+  <p class=say><em>소환</em>「…부르셨습니까? 저를요?」</p>
+  <p class=say><em>승리</em>「열한 명. 이번에는 더 갈 수 있겠습니다.」</p>
+  <p class=say><em>흐려질 때</em>「제 이름은, 아…」</p></section>
+ 
+</article><div class=gap><span class=num>026</span><span>─ 기억나지 않음 ─</span></div>
+<article class=entry id="s029">
+ <header>
+  <div class=numcol><div class=num>029</div><img class=sp src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJAAAADACAYAAADryOpPAAACsElEQVR42u3dPUozURQG4Im4BCtBUAwuIpWdXTbiDlyAO3AjdnZWWYQoCoKVhTvQQghjMcTJ/Nx77n2e6isMfIaX83Jm7oxNAwAAAAAAAAAAAAAAlVr4Cn4dn5x97/vZj/fXar/HA9FBgFBh0WpLnZlACBAqrIDaqrnOTCAECAFCgBAgsIWl3bxq28hMIASIdA59BXGtLq+21bx5fEhSkSYQAoQtzBa2R211mbPOTCAECFsYE21nU1ebCYQAYQsrciObc/NKtZGZQAgQtjBGrC0TCBWGCitSezMq9dFm98JQYagwdTZzbUXZvEwgBAgVRtDNywRCgFBhNHkf1TCBECDyFv5EYg7PfI3l9PxChaHCwBYW3dFqufNn1qtlr/q+v73zXBgqDBWWVtfFt7eXp+I3LxMIFQYChAAhQNjCmMLn5nn77/9cVOwyxcVDEwgBQoXR/D2S0fXm+b73vEwgVBgqLJz2faWc74t1PQqdwwlDEwgBQoWNLuKbK0wgECAECAFCgECAECAEiFKEufcy5EJiDvfFxnoV8Prmeuf3MPUpRBMIASIPxZ5IbB+NKOklVCYQAgQChAAhQNjC8pTb5tX+/+TwZzFNIAQIFcbM5rzPZQIhQOQt622g7xGOiK/5jb6RmUAIEAKEACFA0FP4C4kRN6+26PfITCAECAFCgBAgqGELi755lbSRmUAIEOksavuF+x62b1fJkM+aQCBACBAChACBACFACBAChACBACFACBACBAKEACFACBAIEAKEACFAIECMpMY31X8l+qwJBAKEClNhJhACBCpMhZlACBAqTIWZQCBAqDAVZgIhQKDCVJgJhAChwlSYCjOBECBUmAozgUCAUGEqzARCgFBhKkyFmUAIECpMhZlAIECoMBVmAiFAoMJUmAmEAAEAAAAD/AAiOLAo5PxUSgAAAABJRU5ErkJggg==' alt='' width=96 height=128 loading=lazy></div>
+  <div class=idhead>
+   <div class=stars><span class=on>★★★★★</span><span class=off></span></div><h3>유안</h3><p class=title>성문 안쪽의 의사</p>
+   <p class=tagline>「문 안쪽에서도 사람이 죽고 있습니다. 왜입니까.」</p>
+   <div class=meta><span>29층</span><span>붕괴기</span><span class=cls>장인</span>
+    <span>약방</span><span class=role>탐구</span>
+    <span class=pw>전투력 519</span><span class=pw>본디 ?</span></div>
+  </div>
+ </header>
+ <div class=cols><section class=block><h4>생전</h4><p>성 안 약방을 맡았다. 북문이 닫힌 뒤 안쪽에는 피난민 절반이 들어와 있었다. 그는 그들을 돌봤다.</p></section>
+  <section class=block><h4>최후</h4><p>사흘 동안 안쪽에서도 사람이 죽었다. 굶주림도 부상도 아니었다. 원인을 기록하던 중 같은 증상으로 죽었다.</p></section></div>
+ <section class=block><h4>기억 · 각성 단계별 해금</h4><ol class=mem><li>첫날 열일곱 명이 죽었다. 상처가 없었다.</li><li>둘째 날은 서른 명이었다.</li><li>그는 물을 의심했다. 우물은 깨끗했다.</li><li>셋째 날 자기 손이 떨리는 것을 기록했다.</li><li>마지막 기록은 이렇다. — 문 밖이 아니었다.</li></ol></section>
+ <section class=block><h4>스탯</h4><div class=stats><div><span>잔존</span><b>1067</b><i>+56.61</i></div><div><span>의지</span><b>137</b><i>+7.19</i></div><div><span>자취</span><b>85</b><i>+4.25</i></div><div><span>공명</span><b>165</b><i>+3.16</i></div></div></section>
+ <section class=block><h4>스킬</h4><div class=sk><b>「증상 기록」</b><i>액티브</i><span>적 전체의 상태를 노출시키고 3턴간 받는 피해를 증가시킨다.</span></div><div class=sk><b>「사흘」</b><i>패시브</i><span>전투가 3턴 지날 때마다 아군 전체의 의지와 공명이 상승한다.</span></div><div class=sk><b>「문 밖이 아니었다」</b><i>잠금</i><span>각성 5에서 해금된다.</span></div></section>
+ 
+ <div class=cols><section class=block><h4>뜰 · 약방</h4><p>뜰에서 잔상들을 살핀다. 이미 죽은 사람들을 살핀다.</p>
+   <p class=sub>산출 기억 조각 · 흐려진 잔상의 회복 시간 단축</p><p class=say>「오늘은 아무도 나빠지지 않았습니다.」</p></section>
+  <section class=block><h4>외형</h4><p>소매를 걷은 팔, 허리에 찬 기록판</p><p class=sub>오른손이 미세하게 떨린다. 셋째 날부터 멈추지 않았다</p>
+   <p class=sub>상징 · 끝맺지 못한 기록판 <span class=sw style="background:#4E7A6B"></span> #4E7A6B</p></section></div>
+ <section class=block><h4>음성</h4>
+  <p class=say><em>소환</em>「…환자입니까, 아니면.」</p>
+  <p class=say><em>승리</em>「원인은 아직 모릅니다.」</p>
+  <p class=say><em>흐려질 때</em>「손이… 떨리는군요.」</p></section>
+ <p class=dnote>1막 최고 등급. 마지막 기록이 「아래에서 온 것」 두 번째 씨앗. 19층과 연결. 1부에서 회수하지 않는다.</p>
+</article><h2 class=actline><span>2막 · 균열</span><i>11명 확인</i></h2>
+<article class=entry id="s031">
+ <header>
+  <div class=numcol><div class=num>031</div><img class=sp src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJAAAADACAYAAADryOpPAAAC4ElEQVR42u3dMUozQRgGYBUvYCUsLGQJ5BCCYOcJBKvY2lqkFusUttZWgiewEwRbe0EiBAJ23kALMYyQgEl2k5md56nCjxojL9/Lt5nsv7UFAAAAAAAAAAAAAACZ2vYn+FGU1dey3zsZj7L9O+6IDgKECkutttSZCYQAocJaUFs515kJhAAhQAgQAgS2sM1uXrltZCYQAoQAIUAIEAgQAoQAIUAgQAgQEXMisUFOJIIAIUAIEAIEtrCmNzIfbQYBQoUlVGduMAUChAAhQAgQCBAChADRdslfAIvhzht1SfGCpAmEACFACBACBDlsYQdHxzM3r/e3V5uXCYQAIUAgQAgQAoQAgQDRgN0cXuRgeLjx32E4eJr57+FF0efHh7VdVLy+60+f9+L0dunnNYFQYaiwWnS6venjmN8XC3/PumrIBEKFocKiNe8IR+pOzveDx/3kXqMJhAChwho17yIeJhAChAAhQCBA2MLqEtv7YuHnvzrdXu0XDFc5kmECocJQYazo/uZjoa9f5wlGEwgBQoWtTTjeY7uP4t/qWf6YyqYO5JtACBBxSObmRoueSIz5UP28m0ot+hptYagwbGEkul2aQKgwbGGt2cLadJvfGC4SmkAIELYwWrBtmUAIELYwm9cSG5kJhAoDAUKAECBaJMkLiW3avELh4f9UNjITCAFCgBAgBAhy2ML+85+VzDsOsejHnMNtaJXvNYFAgMiqwuo6lRfb3TlMIBAgBAgBQoCwhRGq6wJgisczTCAECAFCgECAECAECAECAUKAECBaJJf3wj4j+zkmEAgQKmyd1TMZj/Z+HxdlNRIfEwgBQoU1oCirl4a3JxuZCYQAocJi3rxUmAmEAKHCVJgJBAKEClNhJhACBCpMhZlACBAqLPUKm4xHV03+/KKsLld4LhMIFQYqzBZmAiFAqLAIFWV1psJMIAQIFWbzUmEmEAKEClNhJhAIECpMhZlACBAAAACwAd/gMrlOJtqa8gAAAABJRU5ErkJggg==' alt='' width=96 height=128 loading=lazy></div>
+  <div class=idhead>
+   <div class=stars><span class=on>★★★★</span><span class=off>☆</span></div><h3>미로</h3><p class=title>도망친 전령</p>
+   <p class=tagline>「빨랐어. 누구보다 빨랐어. 그게 문제였지.」</p>
+   <div class=meta><span>31층</span><span>붕괴기</span><span class=cls>병졸</span>
+    <span>전령</span><span class=role>도피</span>
+    <span class=pw>전투력 386</span><span class=pw>본디 ?</span></div>
+  </div>
+ </header>
+ <div class=cols><section class=block><h4>생전</h4><p>이렘에서 가장 빠른 전령이었다. 남쪽 관문에서 왕성까지 반나절이면 닿았다. 그 기록은 아무도 깨지 못했다.</p></section>
+  <section class=block><h4>최후</h4><p>지원 요청을 전달하러 가던 중, 도중에 방향을 틀었다. 왕성이 이미 함락됐다는 것을 알았기 때문이라고 스스로 말했다. 그는 살아남았고, 두 달 뒤 다른 곳에서 죽었다. 전달되지 못한 서신은 아직 그의 품에 있다.</p></section></div>
+ <section class=block><h4>기억 · 각성 단계별 해금</h4><ol class=mem><li>갈림길에서 멈춰 선 시간은 숨 네 번이었다.</li><li>그날 이후로 한 번도 전속력으로 달리지 않았다.</li><li>서신을 버릴 기회는 많았다. 버리지 않았다.</li><li>두 달 동안 아무에게도 자기 이름을 말하지 않았다.</li><li>그는 지금도 달리고 있다. 도착할 곳이 없을 뿐이다.</li></ol></section>
+ <section class=block><h4>스탯</h4><div class=stats><div><span>잔존</span><b>713</b><i>+35.63</i></div><div><span>의지</span><b>111</b><i>+5.81</i></div><div><span>자취</span><b>49</b><i>+2.44</i></div><div><span>공명</span><b>139</b><i>+3.19</i></div></div></section>
+ <section class=block><h4>스킬</h4><div class=sk><b>「숨 네 번」</b><i>액티브</i><span>즉시 추가 행동을 얻는다. 이 행동으로 준 피해만큼 자신의 잔존이 감소한다.</span></div><div class=sk><b>「전하지 못한 서신」</b><i>패시브</i><span>전투 시작 시 회피율이 크게 상승하고, 매 턴 조금씩 감소한다.</span></div></section>
+ 
+ <div class=cols><section class=block><h4>뜰 · 전령</h4><p>뜰 바깥을 돈다. 늘 돌아온다.</p>
+   <p class=sub>산출 유품 · 방치 보상 수령 상한 시간 증가</p><p class=say>「한 바퀴 돌고 왔어. 봐, 돌아왔잖아.」</p></section>
+  <section class=block><h4>외형</h4><p>가벼운 차림, 한쪽으로 기운 자세</p><p class=sub>신발 바닥이 한쪽만 남아 있다. 다른 쪽은 어딘가에 두고 왔다</p>
+   <p class=sub>상징 · 봉인이 뜯기지 않은 서신 <span class=sw style="background:#8FA85E"></span> #8FA85E</p></section></div>
+ <section class=block><h4>음성</h4>
+  <p class=say><em>소환</em>「…나 말고 다른 사람은 없었어?」</p>
+  <p class=say><em>승리</em>「이번엔 안 돌아갔어. 봤지?」</p>
+  <p class=say><em>흐려질 때</em>「미안, 나 또…」</p></section>
+ 
+</article>
+<article class=entry id="s032">
+ <header>
+  <div class=numcol><div class=num>032</div><img class=sp src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJAAAADACAYAAADryOpPAAACu0lEQVR42u3dQUrrUBSAYSNdhSBUCl2EI2duRHELjjroyC2IbsSZIxchiILQsTuoEwcRCSYkac7N+b6xz1ftzznctonVESGdnJ7t//ua3ed7NfXjPPZUISAEhIAQEAgIASEgBAQCQkDEVfkVHN5me7ef4v/dbm4Hf75NIASEgBAQAgIBISAERA5eSPzR5kPsTfp8uH3sFxXHePHQBEJAxLCwtob9PhGu1TKBEBBWmLVlnZlACAgBISAQEE5hAU9emU9kJhACYjop3reZaoXVtVlhQ320Y+yPcJhACAgBISAEBAJCQAiIfNJdF3bIFxV9IhEEhIAQEAICp7CxT2QubQYBYYUVtM6yrS0TCAEhIASEgEBACAgBkU/xL4BFuGx5KCW+IGkCISAEhIAQEMzpFHZ+cdnphPXx9lrcE7BcrTt9/cvzU6jnzARCQAgIASEgEBACQkDkkOKPrVxd30z+GB4f7k0gEBBWWJP6+0qR3xfr+v6XCYQVBgJCQAgIp7CyzPVFPBMIASEgEBACwiksjvqdLiLcwaP+eJar9WzuKGICISAEhIAQEGQ+hUW7c0Wbx9n1DiQmEFYYhF1hQ430aLf/rT+ePrfzrf9+IqxsEwgBISAEhICg9FPYnE5epT9OEwgBISAEBALCKeyvEv/AStPjL/HGUyYQAkJACAgBQYZTWOknrzmdyEwgBISAEBACggynsKYTSpvrpLp+GrDPjaraXP/l0masMBAQAkJAJFNl+4GjncJMIKwwEBACQkAICASEgBAQAgIBISAEhIDgt0XCn/lron9rAoGAsMKsMBMIAYEVZoWZQAgIK8wKM4FAQFhhVpgJhIDACrPCTCAEhBVmhVlhJhACwgqzwkwgEBBWmBVmAiEgrDArzAozgRAQVpgVZgKBgLDCrDATCAGBFWaFmUAICAAAAOjhGxoOnOoBLt9EAAAAAElFTkSuQmCC' alt='' width=96 height=128 loading=lazy></div>
+  <div class=idhead>
+   <div class=stars><span class=on>★★★</span><span class=off>☆☆</span></div><h3>깃발을 든 사람</h3><p class=title>32층 · 이름이 남지 않음</p>
+   <p class=tagline>「어느 쪽이든 들어야 했습니다.」</p>
+   <div class=meta><span>32층</span><span>붕괴기</span><span class=cls>병졸</span>
+    <span>망루</span><span class=role>수호</span>
+    <span class=pw>전투력 291</span><span class=pw>본디 ?</span></div>
+  </div>
+ </header>
+ <div class=cols><section class=block><h4>생전</h4><p>전쟁이 길어지자 양쪽이 번갈아 이 마을을 지나갔다. 그는 두 번 징집되었고 두 번 다 깃발을 들었다. 깃발을 드는 사람은 무기를 들지 않아도 되었기 때문이다.</p></section>
+  <section class=block><h4>최후</h4><p>두 번째 깃발을 든 채로 전선 한가운데에 서 있었다. 양쪽 다 그를 쏘지 않았고, 양쪽 다 그를 데려가지 않았다.</p></section></div>
+ <section class=block><h4>기억 · 각성 단계별 해금</h4><ol class=mem><li>처음 깃발은 파란색이었다.</li><li>두 번째 깃발은 붉은색이었다.</li><li>그는 색을 구분하지 못했다. 태어날 때부터 그랬다.</li><li>그래서 두 번 다 같은 일이라고 생각했다.</li><li>깃발은 지금 색이 다 빠져 있다. 그가 보던 대로다.</li></ol></section>
+ <section class=block><h4>스탯</h4><div class=stats><div><span>잔존</span><b>872</b><i>+43.97</i></div><div><span>의지</span><b>47</b><i>+2.27</i></div><div><span>자취</span><b>89</b><i>+4.47</i></div><div><span>공명</span><b>44</b><i>+0.68</i></div></div></section>
+ <section class=block><h4>스킬</h4><div class=sk><b>「양쪽의 깃발」</b><i>액티브</i><span>적 전체의 표적을 자신에게 돌리고 2턴간 자취가 크게 오른다.</span></div><div class=sk><b>「쏘지 않았다」</b><i>패시브</i><span>전투 시작 후 3턴 동안 받는 피해가 절반이 된다.</span></div></section>
+ <section class=block><h4>개화 3갈래</h4><div class=tal><div class=talhead><em class='bl b-std'>정석</em><b>「색이 빠진 천」</b></div><dl><dt>물주기</dt><dd>유품 위주 · 뜰 생업 망루 유지</dd><dt>초반</dt><dd>아군 1명이 받을 피해를 대신 받는다.</dd><dt>개화</dt><dd>대신 받은 피해의 일부를 자취로 전환한다.</dd></dl><p class=note>가장 무난한 갈래.</p></div><div class=tal><div class=talhead><em class='bl b-late'>늦개화</em><b>「두 번 든 손」</b></div><dl><dt>물주기</dt><dd>붕괴기 층에서 반복 편성</dd><dt>초반</dt><dd>자신이 흐려질 때 아군 전체의 자취가 소폭 오른다. 발동 조건이 나빠 거의 쓸모없다.</dd><dt>전환점</dt><dd>각성 4</dd><dt>개화</dt><dd>흐려지지 않고 잔존 1로 버티며, 그 턴 아군 전체가 무적이 된다.</dd></dl><p class=note>각성 3 기록 「그는 색을 구분하지 못했다」가 힌트.</p></div><div class=tal><div class=talhead><em class='bl b-cond'>조건부</em><b>「가운데」</b></div><dl><dt>물주기</dt><dd>아군 3명 이하로 반복 클리어</dd><dt>초반</dt><dd>아군 수가 적을수록 자취가 오른다.</dd><dt>개화</dt><dd>아군 2명 이하일 때 자취 2배.</dd></dl><p class=note>소수 정예 편성 전용.</p></div></section>
+ <div class=cols><section class=block><h4>뜰 · 망루</h4><p>뜰 망루에 선다. 깃발은 걸지 않는다.</p>
+   <p class=sub>산출 유품 · 뜰 전체의 흐려짐 회복 시간 단축</p><p class=say>「오늘은 아무도 안 옵니다.」</p></section>
+  <section class=block><h4>외형</h4><p>정면을 향해 두 팔로 긴 장대를 세워 든 자세. 천은 늘어져 있고 바람에 흔들리지 않는다</p><p class=sub>양쪽 소매의 색이 다르다. 두 부대의 것을 하나씩 걸쳤다</p>
+   <p class=sub>상징 · 색이 빠진 깃발 <span class=sw style="background:#7E8288"></span> #7E8288</p></section></div>
+ <section class=block><h4>음성</h4>
+  <p class=say><em>소환</em>「…어느 쪽입니까?」</p>
+  <p class=say><em>승리</em>「아무도 안 쏘았습니다.」</p>
+  <p class=say><em>흐려질 때</em>「색이… 잘 안 보여서.」</p></section>
+ 
+</article>
+<article class=entry id="s033">
+ <header>
+  <div class=numcol><div class=num>033</div><img class=sp src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJAAAADACAYAAADryOpPAAACq0lEQVR42u3dQUojQRgF4FI8hSAoghdwFxDceRovIC7FC3gad648hCAKgmtvoAshFEpj7E531V/1fevJMITHe1Od7iQlAAAAAAAAAAAAAADo1I634Nv+wdHn2Ne+v710+z7uig4ChAmLNlvmTAMhQJiwBmar5znTQAgQAoQAIUDgFFb25NXbiUwDIUCUs+ctiGt1frGe5seH+yITqYEQIJzCnMJGzNaQJedMAyFAOIUx0+ls7mnTQAgQTmFNnsiWPHmVOpFpIAQIpzC2OFsaCBOGCWtSfjJq9dFmn4VhwjBh5mzh2Ypy8tJACBAmjKAnLw2EAGHCSHXfqqGBECDqFv6OxBqe+dqWw+MTE4YJA6ewVtUwWxoIAcKEjTZ08e31+an5k5cGwoSBU1jnJ6/Lq5v1fwPubq9H//0aCBOGCWPiDGkgTBgmjIWdrs42+TPV3rKigRAgTNhW5J8r1fy52I9HoUPfUamBECBM2J8ifnOFBgIBQoAQIAQIBAgBQoBoRbO3c9T2udjc32A/5cZ4DYQJw4RVJX+WKsqXUJWaIQ2EAGHC6GS2NBAChAmbVW0nr/zfU8PPYmogBAgBQoBAgHAK+82zYBoIAYKgE/ZfUb6pvqWLihoIAUKAECAECAQIAUKA6EP4C4kRf+YyF/2iogZCgCgn/M3dUR5b3oQJw4RB8xPW0mxFnzMNhAAhQAgQAgQChAAhQPQhzIXEHi4eDqn5oqIGQoAQIAQIAYJWT2GlTnP5CWjKazUQCBAChAAhQJBS6vP3wj4KvVYDgQBhwkyYBkKAwISZMA2EAGHCTJgGAgHChJkwDYQAgQkzYRoIAcKEmTATpoEQIEyYCdNAIECYMBOmgRAgTJgJM2EaCAHChJkwDQQChAkzYRoIAQITZsI0EAIEAAAATPAF+Iqv4nBOeC8AAAAASUVORK5CYII=' alt='' width=96 height=128 loading=lazy></div>
+  <div class=idhead>
+   <div class=stars><span class=on>★★★★</span><span class=off>☆</span></div><h3>이름을 적던 병사</h3><p class=title>33층 · 이름이 남지 않음</p>
+   <p class=tagline>「적어 두면 누가 없어졌는지 압니다.」</p>
+   <div class=meta><span>33층</span><span>붕괴기</span><span class=cls>관리</span>
+    <span>서고</span><span class=role>탐구</span>
+    <span class=pw>전투력 387</span><span class=pw>본디 ?</span></div>
+  </div>
+ </header>
+ <div class=cols><section class=block><h4>생전</h4><p>보급병이었다. 싸우지 않았고 세는 일을 했다. 부대가 줄어들기 시작하자 벽에 이름을 적기 시작했다. 아무도 시키지 않았다.</p></section>
+  <section class=block><h4>최후</h4><p>벽이 다 찼을 때 그는 자기 이름을 적을 자리를 남겨 두지 않았다. 마지막 이름 아래에서 발견되었다.</p></section></div>
+ <section class=block><h4>기억 · 각성 단계별 해금</h4><ol class=mem><li>처음에는 하루에 한 명이었다.</li><li>글씨가 급해진 것은 넷째 달부터다.</li><li>이름을 모르는 사람은 특징을 적었다. 「왼손잡이」 「웃음소리가 큰」</li><li>그는 자기 이름을 마지막에 적으려 했다.</li><li>벽이 먼저 찼다.</li></ol></section>
+ <section class=block><h4>스탯</h4><div class=stats><div><span>잔존</span><b>657</b><i>+34.94</i></div><div><span>의지</span><b>98</b><i>+5.16</i></div><div><span>자취</span><b>68</b><i>+3.41</i></div><div><span>공명</span><b>140</b><i>+2.66</i></div></div></section>
+ <section class=block><h4>스킬</h4><div class=sk><b>「벽의 이름」</b><i>액티브</i><span>적 전체의 약점을 노출시킨다. 적 수가 많을수록 효과가 크다.</span></div><div class=sk><b>「급해지는 글씨」</b><i>패시브</i><span>아군이 흐려질 때마다 남은 아군 전체의 의지가 영구 상승한다.</span></div></section>
+ <section class=block><h4>개화 4갈래</h4><div class=tal><div class=talhead><em class='bl b-std'>정석</em><b>「세로로 길게」</b></div><dl><dt>물주기</dt><dd>기억 조각 위주 · 생업 서고 유지</dd><dt>초반</dt><dd>적 1명의 약점을 노출시킨다.</dd><dt>개화</dt><dd>노출된 적이 받는 피해가 크게 증가한다.</dd></dl><p class=note>안정적.</p></div><div class=tal><div class=talhead><em class='bl b-early'>조기</em><b>「왼손잡이, 웃음소리가 큰」</b></div><dl><dt>물주기</dt><dd>유품 위주 · 30층 이하 반복</dd><dt>초반</dt><dd>전투 시작 시 적 전원의 정보를 즉시 공개한다. 초반 층에서 압도적.</dd><dt>개화</dt><dd>정보량이 늘지 않아 후반에 무의미해진다.</dd></dl><p class=note>초반 진행 가속용.</p></div><div class=tal><div class=talhead><em class='bl b-late'>늦개화</em><b>「남겨 두지 않은 자리」</b></div><dl><dt>물주기</dt><dd>자신이 마지막까지 남는 전투를 반복</dd><dt>초반</dt><dd>아군이 전멸에 가까울수록 의지가 오른다. 그런 상황 자체가 패배라 쓸모없다.</dd><dt>전환점</dt><dd>각성 5</dd><dt>개화</dt><dd>아군이 흐려질 때마다 그 아군의 스킬 하나를 이어받아 사용한다.</dd></dl><p class=note>이 게임 늦개화의 대표. 각성 5 기록이 곧 발동 조건이다.</p></div><div class=tal><div class=talhead><em class='bl b-cond'>조건부</em><b>「넷째 달」</b></div><dl><dt>물주기</dt><dd>붕괴기 장기전 반복</dd><dt>초반</dt><dd>4턴 이후 아군 전체 명중 상승.</dd><dt>개화</dt><dd>4턴 이후 아군 전체 의지 40% 상승.</dd></dl><p class=note>관문층 장기전 전용.</p></div></section>
+ <div class=cols><section class=block><h4>뜰 · 서고</h4><p>뜰의 잔상 이름을 벽에 적는다. 지우는 일은 없다.</p>
+   <p class=sub>산출 기억 조각 · 명부 등재 시 추가 보상</p><p class=say>「한 명 더 적었습니다.」</p></section>
+  <section class=block><h4>외형</h4><p>한 손에 숯, 다른 손은 벽을 짚은 자세. 시선은 늘 벽을 향한다</p><p class=sub>손등과 소매가 검다. 씻어도 지워지지 않았다</p>
+   <p class=sub>상징 · 숯이 닳은 조각 <span class=sw style="background:#6D7A84"></span> #6D7A84</p></section></div>
+ <section class=block><h4>음성</h4>
+  <p class=say><em>소환</em>「…성함이 어떻게 되십니까.」</p>
+  <p class=say><em>승리</em>「오늘은 적을 게 없습니다.」</p>
+  <p class=say><em>흐려질 때</em>「제 것은… 못 적었습니다.」</p></section>
+ 
+</article><div class=gap><span class=num>034</span><span>─ 기억나지 않음 ─</span></div>
+<article class=entry id="s036">
+ <header>
+  <div class=numcol><div class=num>036</div><img class=sp src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJAAAADACAYAAADryOpPAAAC4UlEQVR42u3dPUoEQRAG0F3xFIKgCB7CyMyjeAIzQzNP4FHMjDyEIAqCsTfQxGCDbXZnZ3q6euq9UPwdP+qj2hl3vWIRTk7Pf3e9z/fXx3rqr3vk0iNACBAChACBACFACBACBAKEABHX2iWI7/Hh9rfF1727f9qZDxMIFYYAIUAIEAgQAoQAkYODxH/73JReUuNm9ZLah4r7HB6aQKgwYjhWW9N+njnrzARCgFBhaqvS589QZyYQAoQAIUAIENjC5t+8Mm9kJhACRDsp/m7TqsI21aiwqW7tGHoLhwmECkOAECAECAQIAUKAyCfdc2FzHiq6IxEECAFCgBAgsIXV3sg82gwChArrqM6y1ZYJhAAhQAgQAgQChAAhQOTT/QFYhMeWp9LjgaQJhAAhQAgQAgTZtrDeN7LebwUxgRAgBAgBQoBAgBAgBIgcujzEurq+2Xpg+Pn+1t3PcnZxufXtry/PXfxuTCAECBV2cG2VRK6zUm2VRK4zEwgBop1wL3k5tKoyKF2TCNVmAiFAJK8wtTX+urWqMxMIASJJhamq5W1qJhACRDvNDqJq1FlpXEd4Xqz0/Nec18EEQoVhCwullzv39vn+e9xSTSAEiIRb2NBNZExVRd7CIlwfEwgVhi0s1FYV7Z9NbX4/Q+usdE0ibG0mEAJE8i2sdmVEs6SXyDSBECAECAFCgCDzFuY/1ZtACBACBAKEACFACBAIEHV0f5DY4+FhSY+HiiYQAoQAIUAIEGTYwpa0efW+kZlACBAChAAhQCBACBACRA7dHCRmODwsiXyoaAIhQAgQAoQAwVK3sFbb3OYGNOZjTSAQIAQIAUKAYLVaLeAlLw/w0+hjTSAQIFSYCjOBECBQYSrMBEKAUGEqzAQCAUKFqTATCAECFabCTCAECBWmwlSYCYQAocJUmAkEAoQKU2EmEAKEClNhKswEQoBQYSrMBAIBQoWpMBMIAQIVpsJMIAQIAAAAGOEPv7S7CI5LUPYAAAAASUVORK5CYII=' alt='' width=96 height=128 loading=lazy></div>
+  <div class=idhead>
+   <div class=stars><span class=on>★★★</span><span class=off>☆☆</span></div><h3>길을 가리키던 사람</h3><p class=title>36층 · 이름이 남지 않음</p>
+   <p class=tagline>「저는 그냥 가리켰을 뿐입니다.」</p>
+   <div class=meta><span>36층</span><span>붕괴기</span><span class=cls>관리</span>
+    <span>등대</span><span class=role>헌신</span>
+    <span class=pw>전투력 292</span><span class=pw>본디 ?</span></div>
+  </div>
+ </header>
+ <div class=cols><section class=block><h4>생전</h4><p>갈림길에 사는 사람이었다. 피난 행렬이 밀려오자 사람들이 그에게 어느 쪽이냐고 물었다. 그는 성을 가리키기도 하고 종소리 쪽을 가리키기도 했다.</p></section>
+  <section class=block><h4>최후</h4><p>사흘 동안 갈림길에 서서 가리켰다. 행렬이 끊긴 뒤에도 서 있었다. 성으로 간 쪽은 문 앞에서 죽었고, 종소리 쪽으로 간 쪽은 종이 멈춘 뒤에 죽었다.</p></section></div>
+ <section class=block><h4>기억 · 각성 단계별 해금</h4><ol class=mem><li>성으로 간 사람이 더 많았다.</li><li>그는 무엇을 기준으로 가리켰는지 기억하지 못한다.</li><li>짐이 무거운 사람은 성으로, 아이가 있는 사람은 종소리 쪽으로 보냈다.</li><li>어느 쪽도 살지 않았다.</li><li>그는 그 사실을 모른다.</li></ol></section>
+ <section class=block><h4>스탯</h4><div class=stats><div><span>잔존</span><b>756</b><i>+39.39</i></div><div><span>의지</span><b>60</b><i>+2.99</i></div><div><span>자취</span><b>58</b><i>+2.91</i></div><div><span>공명</span><b>79</b><i>+1.42</i></div></div></section>
+ <section class=block><h4>스킬</h4><div class=sk><b>「두 갈래」</b><i>액티브</i><span>아군 하나를 즉시 후열로 보내고 회복시킨다.</span></div><div class=sk><b>「사흘 동안」</b><i>패시브</i><span>전투가 길어질수록 아군 전체의 회복량이 증가한다.</span></div></section>
+ 
+ <div class=cols><section class=block><h4>뜰 · 등대</h4><p>뜰 입구에서 방향을 가리킨다. 갈 곳은 하나뿐이다.</p>
+   <p class=sub>산출 기억 조각 · 신규 잔상 영입 시 초기 호감도 상승</p><p class=say>「여기가 맞습니다.」</p></section>
+  <section class=block><h4>외형</h4><p>한 팔을 옆으로 뻗은 자세. 팔이 내려가지 않는다</p><p class=sub>양쪽 신발의 닳은 정도가 다르다. 한쪽으로만 몸을 돌렸다</p>
+   <p class=sub>상징 · 닳은 이정표 조각 <span class=sw style="background:#8B8467"></span> #8B8467</p></section></div>
+ <section class=block><h4>음성</h4>
+  <p class=say><em>소환</em>「…어느 쪽으로 가십니까?」</p>
+  <p class=say><em>승리</em>「이쪽이 맞았습니다.」</p>
+  <p class=say><em>흐려질 때</em>「제가 가리킨 쪽이…」</p></section>
+ 
+</article>
+<article class=entry id="s039">
+ <header>
+  <div class=numcol><div class=num>039</div><img class=sp src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJAAAADACAYAAADryOpPAAACwklEQVR42u3dMUokTRjHYVvmFIKgiOamJoqJmZfwXF7CzEQ0MTVXRGFgYm+ggTB0MIMzdldXvVXPE358u+juj/dPOzrb7RDW+fXNd8rf/+nutvvr/9n118AQAkJACAgBISAQEAJCQAgIBISAEBACghU6fwR1GOtbOzb5Fg4XCBOGgBAQAoIBZv4Ifu3tH/77KWYx/2j2adYFQkDk0/QXEofMljlzgRAQJqyC2Wp5zlwgBISAEBACAk9heZ+8Wnsic4EQEAJCQAgIBISAEBACAgEhIArmOxITyvX619nF1fJzfH68T/oxuEAICBNmwkacrXVSzJkLhIAwYdXMWWmzlXrOXCAEhAkLPWdRZivFnLlAmDDy8R6JAZQ2Wy4QJgwTxgRTlWK2XCAEhAkbRQnvvFHCxzDlbLlACAgTRtDZcoEQEGUI+e0c677g9vn+Gu5zOTg6CTdbLhACwlMYQWfLBUJAmDCCzpYLhIAwYZM5Pr3M/jG8vTxUM1suEALChI2u/7pSya+L9X8UejH/WP73Kd/b0AVCQJiwyaT+makSRJktFwgBYcImM+SLeLhACAgBISAQEJ7CNlHa62K5/u0wFwgBYcLC6b+uVPIbQLlACAgEhIAQEJ7C6lDak1f/46npi4ouEAJCQAgIAUHLT2FR3ua3picyFwgBYcJWauHHmV0gBATNPoVF/AdWanoic4EQEAJCQAgIWngKi/7kVdMTmQuEgBAQAkJAsKWutU94258X6z8NDfm1LhAICAEhIAQEAkJACAgBISAQEAJCQAgIBISAEBACAgEhIMoza/Bz/sr0a10gEBAmzIS5QAgITJgJc4EQECbMhLlAICBMmAlzgRAQmDAT5gIhIEyYCTNhLhACwoSZMBcIBIQJM2EuEALChJkwE+YCISBMmAlzgUBAmDAT5gIhIDBhJswFQkAAAADAAD9OX7DL5Qm7ggAAAABJRU5ErkJggg==' alt='' width=96 height=128 loading=lazy></div>
+  <div class=idhead>
+   <div class=stars><span class=on>★★★★★</span><span class=off></span></div><h3>레안</h3><p class=title>문을 닫으라 한 사람</p>
+   <p class=tagline>「절반은 들어왔다. 그거면 됐다고 생각했다.」</p>
+   <div class=meta><span>39층</span><span>붕괴기</span><span class=cls>병졸</span>
+    <span>망루</span><span class=role>저항</span>
+    <span class=pw>전투력 520</span><span class=pw>본디 ?</span></div>
+  </div>
+ </header>
+ <div class=cols><section class=block><h4>생전</h4><p>북부 방면 지휘관. 성의 수용 한계를 계산한 사람이다. 물과 곡식으로 버틸 수 있는 인원이 정확히 절반이었다. 그 계산은 맞았다.</p></section>
+  <section class=block><h4>최후</h4><p>문을 닫으라고 명령한 뒤 성벽 위에 남았다. 안으로 내려오지 않았다. 사흘 뒤 성벽 위에서 발견되었고, 손에는 아무것도 들려 있지 않았다.</p></section></div>
+ <section class=block><h4>기억 · 각성 단계별 해금</h4><ol class=mem><li>계산을 세 번 다시 했다. 세 번 다 절반이었다.</li><li>명령을 내린 것은 본인이지만 문을 닫은 것은 카브릴이었다.</li><li>그 이름을 기록에서 지우려 했다. 실패했다.</li><li>성벽 위에서 사흘 동안 아래를 보고 있었다. 안쪽이 아니라 바깥쪽을.</li><li>안쪽에서도 사람이 죽고 있다는 것을 그는 끝내 몰랐다.</li></ol></section>
+ <section class=block><h4>스탯</h4><div class=stats><div><span>잔존</span><b>1000</b><i>+50</i></div><div><span>의지</span><b>190</b><i>+9.8</i></div><div><span>자취</span><b>92</b><i>+4.6</i></div><div><span>공명</span><b>118</b><i>+2.2</i></div></div></section>
+ <section class=block><h4>스킬</h4><div class=sk><b>「절반」</b><i>액티브</i><span>적 전체에게 큰 피해를 준다. 자신의 잔존이 절반으로 줄어든다.</span></div><div class=sk><b>「성벽 위」</b><i>패시브</i><span>후열 아군이 흐려질 때마다 자신의 의지가 크게 상승한다.</span></div><div class=sk><b>「세 번 다시 셌다」</b><i>잠금</i><span>각성 5에서 해금된다.</span></div></section>
+ <section class=block><h4>개화 4갈래</h4><div class=tal><div class=talhead><em class='bl b-std'>정석</em><b>「수용 한계」</b></div><dl><dt>물주기</dt><dd>기억 조각 위주 · 생업 망루 유지</dd><dt>초반</dt><dd>적 하나에게 큰 피해.</dd><dt>개화</dt><dd>처치 시 아군 전체 의지 상승.</dd></dl><p class=note>무난한 주력.</p></div><div class=tal><div class=talhead><em class='bl b-cond'>조건부</em><b>「내려오지 않음」</b></div><dl><dt>물주기</dt><dd>자신이 마지막까지 남는 전투 반복</dd><dt>초반</dt><dd>아군이 적을수록 의지가 오른다.</dd><dt>개화</dt><dd>혼자 남으면 의지 3배. 회복은 받지 못한다.</dd></dl><p class=note>극단적. 묘수 경로 전용.</p></div><div class=tal><div class=talhead><em class='bl b-late'>늦개화</em><b>「지우려 한 이름」</b></div><dl><dt>물주기</dt><dd>카브릴과 함께 편성해 반복 클리어</dd><dt>초반</dt><dd>같은 팀에 수호 역할이 있으면 의지가 소폭 오른다. 거의 체감되지 않는다.</dd><dt>전환점</dt><dd>각성 4</dd><dt>개화</dt><dd>같은 팀의 수호 역할 1명이 흐려지면 즉시 부활시키고, 자신의 의지를 그에게 전부 넘긴다.</dd></dl><p class=note>카브릴을 위해 설계된 갈래. 인연 「명령과 손」과 연동된다.</p></div><div class=tal><div class=talhead><em class='bl b-early'>조기</em><b>「바깥쪽을 보다」</b></div><dl><dt>물주기</dt><dd>유품 위주 · 40층 이하 반복</dd><dt>초반</dt><dd>전투 시작 즉시 적 전체에 피해. 초반 압도적.</dd><dt>개화</dt><dd>성장 계수가 낮아 후반에 밀린다.</dd></dl><p class=note>2막 진행 가속용.</p></div></section>
+ <div class=cols><section class=block><h4>뜰 · 망루</h4><p>뜰의 망루에 선다. 아래를 세지 않는다.</p>
+   <p class=sub>산출 진급석 · 뜰 전체 자원 생산량 상승</p><p class=say>「오늘은 세지 않았다.」</p></section>
+  <section class=block><h4>외형</h4><p>곧게 선 자세, 두 손을 등 뒤로. 무기를 들지 않았다</p><p class=sub>외투 자락이 한쪽만 그을려 있다. 성벽 바깥쪽을 향하던 쪽이다</p>
+   <p class=sub>상징 · 빈 손 <span class=sw style="background:#3F4E63"></span> #3F4E63</p></section></div>
+ <section class=block><h4>음성</h4>
+  <p class=say><em>소환</em>「…또 세라는 겁니까.」</p>
+  <p class=say><em>승리</em>「이번에는 전부 들어왔다.」</p>
+  <p class=say><em>흐려질 때</em>「계산은… 맞았다.」</p></section>
+ <p class=dnote>2막 최고 등급. 카브릴 인연의 반대편. 「안쪽에서도 죽었다」는 유안의 기록과 연결되지만 본인은 모른다.</p>
+</article>
+<article class=entry id="s041">
+ <header>
+  <div class=numcol><div class=num>041</div><img class=sp src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJAAAADACAYAAADryOpPAAACk0lEQVR42u3dsUrzUBiA4SpeRSFgEQRHVyc3tXfj5DU4eTeim5OruyARApm9gzqIkIjVFNLmfOc8z/QPDv3Tl+/jmLTOZgAAAAAAAJCnPZfgb/Nqsfr+d9vUrtcP+y4BAmIyBy5BOh5ul6v/fuby5j6pNWoCISCssGRPXk5kJhACwgoLuraG/HzJ68wEQkBYYSHWlnVmAiEgrLAM1pZ1ZgIhIASEgBAQOIVNdfIq+URmAiEgBISAEBAICAEhIAQEAkJACAgBgYAYW7aPc0z1CMeQ15PTox0mEAJCQAgIAYGAEBACQkAgIASEgBAQCIixhX+cI7XHNnJ9zSYQAkJACAgEhFPYl+4D6hFPN/0H7E/CvX4TCAEhIASEgEBACAgBUYaQv0g8O7/49Rdu72+v2fxfTCCsMMhmhQ0Z9YdHxyHWWfd1mkBYYZDNCot+Ktnl9Xl+epz8uxZNIARE4SvM2oq7zkwgBEQhK8yq2v213fZqM4EQEIWssO443cY6WzeuU/i8WPfzX21Tz6a4DiYQVhhWWFJSuB802uu/WvpoM1YYpL/CNj2RRV9Vua5yEwgB4RRmVW1p9ZtAWGFYYeHWVmrfl9h9Pf3vRYy97k0gBISAEBACAgEhIASEgEBACIiEZfXoRPy/F2YCYYWBgBAQAkJAICAEhIAQEAiIEYW/Fxbx/tc6Ee+LmUAICAEhIAQEAkJACAgBgYAQEAkLeS8sp/tf60S5L2YCISAEhIAQEGwo6p+8/PDWmUAICCvMCsMEQkCEFOZe2LxavJT6JrVNfWoCYYVB5FOYk5cJhIDACsMEQkBYYVaYCQQCYiJJ3wubV4s7b1Ff29TXJhBWGEQ4hTl5mUAICAAAAAAAAAAAAAAAgL5Pl6uZpQx/62wAAAAASUVORK5CYII=' alt='' width=96 height=128 loading=lazy></div>
+  <div class=idhead>
+   <div class=stars><span class=on>★★★★★</span><span class=off></span></div><h3>세렌</h3><p class=title>마지막 종지기</p>
+   <p class=tagline>「종이 울리는 동안은 아직 늦지 않았다.」</p>
+   <div class=meta><span>41층</span><span>균열기</span><span class=cls>성직</span>
+    <span>종탑</span><span class=role>헌신</span>
+    <span class=pw>전투력 516</span><span class=pw>본디 ?</span></div>
+  </div>
+ </header>
+ <div class=cols><section class=block><h4>생전</h4><p>이렘 서쪽 종탑을 스물세 해 동안 관리했다. 아침 여섯 시와 저녁 여섯 시, 하루 두 번 종을 쳤다. 그 외에는 종탑을 청소하고 밧줄을 갈았다. 도시 사람 대부분은 그의 이름을 몰랐지만, 그가 친 종소리는 전부 알고 있었다.</p></section>
+  <section class=block><h4>최후</h4><p>균열이 열린 날, 대피 종을 세 시간 동안 쳤다. 정해진 신호는 열두 번이었는데 멈추지 않았다. 손바닥이 갈라져 밧줄이 붉게 젖었다. 종탑이 무너질 때 그는 밧줄을 놓지 않았다.</p></section></div>
+ <section class=block><h4>기억 · 각성 단계별 해금</h4><ol class=mem><li>밧줄에 감는 천의 두께를 계절마다 다르게 했다.</li><li>종을 치기 전에 항상 한 번 종을 손으로 쓸었다.</li><li>그날 열두 번을 친 뒤, 사람들이 아직 다리 위에 있는 것을 보았다.</li><li>세 시간째에 이미 소리가 들리지 않았다. 그래도 쳤다.</li><li>탑은 그의 얼굴을 기억하지 못한다. 소리만 기억한다.</li></ol></section>
+ <section class=block><h4>스탯</h4><div class=stats><div><span>잔존</span><b>1288</b><i>+67.69</i></div><div><span>의지</span><b>140</b><i>+6.99</i></div><div><span>자취</span><b>94</b><i>+4.48</i></div><div><span>공명</span><b>122</b><i>+1.97</i></div></div></section>
+ <section class=block><h4>스킬</h4><div class=sk><b>「여섯 시의 종」</b><i>액티브</i><span>아군 전체의 잔존을 회복시킨다. 회복량은 자신의 잃은 잔존에 비례해 증가한다.</span></div><div class=sk><b>「멈추지 않는 손」</b><i>패시브</i><span>자신이 흐려질 때, 아군 전체에게 1회 흐려짐 방지를 부여한다.</span></div></section>
+ <section class=block><h4>개화 4갈래</h4><div class=tal><div class=talhead><em class='bl b-std'>정석</em><b>「여섯 시의 종」</b></div><dl><dt>물주기</dt><dd>기억 조각 위주 육성 + 뜰 생업 `종탑` 유지</dd><dt>초반</dt><dd>아군 전체 소량 회복. 안정적.</dd><dt>개화</dt><dd>아군 전체 회복 + 다음 턴 받는 피해 감소.</dd></dl><p class=note>가장 무난한 갈래. 초보 플레이어의 기본값.</p></div><div class=tal><div class=talhead><em class='bl b-early'>조기</em><b>「울려퍼짐」</b></div><dl><dt>물주기</dt><dd>유품 위주 육성 + 20층 이하 반복</dd><dt>초반</dt><dd>즉시 대량 회복. 초반 층에서 압도적.</dd><dt>개화</dt><dd>회복량은 크지만 성장 계수가 낮아 후반에 뒤처진다.</dd></dl><p class=note>초반 진행을 크게 앞당긴다. 나중에 「잊기」로 갈아타는 것을 상정.</p></div><div class=tal><div class=talhead><em class='bl b-late'>늦개화</em><b>「갈라진 손바닥」</b></div><dl><dt>물주기</dt><dd>세렌이 흐려진 전투를 반복해서 겪게 한다</dd><dt>초반</dt><dd>자기 잔존을 깎아 아군을 회복한다. 소모가 커서 사실상 자해에 가깝다.</dd><dt>전환점</dt><dd>각성 4</dd><dt>개화</dt><dd>깎인 잔존이 그대로 아군 전체의 자취로 전환된다. 오래 버틸수록 파티가 단단해진다.</dd></dl><p class=note>이 게임 늦개화의 표본. 각성 3의 기록 &#x27;세 시간째에 이미 소리가 들리지 않았다. 그래도 쳤다&#x27;가 힌트다.</p></div><div class=tal><div class=talhead><em class='bl b-cond'>조건부</em><b>「세 시간」</b></div><dl><dt>물주기</dt><dd>붕괴기(21~40층) 장기전 반복</dd><dt>초반</dt><dd>턴이 지날수록 회복량 증가. 단기전에서는 발동 전에 끝난다.</dd><dt>개화</dt><dd>10턴 이후 회복량 3배. 보스 층 전용.</dd></dl><p class=note>층 공략의 `묘수` 경로와 궁합이 좋다.</p></div></section>
+ <div class=cols><section class=block><h4>뜰 · 종탑</h4><p>하루 두 번 종을 친다. 뜰 전체가 그 소리를 듣는다.</p>
+   <p class=sub>산출 기억 조각 · 뜰의 모든 잔상의 생산량 +5%</p><p class=say>「오늘도 아무 일 없었습니다. 다행이지요.」</p></section>
+  <section class=block><h4>외형</h4><p>굽은 등, 천을 감은 두 손</p><p class=sub>두 손바닥이 세로로 갈라져 있다. 밧줄 자국 그대로다</p>
+   <p class=sub>상징 · 닳은 종 밧줄 <span class=sw style="background:#B8894A"></span> #B8894A</p></section></div>
+ <section class=block><h4>음성</h4>
+  <p class=say><em>소환</em>「…아직 사람이 남아 있습니까?」</p>
+  <p class=say><em>승리</em>「한 층 더. 종을 칠 시간이 남았습니다.」</p>
+  <p class=say><em>흐려질 때</em>「소리가… 닿았으면 좋겠는데.」</p></section>
+ 
+</article><div class=gap><span class=num>043</span><span>─ 기억나지 않음 ─</span></div>
+<article class=entry id="s046">
+ <header>
+  <div class=numcol><div class=num>046</div><img class=sp src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJAAAADACAYAAADryOpPAAACqklEQVR42u3dQUojQRgF4FI8hSAogt4hK3HjbTyAuBQP4G3cufIQgigIrr2BLoRQKI2xO91Vf9X3rSfDEB7vTXW6k5QAAAAAAAAAAAAAAKBTO96Cb/sHR59jX/v+9tLt+7grOggQJizabJkzDYQAYcIamK2e50wDIUAIEAKEAIFTWNmTV28nMg2EAFHOnrcgrtXZxXqaHx/ui0ykBkKAcApzChsxW0OWnDMNhADhFMZMp7O5p00DIUA4hTV5Ilvy5FXqRKaBECCcwtjibGkgTBgmrEn5yajVR5t9FoYJw4SZs4VnK8rJSwMhQJgwgp68NBAChAkj1X2rhgZCgKhb+DsSa3jma1sOj09MGCYMnMJaVcNsaSAECBM22tDFt9fnp+ZPXhoIEwZOYZ2fvK6vLtf/Dbi5vRv992sgTBgmjIkzpIEwYZgwFna+Ot3kz1R7y4oGQoAwYVuRf65U8+diPx6FDn1HpQZCgDBhf4r4zRUaCAQIAUKAECAQIAQIAaIVzd7OUdvnYnN/g/2UG+M1ECYME1aV/FmqKF9CVWqGNBAChAmjk9nSQAgQJmxWtZ288n9PDT+LqYEQIAQIAQIBwinsN8+CaSAECIJO2H9F+ab6li4qaiAECAFCgBAgECAECAGiD+EvJEb8mctc9IuKGggBopzwN3dHeWx5EyYMEwbNT1hLsxV9zjQQAoQAIUAIEAgQAoQA0YcwFxJ7uHg4pOaLihoIAUKAECAECFo9hZU6zeUnoCmv1UAgQAgQAoQAQUqpz98L+yj0Wg0EAoQJM2EaCAECE2bCNBAChAkzYRoIBAgTZsI0EAIEJsyEaSAECBNmwkyYBkKAMGEmTAOBAGHCTJgGQoAwYSbMhGkgBAgTZsI0EAgQJsyEaSAECEyYCdNACBAAAAAwwRd1Dq/idZnBSgAAAABJRU5ErkJggg==' alt='' width=96 height=128 loading=lazy></div>
+  <div class=idhead>
+   <div class=stars><span class=on>★★</span><span class=off>☆☆☆</span></div><h3>장부를 맞추던 사람</h3><p class=title>46층 · 이름이 남지 않음</p>
+   <p class=tagline>「숫자는 맞아야지요.」</p>
+   <div class=meta><span>46층</span><span>균열기</span><span class=cls>관리</span>
+    <span>서고</span><span class=role>탐구</span>
+    <span class=pw>전투력 226</span><span class=pw>본디 ?</span></div>
+  </div>
+ </header>
+ <div class=cols><section class=block><h4>생전</h4><p>왕립 기록관의 곡물 출납 서기. 사십 년 동안 장부를 맞췄다. 한 번도 틀린 적이 없다는 것이 그의 유일한 자랑이었다.</p></section>
+  <section class=block><h4>최후</h4><p>균열이 기록관을 삼키던 날에도 장부를 맞추고 있었다. 그날 것까지 숫자가 맞다.</p></section></div>
+ <section class=block><h4>기억 · 각성 단계별 해금</h4><ol class=mem><li>이델의 보고서를 접수한 사람이 그였다.</li><li>일곱 번 다 접수했고 일곱 번 다 위로 올렸다.</li><li>반려된 것을 돌려준 것도 그였다.</li><li>한 번도 읽어 보지는 않았다.</li></ol></section>
+ <section class=block><h4>스탯</h4><div class=stats><div><span>잔존</span><b>422</b><i>+22.6</i></div><div><span>의지</span><b>54</b><i>+2.71</i></div><div><span>자취</span><b>36</b><i>+1.81</i></div><div><span>공명</span><b>84</b><i>+1.66</i></div></div></section>
+ <section class=block><h4>스킬</h4><div class=sk><b>「사십 년」</b><i>액티브</i><span>적 하나의 방어를 무시하고 고정 피해를 준다.</span></div><div class=sk><b>「맞는 숫자」</b><i>패시브</i><span>같은 적을 세 번 공격하면 이후 그 적에게 주는 피해가 증가한다.</span></div></section>
+ 
+ <div class=cols><section class=block><h4>뜰 · 서고</h4><p>뜰의 자원을 매일 센다. 틀린 적이 없다.</p>
+   <p class=sub>산출 기억 조각 · 자원 획득량 소폭 상승</p><p class=say>「오늘도 맞습니다.」</p></section>
+  <section class=block><h4>외형</h4><p>굽은 등, 겨드랑이에 낀 장부 한 권</p><p class=sub>오른손 검지에 굳은살이 두껍다</p>
+   <p class=sub>상징 · 가장자리가 닳은 장부 <span class=sw style="background:#7C7A6E"></span> #7C7A6E</p></section></div>
+ <section class=block><h4>음성</h4>
+  <p class=say><em>소환</em>「…접수하겠습니다.」</p>
+  <p class=say><em>승리</em>「숫자가 맞습니다.」</p>
+  <p class=say><em>흐려질 때</em>「그날 것까지는… 맞췄는데.」</p></section>
+ <p class=dnote>이델의 보고서를 접수하고 반려를 돌려준 사람. 악의는 없었다.</p>
+</article>
+<article class=entry id="s047">
+ <header>
+  <div class=numcol><div class=num>047</div><img class=sp src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJAAAADACAYAAADryOpPAAACrElEQVR42u3dMUokQRgF4FI8hSAogrmpiWZewdTYQ4iH8A5ewczIQwiiIBh7Aw2EoVAax+7prvqrvi/eWZbh8d5WT/dMSgAAAAAAAAAAAAAA0Kktb8G33b2Dz7GvfX976fZ93BYdBAgTFm22zJkGQoAwYQ3MVs9zpoEQIAQIAUKAwCms7MmrtxOZBkKAKGfHWxDXydn5apofH+6LTKQGQoBwCnMKGzFbQ5acMw2EAOEUxkyns7mnTQMhQDiFNXkiW/LkVepEpoEQIJzC2OBsaSBMGCasSfnJqNVHm30WhgnDhJmzhWcryslLAyFAmDCCnrw0EAKECSPVfauGBkKAqFv4OxJreOZrU/YPj0wYJgycwlpVw2xpIAQIEzba0MW31+en5k9eGggTBk5hnZ+8rq7vVv8NuL25GP33ayBMGCaMiTOkgTBhmDAWdnx6uc6fqfaWFQ2EAGHCNiL/XKnmz8V+PAod+o5KDYQAYcL+FPGbKzQQCBAChAAhQCBACBACRCuavZ2jts/F5v4G+yk3xmsgTBgmrCr5s1RRvoSq1AxpIAQIE0Yns6WBECBM2KxqO3nl/54afhZTAyFACBACBAKEU9hvngXTQAgQBJ2w/4ryTfUtXVTUQAgQAoQAIUAgQAgQAkQfwl9IjPgzl7noFxU1EAJEOeFv7o7y2PI6TBgmDJqfsJZmK/qcaSAECAFCgBAgECAECAGiD2EuJPZw8XBIzRcVNRAChAAhQAgQtHoKK3Way09AU16rgUCAECAECAGClFKfvxf2Uei1GggECBNmwjQQAgQmzIRpIAQIE2bCNBAIECbMhGkgBAhMmAnTQAgQJsyEmTANhABhwkyYBgIBwoSZMA2EAGHCTJgJ00AIECbMhGkgECBMmAnTQAgQmDATpoEQIAAAAGCCL4wlr+LYA92yAAAAAElFTkSuQmCC' alt='' width=96 height=128 loading=lazy></div>
+  <div class=idhead>
+   <div class=stars><span class=on>★★★★</span><span class=off>☆</span></div><h3>이델</h3><p class=title>균열을 처음 적은 사람</p>
+   <p class=tagline>「아무도 안 믿어도 기록은 남습니다.」</p>
+   <div class=meta><span>47층</span><span>균열기</span><span class=cls>관리</span>
+    <span>서고</span><span class=role>탐구</span>
+    <span class=pw>전투력 384</span><span class=pw>본디 ?</span></div>
+  </div>
+ </header>
+ <div class=cols><section class=block><h4>생전</h4><p>왕립 기록관의 3급 서기. 하는 일은 곡물 출납 장부 정리였다. 취미로 밤하늘의 위치를 적었는데, 어느 해부터 별의 자리가 조금씩 어긋나는 것을 발견했다.</p></section>
+  <section class=block><h4>최후</h4><p>이변을 일곱 번 보고했고 일곱 번 반려당했다. 여덟 번째 보고서를 쓰던 중 균열이 기록관을 삼켰다. 보고서는 완성되지 않았다. 마지막 문장은 &#x27;그러므로 남은 시간은&#x27; 에서 끊겨 있다.</p></section></div>
+ <section class=block><h4>기억 · 각성 단계별 해금</h4><ol class=mem><li>첫 번째 보고서에는 &#x27;착오로 보임&#x27;이라는 붉은 도장이 찍혔다.</li><li>네 번째 보고서부터는 아무도 답을 주지 않았다.</li><li>그는 반려된 보고서를 전부 베껴 자기 방에 보관했다.</li><li>여덟 번째 보고서에는 처음으로 &#x27;위험&#x27;이라는 단어를 썼다.</li><li>그 방은 무너지지 않았다. 사본은 아직 그 자리에 있다.</li></ol></section>
+ <section class=block><h4>스탯</h4><div class=stats><div><span>잔존</span><b>839</b><i>+43.84</i></div><div><span>의지</span><b>99</b><i>+5.34</i></div><div><span>자취</span><b>61</b><i>+3.24</i></div><div><span>공명</span><b>120</b><i>+2.48</i></div></div></section>
+ <section class=block><h4>스킬</h4><div class=sk><b>「여덟 번째 보고서」</b><i>액티브</i><span>적 하나의 약점을 노출시킨다. 이후 3턴 동안 그 적이 받는 피해가 증가한다.</span></div><div class=sk><b>「반려된 기록」</b><i>패시브</i><span>같은 적을 반복해 공격할수록 아군 전체의 명중과 피해가 누적 상승한다.</span></div></section>
+ 
+ <div class=cols><section class=block><h4>뜰 · 서고</h4><p>뜰에서 일어난 일을 전부 기록한다. 이번에는 아무도 반려하지 않는다.</p>
+   <p class=sub>산출 기억 조각 · 명부(도감) 완성 보상 증가</p><p class=say>「오늘 것도 적어 두었습니다. 읽으실 겁니까?」</p></section>
+  <section class=block><h4>외형</h4><p>마른 체구, 옆구리에 낀 서류 뭉치</p><p class=sub>오른쪽 소매 끝이 잉크로 검다. 왼손잡이가 아니었다</p>
+   <p class=sub>상징 · 붉은 도장이 찍힌 보고서 <span class=sw style="background:#6B7FA8"></span> #6B7FA8</p></section></div>
+ <section class=block><h4>음성</h4>
+  <p class=say><em>소환</em>「이번에는… 읽어 주시는 겁니까?」</p>
+  <p class=say><em>승리</em>「적어 두겠습니다. 전부.」</p>
+  <p class=say><em>흐려질 때</em>「그러므로 남은 시간은—」</p></section>
+ 
+</article><div class=gap><span class=num>049</span><span>─ 기억나지 않음 ─</span></div>
+<article class=entry id="s051">
+ <header>
+  <div class=numcol><div class=num>051</div><img class=sp src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJAAAADACAYAAADryOpPAAAC20lEQVR42u3dPUoDURQG0ChuwHYgkCGQJlVaq3R2toKNC3ADdmLnBtyCYGtnZ+UiBIkQSO0OYiGEh2QwPzOZ9+adU0nASQgf9+MmM5NeDwAAAAAAAAAAAAAAMnXkLfhV9Mvlrv+7mM+yfR+PRQcBQoWlVlvqzARCgFBhHaitnOvMBEKAECAECAECW1i7m1duG5kJhAAhQAgQAgQChAAhQAgQCBACRMSckdggZySCACFACBACBLawpjcylzaDAKHCEqozN5gCAUKAECAECAQIAUKA6LrkPwCL4c4bdUnxA0kTCAFCgBAgBAhy2MLOpudrN6+vzw+blwmEACFAIEAIEAKEAIEA0YATb0G7wg9F399enc6BCoM8K2wwHK3+jvl7sfB1mkCoMOh8hVWdwmEjM4FQYagw1JkJhAChwtjcYDxZ+/jby/Pq77ou355eXK59/OnxYeeKNIFQYaiw+qshsu/Fwuu/BsPR8r/aqqqbfTRxfBMIAUKFZavp2qrawsLnNYFQYaiwqITfH8V2H8XwtbV1mkpddwUxgRAgVFjtYqut8PWE9RHW2WA8Se6sSxMIAUKAECAECHLewlK5zW/VRmYCocJAgBAgBAhbWLs2OdUhxR9YqdrITCBUGHSmwnITXmJ8dXO7bPL4JhAqDBXWitQ3ry5tZCYQAoQK28omd3qvuq/gtjURnm6xz//uIIk6M4EQIFSY7eaPJj70M4EQIFTYwaT4E5AmEAgQKqxFdV2r1aXrv0wgBAgBQoBAgBAgBAgBQoBAgBAgBAgBAgHiUHI5neM7suOYQCBAqLAqRb+c1V09i/nstOL4JhAIECosws3LRmYCIUCoMBVmAoEAocJUmAmEAKHCVJgKM4EQIFSYCjOBQIBQYYevmMV8dt/k8Yt+ebfHc5lAqDBQYbYwEwgBQoVFqOiX1yrMBEKAUGE2LxVmAiFAqDAVZgKBAKHCVJgJhAABAAAALfgBxfC4u4vj/mUAAAAASUVORK5CYII=' alt='' width=96 height=128 loading=lazy></div>
+  <div class=idhead>
+   <div class=stars><span class=on>★★</span><span class=off>☆☆☆</span></div><h3>균열을 들여다본 아이</h3><p class=title>51층 · 이름이 남지 않음</p>
+   <p class=tagline>「안에 뭐가 있는지 보고 싶었어요.」</p>
+   <div class=meta><span>51층</span><span>균열기</span><span class=cls>하인</span>
+    <span>물장수</span><span class=role>도피</span>
+    <span class=pw>전투력 227</span><span class=pw>본디 ?</span></div>
+  </div>
+ </header>
+ <div class=cols><section class=block><h4>생전</h4><p>균열이 열 손가락만큼 벌어졌을 때 아이들이 모여들었다. 구경거리였다. 어른들은 위험하다고 하면서도 웃었다.</p></section>
+  <section class=block><h4>최후</h4><p>가장 가까이 갔다. 다른 아이들은 뒤로 물러섰다.</p></section></div>
+ <section class=block><h4>기억 · 각성 단계별 해금</h4><ol class=mem><li>안은 어둡지 않았다고 한다.</li><li>무엇을 보았는지 말하기 전에 사라졌다.</li><li>다른 아이들은 그날 이후 균열 근처에 가지 않았다.</li><li>그 아이의 이름을 부른 사람이 있었다. 대답은 없었다.</li></ol></section>
+ <section class=block><h4>스탯</h4><div class=stats><div><span>잔존</span><b>345</b><i>+18.71</i></div><div><span>의지</span><b>56</b><i>+2.88</i></div><div><span>자취</span><b>27</b><i>+1.37</i></div><div><span>공명</span><b>102</b><i>+2.09</i></div></div></section>
+ <section class=block><h4>스킬</h4><div class=sk><b>「한 걸음 더」</b><i>액티브</i><span>즉시 추가 행동을 얻는다. 이후 2턴간 받는 피해가 증가한다.</span></div><div class=sk><b>「물러서지 않은 쪽」</b><i>패시브</i><span>전투 시작 시 회피율이 크게 오르고 매 턴 감소한다.</span></div></section>
+ 
+ <div class=cols><section class=block><h4>뜰 · 물장수</h4><p>뜰의 우물을 들여다본다. 오래 본다.</p>
+   <p class=sub>산출 기억 조각 · 무명 잔상 발견 확률 상승</p><p class=say>「여기는 안 깊네요.」</p></section>
+  <section class=block><h4>외형</h4><p>앞으로 몸을 기울인 작은 체구, 두 손을 등 뒤로 모음</p><p class=sub>한쪽 눈만 빛을 반사하지 않는다</p>
+   <p class=sub>상징 · 없음 <span class=sw style="background:#5A6B78"></span> #5A6B78</p></section></div>
+ <section class=block><h4>음성</h4>
+  <p class=say><em>소환</em>「…거기 뭐 있어요?」</p>
+  <p class=say><em>승리</em>「봤어요! 봤어요.」</p>
+  <p class=say><em>흐려질 때</em>「아직 다 못 봤는데.」</p></section>
+ <p class=dnote>「아래에서 온 것」 세 번째 씨앗. 무엇을 보았는지 1부에서 밝히지 않는다.</p>
+</article>
+<article class=entry id="s053">
+ <header>
+  <div class=numcol><div class=num>053</div><img class=sp src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJAAAADACAYAAADryOpPAAACuElEQVR42u3cMUrsUBgF4BkZcA+CoAguQhs7Oxch7kKwcxdWLsHOzsoN2AnigGDtDrQQ5IITSDJJbv57v696hcKb8XAON5PJYgEAAAAAAAAAAAAAAJVaegt+7e0ffvf93c+P92rfxx3RQYAwYdFmy5xpIAQIE1bAbNU8ZxoIAUKAECAECJzC8p68ajuRaSAECAFCgBAgECAECAGiDitvQVxNF0invGipgRAgTNio0kp3R6IGQoAQIBAgBAinsJJOZL7aDAKECQs0Zx4wBQKEACFACBAIEAKEAFG6oi4k5noKR80XITUQAoQAIUAIEAgQAoQAIUAgQAgQMxb+s7A5PIVeA4EAYcJaOjk7/5ut9dtr6D9A+lpSz0+PIW7z0EAIECasd9VHdHB03On1znnONBAChAkrcqqGcnd9sfE9ubl/6fTzV7cPg0+hBkKAqHzCzNZ/l6e7o07hUHOmgRAgKpkwUzX9bI09ZxoIE0Y+2T5jGWrOIt7OkT6Ro+miXy5d50wDYcIQIAQIAYKOsn0Wlt5l1+ZElv6874JpIAQIZnhHYpTvQw0lvXCX66Kiz8IwYcQUci5KOoU1Pal+7DlzRyImDBNmwkaasDHmzPfCMGGYMBM28YRpIEwYmDBzpoEQIAQIBAgBwinMKSz0iUwDIUDkE+ZJ9RFnK52hUmdXAyFAmLDJTjG5pmRu/x8NhABhwkLMVsSTWvrvOb8uDYQAYcKKn6pt5kwDYcJgk2VtL3jKaSh1ajUQAoQAIUAIEGxh5S1of5LyhHwNhAAhQAgQCBBOYT18ZfpdDQQChAkzYRoIAQITZsI0EAKECTNhGggECBNmwjQQAgQmzIRpIAQIE2bCTJgGQoAwYSZMA4EAYcJMmAZCgDBhJsyEaSAECBNmwjQQCBAmzIRpIAQITJgJ00AIEAAAALCFH7KTywJcNofwAAAAAElFTkSuQmCC' alt='' width=96 height=128 loading=lazy></div>
+  <div class=idhead>
+   <div class=stars><span class=on>★★★</span><span class=off>☆☆</span></div><h3>축제를 준비하던 사람</h3><p class=title>53층 · 이름이 남지 않음</p>
+   <p class=tagline>「다들 웃어야 하지 않겠습니까.」</p>
+   <div class=meta><span>53층</span><span>균열기</span><span class=cls>유랑</span>
+    <span>악기</span><span class=role>헌신</span>
+    <span class=pw>전투력 293</span><span class=pw>본디 ?</span></div>
+  </div>
+ </header>
+ <div class=cols><section class=block><h4>생전</h4><p>그해 성벽 보수 예산이 깎이고 축제 예산이 늘었다. 그는 그 돈으로 축제를 준비했다. 사람들이 불안해할수록 더 크게 준비했다.</p></section>
+  <section class=block><h4>최후</h4><p>네 번째 축제가 열린 날 균열이 광장까지 왔다. 그는 무대 아래에 있었다.</p></section></div>
+ <section class=block><h4>기억 · 각성 단계별 해금</h4><ol class=mem><li>예산이 어디서 왔는지 그는 알고 있었다.</li><li>성벽 담당관이 세 번 찾아와 항의했다.</li><li>세 번 다 축제에 초대했다.</li><li>그해 축제가 이렘에서 가장 컸다.</li><li>사람들은 그날을 좋은 날로 기억한다.</li></ol></section>
+ <section class=block><h4>스탯</h4><div class=stats><div><span>잔존</span><b>710</b><i>+37.08</i></div><div><span>의지</span><b>62</b><i>+3.08</i></div><div><span>자취</span><b>55</b><i>+2.76</i></div><div><span>공명</span><b>87</b><i>+1.58</i></div></div></section>
+ <section class=block><h4>스킬</h4><div class=sk><b>「네 번째 축제」</b><i>액티브</i><span>아군 전체의 잔존을 회복하고 1턴간 의지를 올린다.</span></div><div class=sk><b>「더 크게」</b><i>패시브</i><span>아군이 흐려질수록 남은 아군의 회복량이 증가한다.</span></div></section>
+ 
+ <div class=cols><section class=block><h4>뜰 · 악기</h4><p>뜰에서 매일 준비한다. 축제는 열리지 않는다.</p>
+   <p class=sub>산출 울림 · 뜰 잔상 전체의 생산량 소폭 상승</p><p class=say>「이번엔 더 크게 하겠습니다.」</p></section>
+  <section class=block><h4>외형</h4><p>두 팔을 벌린 자세, 소매에 장식 끈</p><p class=sub>옷은 화려하고 신발은 낡았다</p>
+   <p class=sub>상징 · 꺾인 장식 기둥 <span class=sw style="background:#9C7B4E"></span> #9C7B4E</p></section></div>
+ <section class=block><h4>음성</h4>
+  <p class=say><em>소환</em>「…준비는 다 됐습니다.」</p>
+  <p class=say><em>승리</em>「오늘은 좋은 날입니다.」</p>
+  <p class=say><em>흐려질 때</em>「무대가… 아직 안 끝났는데.」</p></section>
+ 
+</article><div class=gap><span class=num>056</span><span>─ 기억나지 않음 ─</span></div>
+<article class=entry id="s058">
+ <header>
+  <div class=numcol><div class=num>058</div><img class=sp src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJAAAADACAYAAADryOpPAAACl0lEQVR42u3dMUozQRgG4ChewUYQFMEifRorOy+RE9h4ljQ5QS5hZ+UhBIkQSO0NtBDCFC5mkx13Zr7nKX8I+IeX92V2k81kAgAAAAAAAAAAAAAAQZ14C35cXF5/Hfra7WYd9n08FR0ECBNW22yZMw2EAGHCGpityHOmgRAgBAgBQoDAKWzck1e0E5kGQoAQIAQIAQIBQoAQIGI48xbU5elx3uui6GK5ynoBUwMhQJiwrNL7UD6RqIEQIEwYVbi7f9hN9uvL8+CTqoEQIExYMyeykk9eOeZMAyFAmLCq56zGC4ZDzZkGwoRhwthzbobiFIYJw4RR+FTlmC0NhABhwgZRwpM3Svgb/nO2NBAChAAhQAgQRDuFdV1w+3h/q+7/cnVzq4EwYRBnwqKZTc81ECYMBAgBQoAQIBAgBIhRNXUhMb2vVPJ9sfSr0NvNevfvXV83nk3nxX7iUQMhQJiwP+X+zlQJcn8AXgMhQAgQCBAChAAhQAgQHKrZD9WXdl+s1d8O00AIECZscOl9pZIfAKWBECAwYQ1bLFfFnuA0EAKECRtcaSev9O9p6aKiBkKAECAECAGCyKewWh7z29KJTAMhQJiwX0X4OrMGQoAg7Cmsxh9YaelEpoEQIAQIAUKAIMIprPaTV0snMg2EAGHCetnnl467Hpnb98P26ZQc81oNBAJEqAmr8cntGggECAFCgBAgECAECAFCgECAECAECAECAUKAECAECAECAUKAqEfE3wv7HOm1GggECBNmwjQQAgQmzIRpIAQIE2bCNBAIECbMhGkgBAhMmAnTQAgQJsyEmTANhABhwkyYBgIBwoSZMA2EAGHCTJgJ00AIECbMhGkgECBMmAnTQAgQmDATpoEQIAAAAOAI35/opObEU84hAAAAAElFTkSuQmCC' alt='' width=96 height=128 loading=lazy></div>
+  <div class=idhead>
+   <div class=stars><span class=on>★★★★</span><span class=off>☆</span></div><h3>골목을 메우던 사람</h3><p class=title>58층 · 이름이 남지 않음</p>
+   <p class=tagline>「돌로 막으면 됩니다. 안 됩니까?」</p>
+   <div class=meta><span>58층</span><span>균열기</span><span class=cls>장인</span>
+    <span>채석</span><span class=role>저항</span>
+    <span class=pw>전투력 384</span><span class=pw>본디 ?</span></div>
+  </div>
+ </header>
+ <div class=cols><section class=block><h4>생전</h4><p>채석장 십장이었다. 균열이 골목 하나를 삼킨 날, 그는 돌을 실어 와 메우기 시작했다. 아무도 돕지 않았고 아무도 말리지 않았다.</p></section>
+  <section class=block><h4>최후</h4><p>열하루 동안 돌을 부었다. 균열은 돌을 삼키는 만큼 넓어졌다. 열이틀째에 그도 삼켜졌다.</p></section></div>
+ <section class=block><h4>기억 · 각성 단계별 해금</h4><ol class=mem><li>첫날 수레 열두 대였다.</li><li>닷새째부터 혼자였다.</li><li>돌이 떨어지는 소리가 나지 않았다. 바닥이 없었다.</li><li>그는 그것을 알고도 계속 부었다.</li><li>메운 골목은 지금도 그대로 열려 있다.</li></ol></section>
+ <section class=block><h4>스탯</h4><div class=stats><div><span>잔존</span><b>750</b><i>+37.93</i></div><div><span>의지</span><b>134</b><i>+6.97</i></div><div><span>자취</span><b>76</b><i>+3.79</i></div><div><span>공명</span><b>83</b><i>+1.59</i></div></div></section>
+ <section class=block><h4>스킬</h4><div class=sk><b>「열두 대」</b><i>액티브</i><span>적 전체에게 피해를 주고 1턴간 이동을 봉쇄한다.</span></div><div class=sk><b>「바닥이 없다」</b><i>패시브</i><span>공격이 막히거나 무효화될 때마다 의지가 누적 상승한다.</span></div></section>
+ <section class=block><h4>개화 3갈래</h4><div class=tal><div class=talhead><em class='bl b-std'>정석</em><b>「수레 열두 대」</b></div><dl><dt>물주기</dt><dd>유품 위주 · 생업 채석 유지</dd><dt>초반</dt><dd>적 전체에 피해.</dd><dt>개화</dt><dd>피해량이 아군 수에 비례해 증가한다.</dd></dl><p class=note>안정적 광역.</p></div><div class=tal><div class=talhead><em class='bl b-cond'>조건부</em><b>「닷새째부터 혼자」</b></div><dl><dt>물주기</dt><dd>아군 3명 이하 반복</dd><dt>초반</dt><dd>아군이 적을수록 의지 상승.</dd><dt>개화</dt><dd>혼자 남으면 매 턴 잔존을 회복하며 싸운다.</dd></dl><p class=note>약체·소수 경로와 궁합.</p></div><div class=tal><div class=talhead><em class='bl b-late'>늦개화</em><b>「소리가 나지 않았다」</b></div><dl><dt>물주기</dt><dd>균열기 층에서 반복 편성</dd><dt>초반</dt><dd>적의 방어를 소량 무시한다. 수치가 낮아 무의미하다.</dd><dt>전환점</dt><dd>각성 4</dd><dt>개화</dt><dd>적의 방어와 회복을 완전히 무시한다.</dd></dl><p class=note>각성 3 기록이 힌트. 「바닥이 없다」를 알고도 계속했다는 서사가 곧 효과다.</p></div></section>
+ <div class=cols><section class=block><h4>뜰 · 채석</h4><p>뜰의 빈 곳을 돌로 메운다. 빈 곳은 줄지 않는다.</p>
+   <p class=sub>산출 진급석 · 진급석 생산량 크게 상승</p><p class=say>「아직 덜 메웠습니다.」</p></section>
+  <section class=block><h4>외형</h4><p>한쪽 어깨가 내려간 체구, 두 손에 굳은살</p><p class=sub>양 무릎이 늘 젖어 있다. 골목 바닥이 마르지 않았다</p>
+   <p class=sub>상징 · 이 빠진 정 <span class=sw style="background:#6F6A5C"></span> #6F6A5C</p></section></div>
+ <section class=block><h4>음성</h4>
+  <p class=say><em>소환</em>「…메울 곳이 있습니까.」</p>
+  <p class=say><em>승리</em>「막았습니다. 이번에는.」</p>
+  <p class=say><em>흐려질 때</em>「아직 덜 부었는데.」</p></section>
+ <p class=dnote>진급석 주 생산자. 「바닥이 없다」는 아래에서 온 것 네 번째 씨앗.</p>
+</article></main>
+<footer><div class="wrap">
+ <p>본디는 기록되지 않는다. 그 사람이 어디까지 갈 수 있는지는 기억해내 봐야 안다.</p>
+ <p style="margin-top:.6rem">비어 있는 자리는 아직 부르지 못한 사람이다.</p>
+ <p style="margin-top:1.2rem;font-size:.74rem">그림은 부품 조합으로 자동 생성한 임시 실루엣이다. 실제 아트는 교체된다.</p>
+</div></footer>

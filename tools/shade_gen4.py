@@ -126,7 +126,7 @@ def make(seed, world=1, rarity=None):
     death=tpl.format(place=t["place"],obj=t["obj"],을=josa(tgt,"을","를"))+". "+r.pick(TAIL[role])+"."
     # 스탯
     pool=POOL[rar]*(0.94+r.f()*0.12); w={s:BIAS[role][s]*(0.72+r.f()*0.62) for s in BIAS[role]}
-    tot=sum(w.values()); st={s:max(1,round(pool*w[s]/tot)) for s in w}; st["잔존"]*=7
+    tot=sum(w.values()); st={s:max(1,round(pool*w[s]/tot)) for s in w}; st["잔존"]*=4
     gr={s:round(st[s]*(0.030+r.f()*0.048),2) for s in st}
     # 스킬
     npk=3+r.i(2); base=list(SKILL[role])

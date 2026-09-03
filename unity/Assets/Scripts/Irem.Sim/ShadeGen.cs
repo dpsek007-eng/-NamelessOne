@@ -94,7 +94,7 @@ namespace Irem.Sim
             var stats = new Dictionary<string, int>();
             foreach (var st in T.StatOrder)
                 stats[st] = Math.Max(1, (int)Math.Round(pool * w[st] / tot, MidpointRounding.ToEven));
-            stats["잔존"] *= 7;
+            stats["잔존"] *= 4;
             var growth = new Dictionary<string, double>();
             foreach (var st in T.StatOrder)
                 growth[st] = Math.Round(stats[st] * (0.030 + r.F() * 0.048), 2, MidpointRounding.ToEven);

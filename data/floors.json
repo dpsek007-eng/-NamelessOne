@@ -57,7 +57,7 @@
       "teams": 1,
       "slot": 3,
       "members_required": 3,
-      "base_power": 620,
+      "base_power": 637,
       "routes": [
         {
           "id": "force",
@@ -74,7 +74,7 @@
       "teams": 1,
       "slot": 3,
       "members_required": 3,
-      "base_power": 635,
+      "base_power": 653,
       "routes": [
         {
           "id": "force",
@@ -91,7 +91,7 @@
       "teams": 1,
       "slot": 3,
       "members_required": 3,
-      "base_power": 650,
+      "base_power": 668,
       "routes": [
         {
           "id": "force",
@@ -108,7 +108,7 @@
       "teams": 1,
       "slot": 3,
       "members_required": 3,
-      "base_power": 666,
+      "base_power": 684,
       "routes": [
         {
           "id": "force",
@@ -125,7 +125,7 @@
       "teams": 1,
       "slot": 3,
       "members_required": 3,
-      "base_power": 681,
+      "base_power": 700,
       "routes": [
         {
           "id": "force",
@@ -142,7 +142,7 @@
       "teams": 1,
       "slot": 4,
       "members_required": 4,
-      "base_power": 898,
+      "base_power": 917,
       "routes": [
         {
           "id": "force",
@@ -181,7 +181,7 @@
       "teams": 1,
       "slot": 4,
       "members_required": 4,
-      "base_power": 1012,
+      "base_power": 1050,
       "routes": [
         {
           "id": "force",
@@ -198,7 +198,7 @@
       "teams": 1,
       "slot": 4,
       "members_required": 4,
-      "base_power": 1033,
+      "base_power": 1072,
       "routes": [
         {
           "id": "force",
@@ -215,7 +215,7 @@
       "teams": 1,
       "slot": 4,
       "members_required": 4,
-      "base_power": 1152,
+      "base_power": 1212,
       "routes": [
         {
           "id": "force",
@@ -232,7 +232,7 @@
       "teams": 1,
       "slot": 4,
       "members_required": 4,
-      "base_power": 1175,
+      "base_power": 1237,
       "routes": [
         {
           "id": "force",
@@ -260,7 +260,7 @@
       "teams": 2,
       "slot": 5,
       "members_required": 10,
-      "base_power": 2540,
+      "base_power": 2603,
       "routes": [
         {
           "id": "force",
@@ -299,7 +299,7 @@
       "teams": 1,
       "slot": 5,
       "members_required": 5,
-      "base_power": 1656,
+      "base_power": 1750,
       "routes": [
         {
           "id": "force",
@@ -316,7 +316,7 @@
       "teams": 1,
       "slot": 5,
       "members_required": 5,
-      "base_power": 1688,
+      "base_power": 1784,
       "routes": [
         {
           "id": "force",
@@ -333,7 +333,7 @@
       "teams": 1,
       "slot": 5,
       "members_required": 5,
-      "base_power": 1747,
+      "base_power": 1862,
       "routes": [
         {
           "id": "force",
@@ -350,7 +350,7 @@
       "teams": 1,
       "slot": 5,
       "members_required": 5,
-      "base_power": 1780,
+      "base_power": 1897,
       "routes": [
         {
           "id": "force",
@@ -367,7 +367,7 @@
       "teams": 3,
       "slot": 5,
       "members_required": 15,
-      "base_power": 4269,
+      "base_power": 4388,
       "routes": [
         {
           "id": "force",
@@ -417,7 +417,7 @@
       "teams": 1,
       "slot": 5,
       "members_required": 5,
-      "base_power": 2041,
+      "base_power": 2178,
       "routes": [
         {
           "id": "force",
@@ -434,7 +434,7 @@
       "teams": 1,
       "slot": 5,
       "members_required": 5,
-      "base_power": 2077,
+      "base_power": 2217,
       "routes": [
         {
           "id": "force",
@@ -451,7 +451,7 @@
       "teams": 1,
       "slot": 5,
       "members_required": 5,
-      "base_power": 2113,
+      "base_power": 2257,
       "routes": [
         {
           "id": "force",
@@ -468,7 +468,7 @@
       "teams": 1,
       "slot": 5,
       "members_required": 5,
-      "base_power": 2439,
+      "base_power": 2609,
       "routes": [
         {
           "id": "force",
@@ -476,12 +476,12 @@
           "conditions": []
         },
         {
-          "id": "era",
+          "id": "trade",
           "power": 0.45,
           "conditions": [
             {
-              "type": "시대",
-              "value": "붕괴기",
+              "type": "생업",
+              "value": "담장",
               "count": 1
             }
           ]
@@ -498,12 +498,12 @@
           ]
         },
         {
-          "id": "trade",
-          "power": 0.55,
+          "id": "era",
+          "power": 0.62,
           "conditions": [
             {
-              "type": "생업",
-              "value": "담장",
+              "type": "층범위",
+              "value": "21~27",
               "count": 1
             }
           ]
@@ -518,7 +518,7 @@
       "teams": 2,
       "slot": 5,
       "members_required": 10,
-      "base_power": 4243,
+      "base_power": 4532,
       "routes": [
         {
           "id": "force",
@@ -546,7 +546,7 @@
       "teams": 1,
       "slot": 5,
       "members_required": 5,
-      "base_power": 2521,
+      "base_power": 2697,
       "routes": [
         {
           "id": "force",
@@ -563,7 +563,7 @@
       "teams": 1,
       "slot": 5,
       "members_required": 5,
-      "base_power": 2561,
+      "base_power": 2741,
       "routes": [
         {
           "id": "force",
@@ -580,7 +580,7 @@
       "teams": 1,
       "slot": 5,
       "members_required": 5,
-      "base_power": 2602,
+      "base_power": 2784,
       "routes": [
         {
           "id": "force",
@@ -603,8 +603,8 @@
           "power": 0.6,
           "conditions": [
             {
-              "type": "시대",
-              "value": "붕괴기",
+              "type": "층범위",
+              "value": "25~31",
               "count": 1
             }
           ]
@@ -619,7 +619,7 @@
       "teams": 1,
       "slot": 5,
       "members_required": 5,
-      "base_power": 2962,
+      "base_power": 3167,
       "routes": [
         {
           "id": "force",
@@ -636,7 +636,7 @@
       "teams": 3,
       "slot": 5,
       "members_required": 15,
-      "base_power": 6496,
+      "base_power": 6857,
       "routes": [
         {
           "id": "force",
@@ -686,7 +686,7 @@
       "teams": 1,
       "slot": 5,
       "members_required": 5,
-      "base_power": 3187,
+      "base_power": 3406,
       "routes": [
         {
           "id": "force",
@@ -703,7 +703,7 @@
       "teams": 1,
       "slot": 5,
       "members_required": 5,
-      "base_power": 3235,
+      "base_power": 3457,
       "routes": [
         {
           "id": "force",
@@ -720,7 +720,7 @@
       "teams": 1,
       "slot": 5,
       "members_required": 5,
-      "base_power": 3287,
+      "base_power": 3508,
       "routes": [
         {
           "id": "force",
@@ -732,8 +732,8 @@
           "power": 0.5,
           "conditions": [
             {
-              "type": "시대",
-              "value": "붕괴기",
+              "type": "층범위",
+              "value": "30~36",
               "count": 1
             }
           ]
@@ -759,7 +759,7 @@
       "teams": 1,
       "slot": 5,
       "members_required": 5,
-      "base_power": 3335,
+      "base_power": 3559,
       "routes": [
         {
           "id": "force",
@@ -776,7 +776,7 @@
       "teams": 2,
       "slot": 5,
       "members_required": 10,
-      "base_power": 5786,
+      "base_power": 6173,
       "routes": [
         {
           "id": "force",
@@ -815,7 +815,7 @@
       "teams": 1,
       "slot": 5,
       "members_required": 5,
-      "base_power": 3430,
+      "base_power": 3661,
       "routes": [
         {
           "id": "force",
@@ -832,7 +832,7 @@
       "teams": 1,
       "slot": 5,
       "members_required": 5,
-      "base_power": 3478,
+      "base_power": 3712,
       "routes": [
         {
           "id": "force",
@@ -849,7 +849,7 @@
       "teams": 1,
       "slot": 5,
       "members_required": 5,
-      "base_power": 3526,
+      "base_power": 3763,
       "routes": [
         {
           "id": "force",
@@ -872,8 +872,8 @@
           "power": 0.55,
           "conditions": [
             {
-              "type": "시대",
-              "value": "붕괴기",
+              "type": "층범위",
+              "value": "35~41",
               "count": 1
             }
           ]
@@ -888,7 +888,7 @@
       "teams": 1,
       "slot": 5,
       "members_required": 5,
-      "base_power": 3797,
+      "base_power": 4055,
       "routes": [
         {
           "id": "force",
@@ -927,7 +927,7 @@
       "teams": 3,
       "slot": 5,
       "members_required": 15,
-      "base_power": 8880,
+      "base_power": 9477,
       "routes": [
         {
           "id": "force",
@@ -977,7 +977,7 @@
       "teams": 1,
       "slot": 5,
       "members_required": 5,
-      "base_power": 4117,
+      "base_power": 4404,
       "routes": [
         {
           "id": "force",
@@ -1016,7 +1016,7 @@
       "teams": 1,
       "slot": 5,
       "members_required": 5,
-      "base_power": 4171,
+      "base_power": 4462,
       "routes": [
         {
           "id": "force",
@@ -1033,7 +1033,7 @@
       "teams": 1,
       "slot": 5,
       "members_required": 5,
-      "base_power": 4225,
+      "base_power": 4519,
       "routes": [
         {
           "id": "force",
@@ -1050,7 +1050,7 @@
       "teams": 1,
       "slot": 5,
       "members_required": 5,
-      "base_power": 4278,
+      "base_power": 4577,
       "routes": [
         {
           "id": "force",
@@ -1067,7 +1067,7 @@
       "teams": 2,
       "slot": 5,
       "members_required": 10,
-      "base_power": 7401,
+      "base_power": 7905,
       "routes": [
         {
           "id": "force",
@@ -1106,7 +1106,7 @@
       "teams": 1,
       "slot": 5,
       "members_required": 5,
-      "base_power": 4386,
+      "base_power": 4691,
       "routes": [
         {
           "id": "force",
@@ -1123,7 +1123,7 @@
       "teams": 1,
       "slot": 5,
       "members_required": 5,
-      "base_power": 4439,
+      "base_power": 4749,
       "routes": [
         {
           "id": "force",
@@ -1162,7 +1162,7 @@
       "teams": 1,
       "slot": 5,
       "members_required": 5,
-      "base_power": 4493,
+      "base_power": 4806,
       "routes": [
         {
           "id": "force",
@@ -1179,7 +1179,7 @@
       "teams": 1,
       "slot": 5,
       "members_required": 5,
-      "base_power": 4547,
+      "base_power": 4864,
       "routes": [
         {
           "id": "force",
@@ -1196,7 +1196,7 @@
       "teams": 3,
       "slot": 5,
       "members_required": 15,
-      "base_power": 10768,
+      "base_power": 11499,
       "routes": [
         {
           "id": "force",
@@ -1246,7 +1246,7 @@
       "teams": 1,
       "slot": 5,
       "members_required": 5,
-      "base_power": 4654,
+      "base_power": 4978,
       "routes": [
         {
           "id": "force",
@@ -1263,7 +1263,7 @@
       "teams": 1,
       "slot": 5,
       "members_required": 5,
-      "base_power": 4708,
+      "base_power": 5036,
       "routes": [
         {
           "id": "force",
@@ -1280,7 +1280,7 @@
       "teams": 1,
       "slot": 5,
       "members_required": 5,
-      "base_power": 4761,
+      "base_power": 5093,
       "routes": [
         {
           "id": "force",
@@ -1319,7 +1319,7 @@
       "teams": 1,
       "slot": 5,
       "members_required": 5,
-      "base_power": 4815,
+      "base_power": 5151,
       "routes": [
         {
           "id": "force",
@@ -1336,7 +1336,7 @@
       "teams": 2,
       "slot": 5,
       "members_required": 10,
-      "base_power": 8498,
+      "base_power": 9076,
       "routes": [
         {
           "id": "force",
@@ -1359,8 +1359,8 @@
           "power": 0.58,
           "conditions": [
             {
-              "type": "시대",
-              "value": "균열기",
+              "type": "층범위",
+              "value": "52~58",
               "count": 1
             }
           ]
@@ -1375,7 +1375,7 @@
       "teams": 1,
       "slot": 5,
       "members_required": 5,
-      "base_power": 4922,
+      "base_power": 5266,
       "routes": [
         {
           "id": "force",
@@ -1392,7 +1392,7 @@
       "teams": 1,
       "slot": 5,
       "members_required": 5,
-      "base_power": 4976,
+      "base_power": 5323,
       "routes": [
         {
           "id": "force",
@@ -1409,7 +1409,7 @@
       "teams": 1,
       "slot": 5,
       "members_required": 5,
-      "base_power": 5030,
+      "base_power": 5381,
       "routes": [
         {
           "id": "force",
@@ -1448,7 +1448,7 @@
       "teams": 1,
       "slot": 5,
       "members_required": 5,
-      "base_power": 5083,
+      "base_power": 5439,
       "routes": [
         {
           "id": "force",
@@ -1465,7 +1465,7 @@
       "teams": 3,
       "slot": 5,
       "members_required": 15,
-      "base_power": 12218,
+      "base_power": 13049,
       "routes": [
         {
           "id": "force",
