@@ -80,6 +80,7 @@ header.top p{font-size:.85rem;color:var(--muted);margin:.5rem 0 0;max-width:44re
 .ch img{width:2.4rem;height:3.2rem;object-fit:contain;image-rendering:pixelated}
 .ch b{display:block;color:var(--ink);font-weight:500;font-size:.78rem;line-height:1.25}
 .ch span{color:var(--faint);font-size:.66rem;font-family:"Nanum Gothic Coding",monospace}
+.ch .tr{color:var(--ember);font-family:"Nanum Myeongjo",serif;font-size:.68rem;display:block}
 .st{color:var(--ember);font-size:.62rem;letter-spacing:.05em}
 
 /* 전투 */
@@ -106,19 +107,23 @@ header.top p{font-size:.85rem;color:var(--muted);margin:.5rem 0 0;max-width:44re
 .res b{font-family:"Nanum Myeongjo",serif}
 
 /* ── 전투 화면 ── */
-.field{display:grid;grid-template-columns:1fr auto 1fr;gap:.6rem;align-items:end;
- background:var(--sunk);border:1px solid var(--hair);border-radius:4px;
- padding:1.2rem .9rem .9rem;min-height:15rem;margin-bottom:.8rem;overflow:hidden}
-.side{display:flex;gap:.5rem;align-items:flex-end;justify-content:center;flex-wrap:wrap}
-.side.foe{flex-direction:row-reverse}
-.vs{font-family:"Nanum Gothic Coding",monospace;font-size:.66rem;color:var(--faint);
- letter-spacing:.2em;align-self:center;writing-mode:vertical-rl}
-.un{width:4.6rem;position:relative;text-align:center;transition:transform .16s ease-out}
+.field{position:relative;background:var(--sunk);border:1px solid var(--hair);border-radius:4px;
+ height:17rem;margin-bottom:.8rem;overflow:hidden}
+.lane{position:absolute;left:0;right:0;bottom:0;height:2.2rem;
+ background:linear-gradient(to top,color-mix(in srgb,var(--ink) 7%,transparent),transparent)}
+.zone{position:absolute;top:0;bottom:0;background:color-mix(in srgb,var(--bad) 9%,transparent);
+ border-left:1px dashed var(--line);border-right:1px dashed var(--line)}
+.goalpost{position:absolute;top:0;bottom:0;width:2px;background:var(--ember);opacity:.5}
+.un{position:absolute;bottom:1.5rem;width:4.2rem;margin-left:-2.1rem;text-align:center;
+ transition:left .3s ease-out, transform .16s ease-out}
 .un.act{transform:translateY(-10px)}
-.un.ally.lunge{transform:translateX(14px) translateY(-6px)}
-.un.foe.lunge{transform:translateX(-14px) translateY(-6px)}
+.un.ally.lunge{transform:translateX(12px) translateY(-6px)}
+.un.foe.lunge{transform:translateX(-12px) translateY(-6px)}
+.un.ref img,.un.ref .fg{opacity:.75}
+.un.ref .un-nm{color:var(--ember)}
+.un.gone{opacity:0;transform:translateY(-14px)}
 .un.fell{opacity:.22;filter:grayscale(1)}
-.un img{width:100%;height:5.4rem;object-fit:contain;image-rendering:pixelated;display:block}
+.un img{width:100%;height:5rem;object-fit:contain;image-rendering:pixelated;display:block}
 .un .fg{width:3.4rem;height:5.4rem;margin:0 auto;background:var(--bad);opacity:.55;
  border-radius:2px 2px 0 0;clip-path:polygon(50% 0,78% 22%,74% 100%,26% 100%,22% 22%)}
 .un .un-nm{font-size:.6rem;color:var(--muted);line-height:1.25;margin-top:.15rem;
@@ -140,6 +145,13 @@ header.top p{font-size:.85rem;color:var(--muted);margin:.5rem 0 0;max-width:44re
  animation:flash .7s ease-out forwards;pointer-events:none;z-index:2}
 @keyframes flash{0%{opacity:0;transform:translate(-50%,-50%) scale(.9)}
  25%{opacity:.5}100%{opacity:0;transform:translate(-50%,-50%) scale(1.06)}}
+.goalbar{display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;margin-bottom:.6rem;font-size:.8rem}
+.goalbar .g{font-family:"Nanum Myeongjo",serif;color:var(--ink);font-size:.92rem}
+.goalbar .prog{font-family:"Nanum Gothic Coding",monospace;color:var(--ember);font-weight:700}
+.envs{display:flex;gap:.35rem;flex-wrap:wrap;margin-bottom:.6rem}
+.env{font-family:"Nanum Gothic Coding",monospace;font-size:.66rem;color:var(--muted);
+ border:1px solid var(--line);border-radius:2px;padding:.08rem .4rem}
+.env b{color:var(--ink);font-weight:600}
 .ctl{display:flex;gap:.4rem;align-items:center;flex-wrap:wrap;margin-bottom:.8rem}
 .ctl .sp{font-family:"Nanum Gothic Coding",monospace;font-size:.7rem;color:var(--faint);margin-left:.3rem}
 .ticker{font-family:"Nanum Gothic Coding",monospace;font-size:.76rem;color:var(--muted);
@@ -211,7 +223,7 @@ footer{border-top:1px solid var(--line);margin-top:2.5rem;padding:1.4rem 0 3rem;
  <p>그림은 부품 조합으로 만든 임시 실루엣입니다. 전투 수치·스킬·층 조건은 실제 설계 데이터입니다.</p>
 </div></footer>
 <script id="DATA" type="application/json">
-{"chars":[{"id":"seren","name":"세렌","r":5,"role":"헌신","floor":41,"era":"균열기","cls":"성직","trade":"종탑","hp":736,"atk":140,"def":94,"spd":122,"pw":554,"col":"#B8894A","tag":"종이 울리는 동안은 아직 늦지 않았다.","sp":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJAAAADACAYAAADryOpPAAACk0lEQVR42u3dsUrzUBiA4SpeRSFgEQRHVyc3tXfj5DU4eTeim5OruyARApm9gzqIkIjVFNLmfOc8z/QPDv3Tl+/jmLTOZgAAAAAAAJCnPZfgb/Nqsfr+d9vUrtcP+y4BAmIyBy5BOh5ul6v/fuby5j6pNWoCISCssGRPXk5kJhACwgoLuraG/HzJ68wEQkBYYSHWlnVmAiEgrLAM1pZ1ZgIhIASEgBAQOIVNdfIq+URmAiEgBISAEBAICAEhIAQEAkJACAgBgYAYW7aPc0z1CMeQ15PTox0mEAJCQAgIAYGAEBACQkAgIASEgBAQCIixhX+cI7XHNnJ9zSYQAkJACAgEhFPYl+4D6hFPN/0H7E/CvX4TCAEhIASEgEBACAgBUYaQv0g8O7/49Rdu72+v2fxfTCCsMMhmhQ0Z9YdHxyHWWfd1mkBYYZDNCot+Ktnl9Xl+epz8uxZNIARE4SvM2oq7zkwgBEQhK8yq2v213fZqM4EQEIWssO443cY6WzeuU/i8WPfzX21Tz6a4DiYQVhhWWFJSuB802uu/WvpoM1YYpL/CNj2RRV9Vua5yEwgB4RRmVW1p9ZtAWGFYYeHWVmrfl9h9Pf3vRYy97k0gBISAEBACAgEhIASEgEBACIiEZfXoRPy/F2YCYYWBgBAQAkJAICAEhIAQEAiIEYW/Fxbx/tc6Ee+LmUAICAEhIAQEAkJACAgBgYAQEAkLeS8sp/tf60S5L2YCISAEhIAQEGwo6p+8/PDWmUAICCvMCsMEQkCEFOZe2LxavJT6JrVNfWoCYYVB5FOYk5cJhIDACsMEQkBYYVaYCQQCYiJJ3wubV4s7b1Ff29TXJhBWGEQ4hTl5mUAICAAAAAAAAAAAAAAAgL5Pl6uZpQx/62wAAAAASUVORK5CYII=","skills":[{"n":"여섯 시의 종","t":"액티브","d":"아군 전체의 잔존을 회복시킨다. 회복량은 자신의 잃은 잔존에 비례해 증가한다."},{"n":"멈추지 않는 손","t":"패시브","d":"자신이 흐려질 때, 아군 전체에게 1회 흐려짐 방지를 부여한다."}]},{"id":"kabril","name":"카브릴","r":5,"role":"수호","floor":24,"era":"붕괴기","cls":"병졸","trade":"문지기","hp":858,"atk":101,"def":131,"spd":93,"pw":553,"col":"#4A5A6B","tag":"명령은 옳았다. 나는 그것을 따랐다.","sp":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJAAAADACAYAAADryOpPAAACgklEQVR42u3dPUozURSA4USyCkFICKS2FgQ7IUtwC67HLbiEgJ0gWFsLoiBYu4NYpBmRgRlndM6953nqT74xvpzDzc9kNgMAAAAAAAAAAAAAgKTmHoKD45PV/rc/+/H+mvZxPJIOAsIKK21tWWcmEALCCqtgbWVeZyYQAmI6Cw/B/9heXe8jXc/u9maU9WoCISCssGpOXhH+XxMIASEgEBACQkAICATE2FK8nSPCE3q1vrXDBEJAWGFVrjPvSAQBISAEhIDAKeyvT2Q+2gwCwgoraJ25wRQICAEhIAQEAkJACIjaFf8EWE13wCjxCUkTCAEhIASEgKCmU9jZxWWvE9bby3Nxf4DletPr3z/e34X6m5lACAgBISAEBAJCQAiIHFJ82crp+Xbya3h62JlAICCssDbN15Uivy7W9/UvEwgrDASEgBAQTmFlqfVJPBMIASEgEBACwiksjuadLqJ95eVyvanmjiImEAJCQAgIAUHmU1i0O1d0uc6+dyAxgbDCIOwKG2ukR7v9b/N6htzOt/n4RFjZJhACQkAICAFB6aewmk5epV+nCYSAEBACAgHhFPZTiV+w0nb9Jd54ygRCQAgIASEgyHAKK/3kVdOJzARCQAgIASEgyHAKazuhdPmcVN93Aw65UVWXz3/5aDNWGAgIASEgkpln+4WjncJMIKwwEBACQkAICASEgBAQAgIBISAEhIDgu0XC3/lzop81gUBAWGFWmAmEgMAKs8JMIASEFWaFmUAgIKwwK8wEQkBghVlhJhACwgqzwqwwEwgBYYVZYSYQCAgrzAozgRAQVpgVZoWZQAgIK8wKM4FAQFhhVpgJhIDACrPCTCAEBAAAAAzwBXO0i+AUlg2RAAAAAElFTkSuQmCC","skills":[{"n":"빗장","t":"액티브","d":"3턴 동안 아군이 받는 모든 피해를 자신이 대신 받는다."},{"n":"등 뒤의 소리","t":"패시브","d":"아군이 흐려질 때마다 자취가 영구히 상승한다. 전투당 5회까지."}]},{"id":"idel","name":"이델","r":4,"role":"탐구","floor":47,"era":"균열기","cls":"관리","trade":"서고","hp":479,"atk":99,"def":61,"spd":120,"pw":409,"col":"#6B7FA8","tag":"아무도 안 믿어도 기록은 남습니다.","sp":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJAAAADACAYAAADryOpPAAACrElEQVR42u3dMUokQRgF4FI8hSAogrmpiWZewdTYQ4iH8A5ewczIQwiiIBh7Aw2EoVAax+7prvqrvi/eWZbh8d5WT/dMSgAAAAAAAAAAAAAA0Kktb8G33b2Dz7GvfX976fZ93BYdBAgTFm22zJkGQoAwYQ3MVs9zpoEQIAQIAUKAwCms7MmrtxOZBkKAKGfHWxDXydn5apofH+6LTKQGQoBwCnMKGzFbQ5acMw2EAOEUxkyns7mnTQMhQDiFNXkiW/LkVepEpoEQIJzC2OBsaSBMGCasSfnJqNVHm30WhgnDhJmzhWcryslLAyFAmDCCnrw0EAKECSPVfauGBkKAqFv4OxJreOZrU/YPj0wYJgycwlpVw2xpIAQIEzba0MW31+en5k9eGggTBk5hnZ+8rq7vVv8NuL25GP33ayBMGCaMiTOkgTBhmDAWdnx6uc6fqfaWFQ2EAGHCNiL/XKnmz8V+PAod+o5KDYQAYcL+FPGbKzQQCBAChAAhQCBACBACRCuavZ2jts/F5v4G+yk3xmsgTBgmrCr5s1RRvoSq1AxpIAQIE0Yns6WBECBM2KxqO3nl/54afhZTAyFACBACBAKEU9hvngXTQAgQBJ2w/4ryTfUtXVTUQAgQAoQAIUAgQAgQAkQfwl9IjPgzl7noFxU1EAJEOeFv7o7y2PI6TBgmDJqfsJZmK/qcaSAECAFCgBAgECAECAGiD2EuJPZw8XBIzRcVNRAChAAhQAgQtHoKK3Way09AU16rgUCAECAECAGClFKfvxf2Uei1GggECBNmwjQQAgQmzIRpIAQIE2bCNBAIECbMhGkgBAhMmAnTQAgQJsyEmTANhABhwkyYBgIBwoSZMA2EAGHCTJgJ00AIECbMhGkgECBMmAnTQAgQmDATpoEQIAAAAGCCL4wlr+LYA92yAAAAAElFTkSuQmCC","skills":[{"n":"여덟 번째 보고서","t":"액티브","d":"적 하나의 약점을 노출시킨다. 이후 3턴 동안 그 적이 받는 피해가 증가한다."},{"n":"반려된 기록","t":"패시브","d":"같은 적을 반복해 공격할수록 아군 전체의 명중과 피해가 누적 상승한다."}]},{"id":"miro","name":"미로","r":4,"role":"도피","floor":31,"era":"붕괴기","cls":"병졸","trade":"전령","hp":407,"atk":111,"def":49,"spd":139,"pw":410,"col":"#8FA85E","tag":"빨랐어. 누구보다 빨랐어. 그게 문제였지.","sp":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJAAAADACAYAAADryOpPAAAC4ElEQVR42u3dMUozQRgGYBUvYCUsLGQJ5BCCYOcJBKvY2lqkFusUttZWgiewEwRbe0EiBAJ23kALMYyQgEl2k5md56nCjxojL9/Lt5nsv7UFAAAAAAAAAAAAAACZ2vYn+FGU1dey3zsZj7L9O+6IDgKECkutttSZCYQAocJaUFs515kJhAAhQAgQAgS2sM1uXrltZCYQAoQAIUAIEAgQAoQAIUAgQAgQEXMisUFOJIIAIUAIEAIEtrCmNzIfbQYBQoUlVGduMAUChAAhQAgQCBAChADRdslfAIvhzht1SfGCpAmEACFACBACBDlsYQdHxzM3r/e3V5uXCYQAIUAgQAgQAoQAgQDRgN0cXuRgeLjx32E4eJr57+FF0efHh7VdVLy+60+f9+L0dunnNYFQYaiwWnS6venjmN8XC3/PumrIBEKFocKiNe8IR+pOzveDx/3kXqMJhAChwho17yIeJhAChAAhQCBA2MLqEtv7YuHnvzrdXu0XDFc5kmECocJQYazo/uZjoa9f5wlGEwgBQoWtTTjeY7uP4t/qWf6YyqYO5JtACBBxSObmRoueSIz5UP28m0ot+hptYagwbGEkul2aQKgwbGGt2cLadJvfGC4SmkAIELYwWrBtmUAIELYwm9cSG5kJhAoDAUKAECBaJMkLiW3avELh4f9UNjITCAFCgBAgBAhy2ML+85+VzDsOsejHnMNtaJXvNYFAgMiqwuo6lRfb3TlMIBAgBAgBQoCwhRGq6wJgisczTCAECAFCgECAECAECAECAUKAECBaJJf3wj4j+zkmEAgQKmyd1TMZj/Z+HxdlNRIfEwgBQoU1oCirl4a3JxuZCYQAocJi3rxUmAmEAKHCVJgJBAKEClNhJhACBCpMhZlACBAqLPUKm4xHV03+/KKsLld4LhMIFQYqzBZmAiFAqLAIFWV1psJMIAQIFWbzUmEmEAKEClNhJhAIECpMhZlACBAAAACwAd/gMrlOJtqa8gAAAABJRU5ErkJggg==","skills":[{"n":"숨 네 번","t":"액티브","d":"즉시 추가 행동을 얻는다. 이 행동으로 준 피해만큼 자신의 잔존이 감소한다."},{"n":"전하지 못한 서신","t":"패시브","d":"전투 시작 시 회피율이 크게 상승하고, 매 턴 조금씩 감소한다."}]},{"id":"north_gatekeeper","name":"북문의 수문장","r":3,"role":"수호","floor":24,"era":"붕괴기","cls":"장인","trade":"담장","hp":422,"atk":58,"def":75,"spd":66,"pw":312,"col":"#5A6070","tag":"대장은 문을 닫으라고 했다. 나는 문 앞에 있었다.","sp":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJAAAADACAYAAADryOpPAAACd0lEQVR42u3dQUrrUBSA4US6CkFoEQS34MiZe3DkEroUl+DIPThz5BYEQQwIjt1BO3BypUQS05B77v2+0ZsIad/POdy0xqYBAAAAAAAAAAAAAIBKtd6CH6dnm91/f/br86Pa9/FEOggIKyza2rLOTCAEhBVWwNqqeZ2ZQAgIASEgBAROYcuevGo7kZlACAgBISAEBAJCQAiIOqy8BbHc3m1H3RR9fLif9QamCYSAsMJmlX4O5RuJJhACQkAgIASEU1hJJzK/2gwCwgoLtM48YAoEhIAQEAICASEgBETpwt9IzOHJG8e6hog3JE0gBISAEBACgpJOYVfXN6NON937W7j/gPX5RfrvXbTrN4EQEFYYf6259aUJhBUGAkJACAgBgYAQEIsq6kZi+rlSzp+LpddpAmGFgYAQEAJCQCAgBISAEBAIiNkU+6X6pf5G2JDrifj7XyYQAkJACAgEhFPYoZfnpzbadQ55AknXvWb7Gk0gBIQV1owZ6UPkcPOw73qmPM43fX9yWGcmEAJCQAgIAUH0U1hJJ6/o12kCISAEhIBAQDiFHYr4B1b6rj/ig6dMIASEgBAQAoIaTmHRT14lnchMIASEFTZK33gf8iXzsV+lmPKUjyFfnj/WLxGYQAgIAYGAEBACQkAgIObU1vaCc7uRaAJhhYGAEBACQkAgIASEgBAQCAgBISAEBL+tKnzN3wv9rAkEAsIKs8JMIAQEVpgVZgIhIKwwK8wEAgFhhVlhJhACAivMCjOBEBBWmBVmhZlACAgrzAozgUBAWGFWmAmEgLDCrDArzARCQFhhVpgJBALCCrPCTCAEBFaYFWYCISAAAABggj1TvZGuwHlAIQAAAABJRU5ErkJggg==","skills":[{"n":"배수로","t":"액티브","d":"가장 잔존이 낮은 아군 하나를 즉시 전열에서 빼내고 피해를 대신 받는다."},{"n":"이름 없는 자리","t":"패시브","d":"24층에서 전투 시 모든 스탯이 크게 상승한다."}]},{"id":"baker_18f","name":"빵을 굽던 사람","r":3,"role":"헌신","floor":13,"era":"종말기","cls":"장인","trade":"화덕","hp":420,"atk":60,"def":58,"spd":82,"pw":312,"col":"#C4763A","tag":"다들 배가 고팠으니까요.","sp":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJAAAADACAYAAADryOpPAAACjUlEQVR42u3czUlzQRiG4ShpIoKgCJaQRXDhzhpsxCJSih24cyEpQhAFwbVgAbpwkQRyQHPmZOY973Xtvg8Ef27mYfI3mQAAAAAAAAAAAAAAQFJHfgW/Tk7Pv/f92o/317S/x2PpICBMWLTZMmdOIASECRvBbGWeMycQAkJACAgBgVtY3ZtXthuZEwgBISAEhIBAQAgIASEgEBAComFekTggr0gEASEgBISAwC1s6BuZtzaDgDBhgebMB0yBgBAQAkJAICAEhIAYu/APgLXwyRulRHxA0gmEgBAQAkJAkO0WFv1GFv2lIE4gBISAEBACAgEhIAREDiEfxFpc3+x8wPDt5Tncz3J2cbnz/1ePDyH+Nk4gBIQJ23u2urQ8Z12z1aXlOXMCISDqmUafqrFazr/W/5gvivxOrpar4lPoBEJAJL+FDTFbUW5hW1NVSZ9pcwJhwkgyYYe8YbU8Yfe3s2a/t//OmRMIE0Y9B30gcfM5nSHmrOs5oxbeL7b9/q/ZaB4sdQIhIJJM2NCziBMIAZFJmOfC+kxVe7ewtae7RfXvzXNhmDBMWJEJK3WravnDpv7yoVJDTJtXJGLCMGEhRJ8wJxAmDFJNmI/5dQIhIAQEAkJAuIW5eY37RuYEQkAICAEhIMhwCxvTzSv6jcwJhIAwYc3O3+aU9PlaJxAICAEhIAQEAkJACAgBISAQEAJCQAgIBISAEBACAgEhIASEgEBAFDJN+DN/VvpaJxAICBNmwpxACAhMmAlzAiEgTJgJcwKBgDBhJswJhIDAhJkwJxACwoSZMBPmBEJAmDAT5gQCAWHCTJgTCAFhwkyYCXMCISBMmAlzAoGAMGEmzAmEgMCEmTAnEAICAAAAevgBWtuevhWennAAAAAASUVORK5CYII=","skills":[{"n":"서른일곱 개","t":"액티브","d":"아군 전체의 잔존을 소량 회복하고, 다음 턴 받는 피해를 감소시킨다."},{"n":"꺼지지 않은 불","t":"패시브","d":"전투 중 매 턴 아군 전체가 잔존을 조금씩 회복한다."}]},{"id":"someones_mother","name":"누군가의 어머니","r":2,"role":"헌신","floor":18,"era":"종말기","cls":"하인","trade":"물장수","hp":313,"atk":42,"def":44,"spd":70,"pw":239,"col":"#9A7A88","tag":"…이름을 부르는 소리만 남았다.","sp":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJAAAADACAYAAADryOpPAAACw0lEQVR42u3dMUoDURQF0CiuQhAUwUWk0spVCFa6BbFKJW5BW1dhZ+UiBIkQSO0OYmEz6gyM8/OZ/+edUwaiyXh5lzfOJLMZAAAAAAAAAAAAAAAEteMQfNs/ONoMfe56tQx7HHdFBwFChdVWW+rMBEKAUGETqK3IdWYCIUAIEAKEAIEtbNzNK9pGZgIhQAgQAoQAgQAhQAgQAgQChABRMFckZuSKRBAgBAgBQoDAFpZ7I3NrMwgQKqyiOvMBUyBACBAChACBACFACBBTV/0JsBI+eWNbajwhaQIhQAgQAoQAQbQtrPaNrPZLQUwgBAgBQoAQIBAgBAgBIoYqT2LNT89bTxh+vL9V914Oj09aH399ea7ib2MCIUCosMG11aXkOuuqrS4l15kJhAAxnr3aqyqCrmNSQrWZQAgQwStMbaUft7HqzARCgAhSYarqr8v5Wevji6eHf/2cPjcULC6uWx+/ursZXH8mECqMIBXW3BRy1FnXJlLC/WLN+7/Wq2WzwjZttdVVNyly/HwTCAFiPKP9L2VbFdbnBFppFdb12nLUVp86S7m92gRChRFkC0vZyGq5yDyx2qr7RmkTCAEiYIXlrqrSPmyq+Xqm9P1iJhACRPAKm+qGZQKBABFqC5vS5hVhIzOBECAECAFCgCDaFlb7V17W/vpNIASI8fjW5oI0Tyo+3t5v/X2l3MJsAqHCsIWprYm9LxMIAUKFDd5WctdE83elPHeAKurMBEKAUGH8kuOknwmEACFAIEAIEAKEACFAIEAIEAKEAIEAIUAIEAIEAoQAIUAIEPwU8aL6z5GeawKBAKHCVJgJhACBClNhJhAChApTYSYQCBAqTIWZQAgQqDAVZgIhQKgwFabCTCAECBWmwkwgECBUmAozgRAgVJgKU2EmEAKEClNhJhAIECpMhZlACBCoMBVmAiFAAAAAQIIvV3m5kZjn8RAAAAAASUVORK5CYII=","skills":[{"n":"감싸기","t":"액티브","d":"아군 하나에게 보호막을 부여한다. 보호막이 유지되는 동안 그 아군은 흐려지지 않는다."},{"n":"두 음절","t":"패시브","d":"잔존이 30% 이하인 아군이 있을 때 자신의 회복량이 크게 증가한다."}]},{"id":"ash_sweeper","name":"재를 쓸던 사람","r":3,"role":"수호","floor":5,"era":"종말기","cls":"장인","trade":"담장","hp":415,"atk":57,"def":79,"spd":66,"pw":313,"col":"#7A7168","tag":"길이 보여야 사람이 오지요.","sp":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJAAAADACAYAAADryOpPAAACdUlEQVR42u3dsUrzUBiA4UR6FYJgEdxdnbp5K66uXkBXV2/FrZOruyAVBGfvoB1cIiXlxDTkfOc8z/QvQtr/5fs4aY1NAwAAAAAAAAAAAAAAlWq9Bb/OL5a7//7s99e22vfxTDoICCss2tqyzkwgBIQVVsDaqnmdmUAICAEhIAQETmHznrxqO5GZQAgIASEgBAQCQkAIiDosvAWxPD7cD7opun56nvQGpgmEgLDCJtX9HMo3Ek0gBISAQEAICKewkk5kfrUZBIQVFmidecAUCAgBISAEBAJCQAiI0oW/kZjDkzdOdQ0Rb0iaQAgIASEgBAQlncJuV3eDTjefH+/h/gMur667/95Fu34TCAFhhXHE6mZpAmGFgYAQEAJCQCAgBMSsirqR2P1cKefPxbrXaQJhhYGAEBACQkAgIASEgBAQCIjJFPul+rn+RljK9UT8/S8TCAEhIAQEAsIp7NDr5qWNdp0pTyDZvG2zfY0mEALCCmuGjPQUOdw87LueMY/z7b4/OawzEwgBISAEhIAg+imspJNX9Os0gRAQAkJAICCcwg5F/AMrfdcf8cFTJhACQkAICAFBDaew6Cevkk5kJhACwgobpG+8p3zJfOhXKcY85SPly/On+iUCEwgBISAQEAJCQAgIBMSU2tpecG43Ek0grDAQEAJCQAgIBISAEBACAgEhIASEgOCvRYWv+WemnzWBQEBYYVaYCYSAwAqzwkwgBIQVZoWZQCAgrDArzARCQGCFWWEmEALCCrPCrDATCAFhhVlhJhAICCvMCjOBEBBWmBVmhZlACAgrzAozgUBAWGFWmAmEgMAKs8JMIAQEAAAAjLAHGxaRrrnqfkQAAAAASUVORK5CYII=","skills":[{"n":"스무 걸음","t":"액티브","d":"아군 전체가 다음 1턴간 받는 피해를 줄인다."},{"n":"비질 자국","t":"패시브","d":"같은 층에서 전투를 반복할수록 아군 전체의 자취가 누적 상승한다."}]},{"id":"counting_child","name":"셈하던 아이","r":3,"role":"탐구","floor":11,"era":"종말기","cls":"관리","trade":"서고","hp":330,"atk":73,"def":48,"spd":102,"pw":312,"col":"#8C93A6","tag":"세면 안 잊어버려요.","sp":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJAAAADACAYAAADryOpPAAACrUlEQVR42u3dMUokQRgF4FI8hSAogocwMjPXzMQTmHkMM+/gHcyMPIQgCoKxN9BAGAqlceye7qq/6vvinWUZHu9t9XTPpAQAAAAAAAAAAAAAAJ3a8hZ82907+Bz72ve3l27fx23RQYAwYdFmy5xpIAQIE9bAbPU8ZxoIAUKAECAECJzCyp68ejuRaSAEiHJ2vAVxHZ+crqb58eG+yERqIAQIpzCnsBGzNWTJOdNACBBOYcx0Opt72jQQAoRTWJMnsiVPXqVOZBoIAcIpjA3OlgbChGHCmpSfjFp9tNlnYZgwTJg5W3i2opy8NBAChAkj6MlLAyFAmDBS3bdqaCAEiLqFvyOxhme+NmX/8MiEYcLAKaxVNcyWBkKAMGGjDV18e31+av7kpYEwYeAU1vnJ6+b2bvXfgOuri9F/vwbChGHCmDhDGggThgljYWfnl+v8mWpvWdFACBAmbCPyz5Vq/lzsx6PQoe+o1EAIECbsTxG/uUIDgQAhQAgQAgQChAAhQLSi2ds5avtcbO5vsJ9yY7wGwoRhwqqSP0sV5UuoSs2QBkKAMGF0MlsaCAHChM2qtpNX/u+p4WcxNRAChAAhQCBAOIX95lkwDYQAQdAJ+68o31Tf0kVFDYQAIUAIEAIEAoQAIUD0IfyFxIg/c5mLflFRAyFAlBP+5u4ojy2vw4RhwqD5CWtptqLPmQZCgBAgBAgBAgFCgBAg+hDmQmIPFw+H1HxRUQMhQAgQAoQAQaunsFKnufwENOW1GggECAFCgBAgSCn1+XthH4Veq4FAgDBhJkwDIUBgwkyYBkKAMGEmTAOBAGHCTJgGQoDAhJkwDYQAYcJMmAnTQAgQJsyEaSAQIEyYCdNACBAmzISZMA2EAGHCTJgGAgHChJkwDYQAgQkzYRoIAQIAAAAm+AIlxq/iFzij/QAAAABJRU5ErkJggg==","skills":[{"n":"예순셋","t":"액티브","d":"적 하나의 남은 잔존을 표시하고 약점을 노출시킨다."},{"n":"줄어드는 속도","t":"패시브","d":"적의 잔존이 줄어들수록 아군 전체의 의지가 상승한다."}]},{"id":"last_watercarrier","name":"마지막 물장수","r":4,"role":"헌신","floor":16,"era":"종말기","cls":"하인","trade":"물장수","hp":558,"atk":88,"def":71,"spd":102,"pw":410,"col":"#5F8AA6","tag":"마르면 더 깊이 파면 됩니다.","sp":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJAAAADACAYAAADryOpPAAACxklEQVR42u3dMUoDURQF0CiuQhAU0UVY2YjgEmyyAlsbaxtbV2DjHsTGykUIEiGQ2h3EwmbUGRjn5zP/zzunDEST8fIub5xJZjMAAAAAAAAAAAAAAAhqyyH4trt3sB763NVyEfY4bosOAoQKq6221JkJhAChwiZQW5HrzARCgBAgBAgBAlvYuJtXtI3MBEKAECAECAECAUKAECAECAQIAaJgrkjMyBWJIEAIEAKEAIEtLPdG5tZmECBUWEV15gOmQIAQIAQIAQIBQoAQIKau+hNgJXzyxqbUeELSBEKAECAECAGCaFtY7RtZ7ZeCmEAIEAKEACFAIEAIEAJEDFWexDo5PW89Yfjx/lbde9k/PG59/PXlqYq/jQmEAKHCBtdWl5LrrKu2upRcZyYQAsR4dmqvqgi6jkkJ1WYCIUAErzC1lX7cxqozEwgBIkiFqaq/ji7mrY8/39/86+f0uaHg7Oq29fGH68vB9WcCocIIUmHNTSFHnXVtIiXcL9a8/2u1XDQrbN1WW111kyLHzzeBECDGM9r/UjZVYX1OoJVWYV2vLUdt9amzlNurTSBUGEG2sJSNrJaLzBOrrbpvlDaBECACVljuqirtw6aar2dK3y9mAiFABK+wqW5YJhAIEKG2sCltXhE2MhMIAUKAECAECKJtYbV/5WXtr98EQoAYj29tLkjzpOL87nHj7yvlFmYTCBWGLUxtTex9mUAIECps8LaSuyaavyvluQNUUWcmEAKECuOXHCf9TCAECAECAUKAECAECAECAUKAECAECAQIAUKAECAQIAQIAUKA4KeIF9V/jvRcEwgECBWmwkwgBAhUmAozgRAgVJgKM4FAgFBhKswEQoBAhakwEwgBQoWpMBVmAiFAqDAVZgKBAKHCVJgJhAChwlSYCjOBECBUmAozgUCAUGEqzARCgECFqTATCAECAAAAEnwBhCC5kdjPCwMAAAAASUVORK5CYII=","skills":[{"n":"같은 시각","t":"액티브","d":"아군 전체를 회복시킨다. 전투가 길어질수록 회복량이 증가한다."},{"n":"마르지 않는 통","t":"패시브","d":"잔존이 20% 이하인 아군이 생기면 즉시 회복시킨다. 전투당 2회."}]},{"id":"dorn","name":"도른","r":4,"role":"저항","floor":21,"era":"붕괴기","cls":"장인","trade":"대장간","hp":411,"atk":140,"def":64,"spd":93,"pw":411,"col":"#A6552F","tag":"농기구는 이제 안 만듭니다.","sp":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJAAAADACAYAAADryOpPAAACo0lEQVR42u3dMUozQRgG4Ch7CkFQBFt7KztPYOMBbTyBnZW9rSARAqm9QSwCyxQGstnZ3W9mnqf6EfK7hpfvZXYmm9UKAAAAAAAAAAAAAAAadeYt2Lu4vN6d+trtZt3s+3guOggQKqy02lJnJhAChAqroLbG1NnL091u6ffk+fXz5ByYQKgwBAgBQoBgoM7Ka57fW+sNRhMIAUKAECAECAQIAUKAECAQIASIwJrYC0v3oaKdSDSBUGFwKofqC6uwodd/dXPb//vj/S379ZhACBAqrJo6m3rlNabCUrnqzARCgFBhRdfZnDcMc1VYrjozgVBhLKfzFsR3//DY19bP91eW/9MqDBWGCmOiqpqCvTBUGCoslKWevBHtGuasLRMIAUKAECAECFpbhR264ZZrn2hOxxy3MIFQYSBACBAChACBACFALM2JxAKkRzKiHR0xgRAgVFgW6b5S5H2x9KPQ2826/3m6xzf1SUITCAFChc1m6s9MRVttmUCoMBAgBAgBQoBAgBAgIinmxtWYG4kR9sVq/e4wEwgBYjnVnkiMfIrPBAIBQoAQIAQIq7D6RFt5pddT001FEwgBQoAQIAQIWl6FlfKY35pWZCYQAoQK+1cLH2c2gRAgaHYVVuIXrNS0IjOBECAECAFCgKCFVVjpK6+aVmQmEAKEChvkmG86PvTI3KGH7dMqGfNaEwgEiKYqrMQnt5tAIEAIEAKEAIEAIUAIEAIEAoQAIUAIEAgQAoQAIUAIEAgQAkQ5ugb/5t+FXmsCgQChwlSYCYQAgQpTYSYQAoQKU2EmEAgQKkyFmUAIEKgwFWYCIUCoMBWmwkwgBAgVpsJMIBAgVJgKM4EQIFSYClNhJhAChApTYSYQCBAqTIWZQAgQqDAVZgIhQAAAAMAIf+r/qGnbsSdhAAAAAElFTkSuQmCC","skills":[{"n":"마흔 자루","t":"액티브","d":"적 전체에게 피해를 준다. 아군 수가 적을수록 피해가 증가한다."},{"n":"자기 몫","t":"패시브","d":"자신의 잔존이 절반 이하일 때 의지가 크게 상승한다."}]},{"id":"left_behind","name":"짐을 두고 온 사람","r":2,"role":"도피","floor":22,"era":"붕괴기","cls":"장인","trade":"목공","hp":231,"atk":56,"def":29,"spd":93,"pw":241,"col":"#6E7A5E","tag":"무거운 것부터 버렸어요. 순서대로.","sp":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJAAAADACAYAAADryOpPAAACuklEQVR42u3dPUrEUBgF0FHcgJUQCBgEV2A1INi5i3EHLsBGbFyAS3AXdlZTuQJBIgQG7NyBFsIQwYD5m7yXd05loTM6XL7Llz8XCwAAAAAAAAAAAAAASNSej+BHlhdfXX92U5XJfo77ooMAocJiqy11ZgIhQKiwGdRWynVmAiFACBAChACBLWzazSu1jcwEQoAQIAQIAQIBQoAQIAQIBAgBImCuSByRKxJBgBAgBAgBAlvY2BuZW5tBgFBhEdWZB0yBACFACBACBAKEACFAzF30B8BCePLGUGI8IGkCIUAIEAKEAEEKW9jy4vLPzev97dXmZQIhQAgQCBAChAAhQCBAjODARzCt+kHR9fOTyzlQYZBmhR2fnG6/Dvm8WP33NIFQYTD7Cmu6hMNG1t/1zWr7vg/3j63e1wRChaHC6FBn9eoxgVBhqDB24Gx51PL7V8FuoCYQAoQKG1xo58V+3/91PpuDoiYQAoQKo6e257BMIFQYKixY9fNHIT9H8WX9YQKhwqCTaO5DantFYsgX1Tc9VKrt3xjCfWQmEAKELYyIassEQoCwhQ2+hc3pMb+xPLXDBEKAsIUR+LZlAiFA2MJsXh02MhMIFQYChAAhQMxIlAcS57R51dUv/o9lIzOBECBUWCv/edJ707mktveI1aukz8+aQCBAqLCe2w0mEAKECtuBGP8FpAkEAoQKm9BQBwBjPLdlAiFACBACBAKEACFACBAIEAKEACFAIEAIEFNL5XKOz8BexwQCAUKFNcnyohy6ejZVedjw+iYQCBAqLMDNy0ZmAiFAqDAVZgKBAKHCVJgJhAChwlSYCjOBECBUmAozgUCAUGG7r5hNVd6N+fpZXtz2eC8TCBUGKswWZgIhQKiwAGV5caXCTCAECBVm81JhJhAChApTYSYQCBAqTIWZQAgQAAAAMIFvhHKyXndMgXoAAAAASUVORK5CYII=","skills":[{"n":"순서대로","t":"액티브","d":"자신의 자취를 버리고 그만큼 공명을 얻는다. 되돌릴 수 없다."},{"n":"돌아가려 함","t":"패시브","d":"회피에 성공할 때마다 아군 전체의 공명이 소폭 상승한다."}]},{"id":"cart_pusher","name":"수레를 밀던 사람","r":3,"role":"저항","floor":23,"era":"붕괴기","cls":"장인","trade":"채석","hp":386,"atk":86,"def":66,"spd":57,"pw":314,"col":"#8A7B4F","tag":"비켜서 가면 되잖습니까. 왜 다들.","sp":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJAAAADACAYAAADryOpPAAAClUlEQVR42u3dMUozQRgG4CgWnkEQFMFDmMbOMjlNGus03ialnZWHECRCILU30EIIW7iYTWbcmfmep/wh4B9e3pfZTTaTCQAAAAAAAAAAAAAABHXiLfhxcXn9dehrt5t12PfxVHQQIExYbbNlzjQQAoQJa2C2Is+ZBkKAECAECAECp7BxT17RTmQaCAFCgBAgBAgECAFCgIjhzFtQl6fH2aCLoovlKusFTA2EAGHCsureh/KJRA2EAGHCqMLd/cNusl9fnpNPqgZCgDBhzZzISj555ZgzDYQAYcKqnrMaLximmjMNhAnDhLHn3KTiFIYJw4RR+FTlmC0NhABhwpIo4ckbJfwN/zlbGggBQoAQIAQIop3C+i64fby/Vfd/ubq51UCYMIgzYdHMp+caCBMGAoQAIUAIEAgQAsSomrqQ2L2vVPJ9se5Xobeb9e7f+75uPJ/Oiv3EowZCgDBhf8r9nakS5P4AvAZCgBAgECAECAFCgBAgOFSzH6ov7b5Yq78dpoEQIExYct37SiU/AEoDIUBgwhq2WK6KPcFpIAQIE5ZcaSev7t/T0kVFDYQAIUAIEAIEkU9htTzmt6UTmQZCgDBhv4rwdWYNhABB2FNYjT+w0tKJTAMhQAgQAoQAQYRTWO0nr5ZOZBoIAcKEDbLPLx33PTJ36Iftu1NyzGs1EAgQoSasxie3ayAQIAQIAUKAQIAQIAQIAQIBQoAQIAQIBAgBQoAQIAQIBAgBoh4Rfy/sc6TXaiAQIEyYCdNACBCYMBOmgRAgTJgJ00AgQJgwE6aBECAwYSZMAyFAmDATZsI0EAKECTNhGggECBNmwjQQAoQJM2EmTAMhQJgwE6aBQIAwYSZMAyFAYMJMmAZCgAAAAIAjfAMfNqUFtnCNPgAAAABJRU5ErkJggg==","skills":[{"n":"한가운데","t":"액티브","d":"적 진형 정중앙에 피해를 주고 1턴간 밀어낸다."},{"n":"멈추지 않음","t":"패시브","d":"행동을 방해받을 때마다 의지가 누적 상승한다."}]},{"id":"yuan","name":"유안","r":5,"role":"탐구","floor":29,"era":"붕괴기","cls":"장인","trade":"약방","hp":610,"atk":137,"def":85,"spd":165,"pw":552,"col":"#4E7A6B","tag":"문 안쪽에서도 사람이 죽고 있습니다. 왜입니까.","sp":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJAAAADACAYAAADryOpPAAACsElEQVR42u3dPUozURQG4Im4BCtBUAwuIpWdXTbiDlyAO3AjdnZWWYQoCoKVhTvQQghjMcTJ/Nx77n2e6isMfIaX83Jm7oxNAwAAAAAAAAAAAAAAlVr4Cn4dn5x97/vZj/fXar/HA9FBgFBh0WpLnZlACBAqrIDaqrnOTCAECAFCgBAgsIWl3bxq28hMIASIdA59BXGtLq+21bx5fEhSkSYQAoQtzBa2R211mbPOTCAECFsYE21nU1ebCYQAYQsrciObc/NKtZGZQAgQtjBGrC0TCBWGCitSezMq9dFm98JQYagwdTZzbUXZvEwgBAgVRtDNywRCgFBhNHkf1TCBECDyFv5EYg7PfI3l9PxChaHCwBYW3dFqufNn1qtlr/q+v73zXBgqDBWWVtfFt7eXp+I3LxMIFQYChAAhQNjCmMLn5nn77/9cVOwyxcVDEwgBQoXR/D2S0fXm+b73vEwgVBgqLJz2faWc74t1PQqdwwlDEwgBQoWNLuKbK0wgECAECAFCgECAECAEiFKEufcy5EJiDvfFxnoV8Prmeuf3MPUpRBMIASIPxZ5IbB+NKOklVCYQAgQChAAhQNjC8pTb5tX+/+TwZzFNIAQIFcbM5rzPZQIhQOQt622g7xGOiK/5jb6RmUAIEAKEACFA0FP4C4kRN6+26PfITCAECAFCgBAgqGELi755lbSRmUAIEOksavuF+x62b1fJkM+aQCBACBAChACBACFACBAChACBACFACBACBAKEACFACBAIEAKEACFAIECMpMY31X8l+qwJBAKEClNhJhACBCpMhZlACBAqTIWZQCBAqDAVZgIhQKDCVJgJhAChwlSYCjOBECBUmAozgUCAUGEqzARCgFBhKkyFmUAIECpMhZlAIECoMBVmAiFAoMJUmAmEAAEAAAAD/AAiOLAo5PxUSgAAAABJRU5ErkJggg==","skills":[{"n":"증상 기록","t":"액티브","d":"적 전체의 상태를 노출시키고 3턴간 받는 피해를 증가시킨다."},{"n":"사흘","t":"패시브","d":"전투가 3턴 지날 때마다 아군 전체의 의지와 공명이 상승한다."},{"n":"문 밖이 아니었다","t":"잠금","d":"각성 5에서 해금된다."}]},{"id":"flagbearer","name":"깃발을 든 사람","r":3,"role":"수호","floor":32,"era":"붕괴기","cls":"병졸","trade":"망루","hp":498,"atk":47,"def":89,"spd":44,"pw":312,"col":"#7E8288","tag":"어느 쪽이든 들어야 했습니다.","sp":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJAAAADACAYAAADryOpPAAACu0lEQVR42u3dQUrrUBSAYSNdhSBUCl2EI2duRHELjjroyC2IbsSZIxchiILQsTuoEwcRCSYkac7N+b6xz1ftzznctonVESGdnJ7t//ua3ed7NfXjPPZUISAEhIAQEAgIASEgBAQCQkDEVfkVHN5me7ef4v/dbm4Hf75NIASEgBAQAgIBISAERA5eSPzR5kPsTfp8uH3sFxXHePHQBEJAxLCwtob9PhGu1TKBEBBWmLVlnZlACAgBISAQEE5hAU9emU9kJhACYjop3reZaoXVtVlhQ320Y+yPcJhACAgBISAEBAJCQAiIfNJdF3bIFxV9IhEEhIAQEAICp7CxT2QubQYBYYUVtM6yrS0TCAEhIASEgEBACAgBkU/xL4BFuGx5KCW+IGkCISAEhIAQEMzpFHZ+cdnphPXx9lrcE7BcrTt9/cvzU6jnzARCQAgIASEgEBACQkDkkOKPrVxd30z+GB4f7k0gEBBWWJP6+0qR3xfr+v6XCYQVBgJCQAgIp7CyzPVFPBMIASEgEBACwiksjvqdLiLcwaP+eJar9WzuKGICISAEhIAQEGQ+hUW7c0Wbx9n1DiQmEFYYhF1hQ430aLf/rT+ePrfzrf9+IqxsEwgBISAEhICg9FPYnE5epT9OEwgBISAEBALCKeyvEv/AStPjL/HGUyYQAkJACAgBQYZTWOknrzmdyEwgBISAEBACggynsKYTSpvrpLp+GrDPjaraXP/l0masMBAQAkJAJFNl+4GjncJMIKwwEBACQkAICASEgBAQAgIBISAEhIDgt0XCn/lron9rAoGAsMKsMBMIAYEVZoWZQAgIK8wKM4FAQFhhVpgJhIDACrPCTCAEhBVmhVlhJhACwgqzwkwgEBBWmBVmAiEgrDArzAozgRAQVpgVZgKBgLDCrDATCAGBFWaFmUAICAAAAOjhGxoOnOoBLt9EAAAAAElFTkSuQmCC","skills":[{"n":"양쪽의 깃발","t":"액티브","d":"적 전체의 표적을 자신에게 돌리고 2턴간 자취가 크게 오른다."},{"n":"쏘지 않았다","t":"패시브","d":"전투 시작 후 3턴 동안 받는 피해가 절반이 된다."}]},{"id":"name_writer","name":"이름을 적던 병사","r":4,"role":"탐구","floor":33,"era":"붕괴기","cls":"관리","trade":"서고","hp":375,"atk":98,"def":68,"spd":140,"pw":408,"col":"#6D7A84","tag":"적어 두면 누가 없어졌는지 압니다.","sp":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJAAAADACAYAAADryOpPAAACq0lEQVR42u3dQUojQRgF4FI8hSAoghdwFxDceRovIC7FC3gad648hCAKgmtvoAshFEpj7E531V/1fevJMITHe1Od7iQlAAAAAAAAAAAAAADo1I634Nv+wdHn2Ne+v710+z7uig4ChAmLNlvmTAMhQJiwBmar5znTQAgQAoQAIUDgFFb25NXbiUwDIUCUs+ctiGt1frGe5seH+yITqYEQIJzCnMJGzNaQJedMAyFAOIUx0+ls7mnTQAgQTmFNnsiWPHmVOpFpIAQIpzC2OFsaCBOGCWtSfjJq9dFmn4VhwjBh5mzh2Ypy8tJACBAmjKAnLw2EAGHCSHXfqqGBECDqFv6OxBqe+dqWw+MTE4YJA6ewVtUwWxoIAcKEjTZ08e31+an5k5cGwoSBU1jnJ6/Lq5v1fwPubq9H//0aCBOGCWPiDGkgTBgmjIWdrs42+TPV3rKigRAgTNhW5J8r1fy52I9HoUPfUamBECBM2J8ifnOFBgIBQoAQIAQIBAgBQoBoRbO3c9T2udjc32A/5cZ4DYQJw4RVJX+WKsqXUJWaIQ2EAGHC6GS2NBAChAmbVW0nr/zfU8PPYmogBAgBQoBAgHAK+82zYBoIAYKgE/ZfUb6pvqWLihoIAUKAECAECAQIAUKA6EP4C4kRf+YyF/2iogZCgCgn/M3dUR5b3oQJw4RB8xPW0mxFnzMNhAAhQAgQAgQChAAhQPQhzIXEHi4eDqn5oqIGQoAQIAQIAYJWT2GlTnP5CWjKazUQCBAChAAhQJBS6vP3wj4KvVYDgQBhwkyYBkKAwISZMA2EAGHCTJgGAgHChJkwDYQAgQkzYRoIAcKEmTATpoEQIEyYCdNAIECYMBOmgRAgTJgJM2EaCAHChJkwDQQChAkzYRoIAQITZsI0EAIEAAAATPAF+Iqv4nBOeC8AAAAASUVORK5CYII=","skills":[{"n":"벽의 이름","t":"액티브","d":"적 전체의 약점을 노출시킨다. 적 수가 많을수록 효과가 크다."},{"n":"급해지는 글씨","t":"패시브","d":"아군이 흐려질 때마다 남은 아군 전체의 의지가 영구 상승한다."}]},{"id":"pathpointer","name":"길을 가리키던 사람","r":3,"role":"헌신","floor":36,"era":"붕괴기","cls":"관리","trade":"등대","hp":432,"atk":60,"def":58,"spd":79,"pw":312,"col":"#8B8467","tag":"저는 그냥 가리켰을 뿐입니다.","sp":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJAAAADACAYAAADryOpPAAAC4UlEQVR42u3dPUoEQRAG0F3xFIKgCB7CyMyjeAIzQzNP4FHMjDyEIAqCsTfQxGCDbXZnZ3q6euq9UPwdP+qj2hl3vWIRTk7Pf3e9z/fXx3rqr3vk0iNACBAChACBACFACBACBAKEABHX2iWI7/Hh9rfF1727f9qZDxMIFYYAIUAIEAgQAoQAkYODxH/73JReUuNm9ZLah4r7HB6aQKgwYjhWW9N+njnrzARCgFBhaqvS589QZyYQAoQAIUAIENjC5t+8Mm9kJhACRDsp/m7TqsI21aiwqW7tGHoLhwmECkOAECAECAQIAUKAyCfdc2FzHiq6IxEECAFCgBAgsIXV3sg82gwChArrqM6y1ZYJhAAhQAgQAgQChAAhQOTT/QFYhMeWp9LjgaQJhAAhQAgQAgTZtrDeN7LebwUxgRAgBAgBQoBAgBAgBIgcujzEurq+2Xpg+Pn+1t3PcnZxufXtry/PXfxuTCAECBV2cG2VRK6zUm2VRK4zEwgBop1wL3k5tKoyKF2TCNVmAiFAJK8wtTX+urWqMxMIASJJhamq5W1qJhACRDvNDqJq1FlpXEd4Xqz0/Nec18EEQoVhCwullzv39vn+e9xSTSAEiIRb2NBNZExVRd7CIlwfEwgVhi0s1FYV7Z9NbX4/Q+usdE0ibG0mEAJE8i2sdmVEs6SXyDSBECAECAFCgCDzFuY/1ZtACBACBAKEACFACBAIEHV0f5DY4+FhSY+HiiYQAoQAIUAIEGTYwpa0efW+kZlACBAChAAhQCBACBACRA7dHCRmODwsiXyoaAIhQAgQAoQAwVK3sFbb3OYGNOZjTSAQIAQIAUKAYLVaLeAlLw/w0+hjTSAQIFSYCjOBECBQYSrMBEKAUGEqzAQCAUKFqTATCAECFabCTCAECBWmwlSYCYQAocJUmAkEAoQKU2EmEAKEClNhKswEQoBQYSrMBAIBQoWpMBMIAQIVpsJMIAQIAAAAGOEPv7S7CI5LUPYAAAAASUVORK5CYII=","skills":[{"n":"두 갈래","t":"액티브","d":"아군 하나를 즉시 후열로 보내고 회복시킨다."},{"n":"사흘 동안","t":"패시브","d":"전투가 길어질수록 아군 전체의 회복량이 증가한다."}]},{"id":"rean","name":"레안","r":5,"role":"저항","floor":39,"era":"붕괴기","cls":"병졸","trade":"망루","hp":571,"atk":190,"def":92,"spd":118,"pw":558,"col":"#3F4E63","tag":"절반은 들어왔다. 그거면 됐다고 생각했다.","sp":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJAAAADACAYAAADryOpPAAACwklEQVR42u3dMUokTRjHYVvmFIKgiOamJoqJmZfwXF7CzEQ0MTVXRGFgYm+ggTB0MIMzdldXvVXPE358u+juj/dPOzrb7RDW+fXNd8rf/+nutvvr/9n118AQAkJACAgBISAQEAJCQAgIBISAEBACghU6fwR1GOtbOzb5Fg4XCBOGgBAQAoIBZv4Ifu3tH/77KWYx/2j2adYFQkDk0/QXEofMljlzgRAQJqyC2Wp5zlwgBISAEBACAk9heZ+8Wnsic4EQEAJCQAgIBISAEBACAgEhIArmOxITyvX619nF1fJzfH68T/oxuEAICBNmwkacrXVSzJkLhIAwYdXMWWmzlXrOXCAEhAkLPWdRZivFnLlAmDDy8R6JAZQ2Wy4QJgwTxgRTlWK2XCAEhAkbRQnvvFHCxzDlbLlACAgTRtDZcoEQEGUI+e0c677g9vn+Gu5zOTg6CTdbLhACwlMYQWfLBUJAmDCCzpYLhIAwYZM5Pr3M/jG8vTxUM1suEALChI2u/7pSya+L9X8UejH/WP73Kd/b0AVCQJiwyaT+makSRJktFwgBYcImM+SLeLhACAgBISAQEJ7CNlHa62K5/u0wFwgBYcLC6b+uVPIbQLlACAgEhIAQEJ7C6lDak1f/46npi4ouEAJCQAgIAUHLT2FR3ua3picyFwgBYcJWauHHmV0gBATNPoVF/AdWanoic4EQEAJCQAgIWngKi/7kVdMTmQuEgBAQAkJAsKWutU94258X6z8NDfm1LhAICAEhIAQEAkJACAgBISAQEAJCQAgIBISAEBACAgEhIMoza/Bz/sr0a10gEBAmzIS5QAgITJgJc4EQECbMhLlAICBMmAlzgRAQmDAT5gIhIEyYCTNhLhACwoSZMBcIBIQJM2EuEALChJkwE+YCISBMmAlzgUBAmDAT5gIhIDBhJswFQkAAAADAAD9OX7DL5Qm7ggAAAABJRU5ErkJggg==","skills":[{"n":"절반","t":"액티브","d":"적 전체에게 큰 피해를 준다. 자신의 잔존이 절반으로 줄어든다."},{"n":"성벽 위","t":"패시브","d":"후열 아군이 흐려질 때마다 자신의 의지가 크게 상승한다."},{"n":"세 번 다시 셌다","t":"잠금","d":"각성 5에서 해금된다."}]},{"id":"ledger_keeper","name":"장부를 맞추던 사람","r":2,"role":"탐구","floor":46,"era":"균열기","cls":"관리","trade":"서고","hp":241,"atk":54,"def":36,"spd":84,"pw":239,"col":"#7C7A6E","tag":"숫자는 맞아야지요.","sp":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJAAAADACAYAAADryOpPAAACqklEQVR42u3dQUojQRgF4FI8hSAogt4hK3HjbTyAuBQP4G3cufIQgigIrr2BLoRQKI2xO91Vf9X3rSfDEB7vTXW6k5QAAAAAAAAAAAAAAKBTO96Cb/sHR59jX/v+9tLt+7grOggQJizabJkzDYQAYcIamK2e50wDIUAIEAKEAIFTWNmTV28nMg2EAFHOnrcgrtXZxXqaHx/ui0ykBkKAcApzChsxW0OWnDMNhADhFMZMp7O5p00DIUA4hTV5Ilvy5FXqRKaBECCcwtjibGkgTBgmrEn5yajVR5t9FoYJw4SZs4VnK8rJSwMhQJgwgp68NBAChAkj1X2rhgZCgKhb+DsSa3jma1sOj09MGCYMnMJaVcNsaSAECBM22tDFt9fnp+ZPXhoIEwZOYZ2fvK6vLtf/Dbi5vRv992sgTBgmjIkzpIEwYZgwFna+Ot3kz1R7y4oGQoAwYVuRf65U8+diPx6FDn1HpQZCgDBhf4r4zRUaCAQIAUKAECAQIAQIAaIVzd7OUdvnYnN/g/2UG+M1ECYME1aV/FmqKF9CVWqGNBAChAmjk9nSQAgQJmxWtZ288n9PDT+LqYEQIAQIAQIBwinsN8+CaSAECIJO2H9F+ab6li4qaiAECAFCgBAgECAECAGiD+EvJEb8mctc9IuKGggBopzwN3dHeWx5EyYMEwbNT1hLsxV9zjQQAoQAIUAIEAgQAoQA0YcwFxJ7uHg4pOaLihoIAUKAECAECFo9hZU6zeUnoCmv1UAgQAgQAoQAQUqpz98L+yj0Wg0EAoQJM2EaCAECE2bCNBAChAkzYRoIBAgTZsI0EAIEJsyEaSAECBNmwkyYBkKAMGEmTAOBAGHCTJgGQoAwYSbMhGkgBAgTZsI0EAgQJsyEaSAECEyYCdNACBAAAAAwwRd1Dq/idZnBSgAAAABJRU5ErkJggg==","skills":[{"n":"사십 년","t":"액티브","d":"적 하나의 방어를 무시하고 고정 피해를 준다."},{"n":"맞는 숫자","t":"패시브","d":"같은 적을 세 번 공격하면 이후 그 적에게 주는 피해가 증가한다."}]},{"id":"crack_child","name":"균열을 들여다본 아이","r":2,"role":"도피","floor":51,"era":"균열기","cls":"하인","trade":"물장수","hp":197,"atk":56,"def":27,"spd":102,"pw":239,"col":"#5A6B78","tag":"안에 뭐가 있는지 보고 싶었어요.","sp":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJAAAADACAYAAADryOpPAAAC20lEQVR42u3dPUoDURQG0ChuwHYgkCGQJlVaq3R2toKNC3ADdmLnBtyCYGtnZ+UiBIkQSO0OYiGEh2QwPzOZ9+adU0nASQgf9+MmM5NeDwAAAAAAAAAAAAAAMnXkLfhV9Mvlrv+7mM+yfR+PRQcBQoWlVlvqzARCgFBhHaitnOvMBEKAECAECAECW1i7m1duG5kJhAAhQAgQAgQChAAhQAgQCBACRMSckdggZySCACFACBACBLawpjcylzaDAKHCEqozN5gCAUKAECAECAQIAUKA6LrkPwCL4c4bdUnxA0kTCAFCgBAgBAhy2MLOpudrN6+vzw+blwmEACFAIEAIEAKEAIEA0YATb0G7wg9F399enc6BCoM8K2wwHK3+jvl7sfB1mkCoMOh8hVWdwmEjM4FQYagw1JkJhAChwtjcYDxZ+/jby/Pq77ou355eXK59/OnxYeeKNIFQYaiw+qshsu/Fwuu/BsPR8r/aqqqbfTRxfBMIAUKFZavp2qrawsLnNYFQYaiwqITfH8V2H8XwtbV1mkpddwUxgRAgVFjtYqut8PWE9RHW2WA8Se6sSxMIAUKAECAECHLewlK5zW/VRmYCocJAgBAgBAhbWLs2OdUhxR9YqdrITCBUGHSmwnITXmJ8dXO7bPL4JhAqDBXWitQ3ry5tZCYQAoQK28omd3qvuq/gtjURnm6xz//uIIk6M4EQIFSY7eaPJj70M4EQIFTYwaT4E5AmEAgQKqxFdV2r1aXrv0wgBAgBQoBAgBAgBAgBQoBAgBAgBAgBAgHiUHI5neM7suOYQCBAqLAqRb+c1V09i/nstOL4JhAIECosws3LRmYCIUCoMBVmAoEAocJUmAmEAKHCVJgKM4EQIFSYCjOBQIBQYYevmMV8dt/k8Yt+ebfHc5lAqDBQYbYwEwgBQoVFqOiX1yrMBEKAUGE2LxVmAiFAqDAVZgKBAKHCVJgJhAABAAAALfgBxfC4u4vj/mUAAAAASUVORK5CYII=","skills":[{"n":"한 걸음 더","t":"액티브","d":"즉시 추가 행동을 얻는다. 이후 2턴간 받는 피해가 증가한다."},{"n":"물러서지 않은 쪽","t":"패시브","d":"전투 시작 시 회피율이 크게 오르고 매 턴 감소한다."}]},{"id":"festival_maker","name":"축제를 준비하던 사람","r":3,"role":"헌신","floor":53,"era":"균열기","cls":"유랑","trade":"악기","hp":406,"atk":62,"def":55,"spd":87,"pw":313,"col":"#9C7B4E","tag":"다들 웃어야 하지 않겠습니까.","sp":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJAAAADACAYAAADryOpPAAACuElEQVR42u3cMUrsUBgF4BkZcA+CoAguQhs7Oxch7kKwcxdWLsHOzsoN2AnigGDtDrQQ5IITSDJJbv57v696hcKb8XAON5PJYgEAAAAAAAAAAAAAAJVaegt+7e0ffvf93c+P92rfxx3RQYAwYdFmy5xpIAQIE1bAbNU8ZxoIAUKAECAECJzC8p68ajuRaSAECAFCgBAgECAECAGiDitvQVxNF0invGipgRAgTNio0kp3R6IGQoAQIBAgBAinsJJOZL7aDAKECQs0Zx4wBQKEACFACBAIEAKEAFG6oi4k5noKR80XITUQAoQAIUAIEAgQAoQAIUAgQAgQMxb+s7A5PIVeA4EAYcJaOjk7/5ut9dtr6D9A+lpSz0+PIW7z0EAIECasd9VHdHB03On1znnONBAChAkrcqqGcnd9sfE9ubl/6fTzV7cPg0+hBkKAqHzCzNZ/l6e7o07hUHOmgRAgKpkwUzX9bI09ZxoIE0Y+2T5jGWrOIt7OkT6Ro+miXy5d50wDYcIQIAQIAYKOsn0Wlt5l1+ZElv6874JpIAQIZnhHYpTvQw0lvXCX66Kiz8IwYcQUci5KOoU1Pal+7DlzRyImDBNmwkaasDHmzPfCMGGYMBM28YRpIEwYmDBzpoEQIAQIBAgBwinMKSz0iUwDIUDkE+ZJ9RFnK52hUmdXAyFAmLDJTjG5pmRu/x8NhABhwkLMVsSTWvrvOb8uDYQAYcKKn6pt5kwDYcJgk2VtL3jKaSh1ajUQAoQAIUAIEGxh5S1of5LyhHwNhAAhQAgQCBBOYT18ZfpdDQQChAkzYRoIAQITZsI0EAKECTNhGggECBNmwjQQAgQmzIRpIAQIE2bCTJgGQoAwYSZMA4EAYcJMmAZCgDBhJsyEaSAECBNmwjQQCBAmzIRpIAQITJgJ00AIEAAAALCFH7KTywJcNofwAAAAAElFTkSuQmCC","skills":[{"n":"네 번째 축제","t":"액티브","d":"아군 전체의 잔존을 회복하고 1턴간 의지를 올린다."},{"n":"더 크게","t":"패시브","d":"아군이 흐려질수록 남은 아군의 회복량이 증가한다."}]},{"id":"alley_filler","name":"골목을 메우던 사람","r":4,"role":"저항","floor":58,"era":"균열기","cls":"장인","trade":"채석","hp":429,"atk":134,"def":76,"spd":83,"pw":411,"col":"#6F6A5C","tag":"돌로 막으면 됩니다. 안 됩니까?","sp":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJAAAADACAYAAADryOpPAAACl0lEQVR42u3dMUozQRgG4ChewUYQFMEifRorOy+RE9h4ljQ5QS5hZ+UhBIkQSO0NtBDCFC5mkx13Zr7nKX8I+IeX92V2k81kAgAAAAAAAAAAAAAAQZ14C35cXF5/Hfra7WYd9n08FR0ECBNW22yZMw2EAGHCGpityHOmgRAgBAgBQoDAKWzck1e0E5kGQoAQIAQIAQIBQoAQIGI48xbU5elx3uui6GK5ynoBUwMhQJiwrNL7UD6RqIEQIEwYVbi7f9hN9uvL8+CTqoEQIExYMyeykk9eOeZMAyFAmLCq56zGC4ZDzZkGwoRhwthzbobiFIYJw4RR+FTlmC0NhABhwgZRwpM3Svgb/nO2NBAChAAhQAgQRDuFdV1w+3h/q+7/cnVzq4EwYRBnwqKZTc81ECYMBAgBQoAQIBAgBIhRNXUhMb2vVPJ9sfSr0NvNevfvXV83nk3nxX7iUQMhQJiwP+X+zlQJcn8AXgMhQAgQCBAChAAhQAgQHKrZD9WXdl+s1d8O00AIECZscOl9pZIfAKWBECAwYQ1bLFfFnuA0EAKECRtcaSev9O9p6aKiBkKAECAECAGCyKewWh7z29KJTAMhQJiwX0X4OrMGQoAg7Cmsxh9YaelEpoEQIAQIAUKAIMIprPaTV0snMg2EAGHCetnnl467Hpnb98P26ZQc81oNBAJEqAmr8cntGggECAFCgBAgECAECAFCgECAECAECAECAUKAECAECAECAUKAqEfE3wv7HOm1GggECBNmwjQQAgQmzIRpIAQIE2bCNBAIECbMhGkgBAhMmAnTQAgQJsyEmTANhABhwkyYBgIBwoSZMA2EAGHCTJgJ00AIECbMhGkgECBMmAnTQAgQmDATpoEQIAAAAOAI35/opObEU84hAAAAAElFTkSuQmCC","skills":[{"n":"열두 대","t":"액티브","d":"적 전체에게 피해를 주고 1턴간 이동을 봉쇄한다."},{"n":"바닥이 없다","t":"패시브","d":"공격이 막히거나 무효화될 때마다 의지가 누적 상승한다."}]}],"floors":[{"n":14,"name":"말","era":"종말기","teams":1,"slot":4,"need":4,"base":1237,"routes":[{"id":"force","pw":1.0,"cond":[]},{"id":"devote","pw":0.75,"cond":[{"t":"역할","v":"헌신","n":1}]}]},{"n":20,"name":"칼자국","era":"종말기","teams":3,"slot":5,"need":15,"base":4388,"routes":[{"id":"force","pw":1.0,"cond":[]},{"id":"guard","pw":0.72,"cond":[{"t":"역할","v":"수호","n":1}]},{"id":"seek","pw":0.75,"cond":[{"t":"역할","v":"탐구","n":1}]},{"id":"weak","pw":0.65,"cond":[{"t":"약체","v":"평균 선명도 3 이하","n":3}]}]},{"n":24,"name":"북문","era":"붕괴기","teams":1,"slot":5,"need":5,"base":2609,"routes":[{"id":"force","pw":1.0,"cond":[]},{"id":"trade","pw":0.45,"cond":[{"t":"생업","v":"담장","n":1}]},{"id":"guard","pw":0.6,"cond":[{"t":"역할","v":"수호","n":1}]},{"id":"era","pw":0.62,"cond":[{"t":"층범위","v":"21~27","n":1}]}]},{"n":25,"name":"문 바깥","era":"붕괴기","teams":2,"slot":5,"need":10,"base":4532,"routes":[{"id":"force","pw":1.0,"cond":[]},{"id":"flee","pw":0.7,"cond":[{"t":"역할","v":"도피","n":1}]}]},{"n":28,"name":"문의 안과 밖","era":"붕괴기","teams":1,"slot":5,"need":5,"base":2784,"routes":[{"id":"force","pw":1.0,"cond":[]},{"id":"guard","pw":0.65,"cond":[{"t":"역할","v":"수호","n":2}]},{"id":"era","pw":0.6,"cond":[{"t":"층범위","v":"25~31","n":1}]}]},{"n":30,"name":"종소리","era":"붕괴기","teams":3,"slot":5,"need":15,"base":6857,"routes":[{"id":"force","pw":1.0,"cond":[]},{"id":"guard","pw":0.7,"cond":[{"t":"역할","v":"수호","n":2}]},{"id":"seek","pw":0.72,"cond":[{"t":"역할","v":"탐구","n":1}]},{"id":"weak","pw":0.62,"cond":[{"t":"약체","v":"평균 선명도 3 이하","n":3}]}]},{"n":35,"name":"같은 방향","era":"붕괴기","teams":2,"slot":5,"need":10,"base":6173,"routes":[{"id":"force","pw":1.0,"cond":[]},{"id":"guard","pw":0.7,"cond":[{"t":"역할","v":"수호","n":2}]},{"id":"devote","pw":0.74,"cond":[{"t":"역할","v":"헌신","n":1}]}]},{"n":38,"name":"표식의 수","era":"붕괴기","teams":1,"slot":5,"need":5,"base":3763,"routes":[{"id":"force","pw":1.0,"cond":[]},{"id":"seek","pw":0.62,"cond":[{"t":"역할","v":"탐구","n":2}]},{"id":"era","pw":0.55,"cond":[{"t":"층범위","v":"35~41","n":1}]}]},{"n":39,"name":"아직 선 성","era":"붕괴기","teams":1,"slot":5,"need":5,"base":4055,"routes":[{"id":"force","pw":1.0,"cond":[]},{"id":"trade","pw":0.55,"cond":[{"t":"생업","v":"망루","n":1}]},{"id":"resist","pw":0.66,"cond":[{"t":"역할","v":"저항","n":2}]}]},{"n":41,"name":"서쪽 종탑","era":"균열기","teams":1,"slot":5,"need":5,"base":4404,"routes":[{"id":"force","pw":1.0,"cond":[]},{"id":"trade","pw":0.5,"cond":[{"t":"생업","v":"종탑","n":1}]},{"id":"devote","pw":0.66,"cond":[{"t":"역할","v":"헌신","n":2}]}]}]}
+{"chars":[{"id":"seren","name":"세렌","r":5,"role":"헌신","floor":41,"era":"균열기","cls":"성직","trade":"종탑","hp":736,"atk":140,"def":94,"spd":122,"pw":554,"col":"#B8894A","tag":"종이 울리는 동안은 아직 늦지 않았다.","sp":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJAAAADACAYAAADryOpPAAACk0lEQVR42u3dsUrzUBiA4SpeRSFgEQRHVyc3tXfj5DU4eTeim5OruyARApm9gzqIkIjVFNLmfOc8z/QPDv3Tl+/jmLTOZgAAAAAAAJCnPZfgb/Nqsfr+d9vUrtcP+y4BAmIyBy5BOh5ul6v/fuby5j6pNWoCISCssGRPXk5kJhACwgoLuraG/HzJ68wEQkBYYSHWlnVmAiEgrLAM1pZ1ZgIhIASEgBAQOIVNdfIq+URmAiEgBISAEBAICAEhIAQEAkJACAgBgYAYW7aPc0z1CMeQ15PTox0mEAJCQAgIAYGAEBACQkAgIASEgBAQCIixhX+cI7XHNnJ9zSYQAkJACAgEhFPYl+4D6hFPN/0H7E/CvX4TCAEhIASEgEBACAgBUYaQv0g8O7/49Rdu72+v2fxfTCCsMMhmhQ0Z9YdHxyHWWfd1mkBYYZDNCot+Ktnl9Xl+epz8uxZNIARE4SvM2oq7zkwgBEQhK8yq2v213fZqM4EQEIWssO443cY6WzeuU/i8WPfzX21Tz6a4DiYQVhhWWFJSuB802uu/WvpoM1YYpL/CNj2RRV9Vua5yEwgB4RRmVW1p9ZtAWGFYYeHWVmrfl9h9Pf3vRYy97k0gBISAEBACAgEhIASEgEBACIiEZfXoRPy/F2YCYYWBgBAQAkJAICAEhIAQEAiIEYW/Fxbx/tc6Ee+LmUAICAEhIAQEAkJACAgBgYAQEAkLeS8sp/tf60S5L2YCISAEhIAQEGwo6p+8/PDWmUAICCvMCsMEQkCEFOZe2LxavJT6JrVNfWoCYYVB5FOYk5cJhIDACsMEQkBYYVaYCQQCYiJJ3wubV4s7b1Ff29TXJhBWGEQ4hTl5mUAICAAAAAAAAAAAAAAAgL5Pl6uZpQx/62wAAAAASUVORK5CYII=","trait":{"id":"종을친다","name":"종을 친다","line":"아직 늦지 않았습니다","w":{"heal":2.4,"ring":3.0,"retreat":-1.0}},"skills":[{"n":"여섯 시의 종","t":"액티브","d":"아군 전체의 잔존을 회복시킨다. 회복량은 자신의 잃은 잔존에 비례해 증가한다."},{"n":"멈추지 않는 손","t":"패시브","d":"자신이 흐려질 때, 아군 전체에게 1회 흐려짐 방지를 부여한다."}]},{"id":"kabril","name":"카브릴","r":5,"role":"수호","floor":24,"era":"붕괴기","cls":"병졸","trade":"문지기","hp":858,"atk":101,"def":131,"spd":93,"pw":553,"col":"#4A5A6B","tag":"명령은 옳았다. 나는 그것을 따랐다.","sp":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJAAAADACAYAAADryOpPAAACgklEQVR42u3dPUozURSA4USyCkFICKS2FgQ7IUtwC67HLbiEgJ0gWFsLoiBYu4NYpBmRgRlndM6953nqT74xvpzDzc9kNgMAAAAAAAAAAAAAgKTmHoKD45PV/rc/+/H+mvZxPJIOAsIKK21tWWcmEALCCqtgbWVeZyYQAmI6Cw/B/9heXe8jXc/u9maU9WoCISCssGpOXhH+XxMIASEgEBACQkAICATE2FK8nSPCE3q1vrXDBEJAWGFVrjPvSAQBISAEhIDAKeyvT2Q+2gwCwgoraJ25wRQICAEhIAQEAkJACIjaFf8EWE13wCjxCUkTCAEhIASEgKCmU9jZxWWvE9bby3Nxf4DletPr3z/e34X6m5lACAgBISAEBAJCQAiIHFJ82crp+Xbya3h62JlAICCssDbN15Uivy7W9/UvEwgrDASEgBAQTmFlqfVJPBMIASEgEBACwiksjuadLqJ95eVyvanmjiImEAJCQAgIAUHmU1i0O1d0uc6+dyAxgbDCIOwKG2ukR7v9b/N6htzOt/n4RFjZJhACQkAICAFB6aewmk5epV+nCYSAEBACAgHhFPZTiV+w0nb9Jd54ygRCQAgIASEgyHAKK/3kVdOJzARCQAgIASEgyHAKazuhdPmcVN93Aw65UVWXz3/5aDNWGAgIASEgkpln+4WjncJMIKwwEBACQkAICASEgBAQAgIBISAEhIDgu0XC3/lzop81gUBAWGFWmAmEgMAKs8JMIASEFWaFmUAgIKwwK8wEQkBghVlhJhACwgqzwqwwEwgBYYVZYSYQCAgrzAozgRAQVpgVZoWZQAgIK8wKM4FAQFhhVpgJhIDACrPCTCAEBAAAAAzwBXO0i+AUlg2RAAAAAElFTkSuQmCC","trait":{"id":"물러서지않는다","name":"물러서지 않는다","line":"돌아선 적 없습니다","w":{"guard":2.0,"attack":1.3,"retreat":-4.0}},"skills":[{"n":"빗장","t":"액티브","d":"3턴 동안 아군이 받는 모든 피해를 자신이 대신 받는다."},{"n":"등 뒤의 소리","t":"패시브","d":"아군이 흐려질 때마다 자취가 영구히 상승한다. 전투당 5회까지."}]},{"id":"idel","name":"이델","r":4,"role":"탐구","floor":47,"era":"균열기","cls":"관리","trade":"서고","hp":479,"atk":99,"def":61,"spd":120,"pw":409,"col":"#6B7FA8","tag":"아무도 안 믿어도 기록은 남습니다.","sp":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJAAAADACAYAAADryOpPAAACrElEQVR42u3dMUokQRgF4FI8hSAogrmpiWZewdTYQ4iH8A5ewczIQwiiIBh7Aw2EoVAax+7prvqrvi/eWZbh8d5WT/dMSgAAAAAAAAAAAAAA0Kktb8G33b2Dz7GvfX976fZ93BYdBAgTFm22zJkGQoAwYQ3MVs9zpoEQIAQIAUKAwCms7MmrtxOZBkKAKGfHWxDXydn5apofH+6LTKQGQoBwCnMKGzFbQ5acMw2EAOEUxkyns7mnTQMhQDiFNXkiW/LkVepEpoEQIJzC2OBsaSBMGCasSfnJqNVHm30WhgnDhJmzhWcryslLAyFAmDCCnrw0EAKECSPVfauGBkKAqFv4OxJreOZrU/YPj0wYJgycwlpVw2xpIAQIEzba0MW31+en5k9eGggTBk5hnZ+8rq7vVv8NuL25GP33ayBMGCaMiTOkgTBhmDAWdnx6uc6fqfaWFQ2EAGHCNiL/XKnmz8V+PAod+o5KDYQAYcL+FPGbKzQQCBAChAAhQCBACBACRCuavZ2jts/F5v4G+yk3xmsgTBgmrCr5s1RRvoSq1AxpIAQIE0Yns6WBECBM2KxqO3nl/54afhZTAyFACBACBAKEU9hvngXTQAgQBJ2w/4ryTfUtXVTUQAgQAoQAIUAgQAgQAkQfwl9IjPgzl7noFxU1EAJEOeFv7o7y2PI6TBgmDJqfsJZmK/qcaSAECAFCgBAgECAECAGiD2EuJPZw8XBIzRcVNRAChAAhQAgQtHoKK3Way09AU16rgUCAECAECAGClFKfvxf2Uei1GggECBNmwjQQAgQmzIRpIAQIE2bCNBAIECbMhGkgBAhMmAnTQAgQJsyEmTANhABhwkyYBgIBwoSZMA2EAGHCTJgJ00AIECbMhGkgECBMmAnTQAgQmDATpoEQIAAAAGCCL4wlr+LYA92yAAAAAElFTkSuQmCC","trait":{"id":"기록한다","name":"기록한다","line":"아무도 안 믿어도 남습니다","w":{"mark":2.8,"keepdist":1.6}},"skills":[{"n":"여덟 번째 보고서","t":"액티브","d":"적 하나의 약점을 노출시킨다. 이후 3턴 동안 그 적이 받는 피해가 증가한다."},{"n":"반려된 기록","t":"패시브","d":"같은 적을 반복해 공격할수록 아군 전체의 명중과 피해가 누적 상승한다."}]},{"id":"miro","name":"미로","r":4,"role":"도피","floor":31,"era":"붕괴기","cls":"병졸","trade":"전령","hp":407,"atk":111,"def":49,"spd":139,"pw":410,"col":"#8FA85E","tag":"빨랐어. 누구보다 빨랐어. 그게 문제였지.","sp":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJAAAADACAYAAADryOpPAAAC4ElEQVR42u3dMUozQRgGYBUvYCUsLGQJ5BCCYOcJBKvY2lqkFusUttZWgiewEwRbe0EiBAJ23kALMYyQgEl2k5md56nCjxojL9/Lt5nsv7UFAAAAAAAAAAAAAACZ2vYn+FGU1dey3zsZj7L9O+6IDgKECkutttSZCYQAocJaUFs515kJhAAhQAgQAgS2sM1uXrltZCYQAoQAIUAIEAgQAoQAIUAgQAgQEXMisUFOJIIAIUAIEAIEtrCmNzIfbQYBQoUlVGduMAUChAAhQAgQCBAChADRdslfAIvhzht1SfGCpAmEACFACBACBDlsYQdHxzM3r/e3V5uXCYQAIUAgQAgQAoQAgQDRgN0cXuRgeLjx32E4eJr57+FF0efHh7VdVLy+60+f9+L0dunnNYFQYaiwWnS6venjmN8XC3/PumrIBEKFocKiNe8IR+pOzveDx/3kXqMJhAChwho17yIeJhAChAAhQCBA2MLqEtv7YuHnvzrdXu0XDFc5kmECocJQYazo/uZjoa9f5wlGEwgBQoWtTTjeY7uP4t/qWf6YyqYO5JtACBBxSObmRoueSIz5UP28m0ot+hptYagwbGEkul2aQKgwbGGt2cLadJvfGC4SmkAIELYwWrBtmUAIELYwm9cSG5kJhAoDAUKAECBaJMkLiW3avELh4f9UNjITCAFCgBAgBAhy2ML+85+VzDsOsejHnMNtaJXvNYFAgMiqwuo6lRfb3TlMIBAgBAgBQoCwhRGq6wJgisczTCAECAFCgECAECAECAECAUKAECBaJJf3wj4j+zkmEAgQKmyd1TMZj/Z+HxdlNRIfEwgBQoU1oCirl4a3JxuZCYQAocJi3rxUmAmEAKHCVJgJBAKEClNhJhACBCpMhZlACBAqLPUKm4xHV03+/KKsLld4LhMIFQYqzBZmAiFAqLAIFWV1psJMIAQIFWbzUmEmEAKEClNhJhAIECpMhZlACBAAAACwAd/gMrlOJtqa8gAAAABJRU5ErkJggg==","trait":{"id":"돌아서지않는다","name":"돌아서지 않는다","line":"이번엔 안 돌아갔어","w":{"retreat":2.4,"attack":1.1,"advance":0.8}},"skills":[{"n":"숨 네 번","t":"액티브","d":"즉시 추가 행동을 얻는다. 이 행동으로 준 피해만큼 자신의 잔존이 감소한다."},{"n":"전하지 못한 서신","t":"패시브","d":"전투 시작 시 회피율이 크게 상승하고, 매 턴 조금씩 감소한다."}]},{"id":"north_gatekeeper","name":"북문의 수문장","r":3,"role":"수호","floor":24,"era":"붕괴기","cls":"장인","trade":"담장","hp":422,"atk":58,"def":75,"spd":66,"pw":312,"col":"#5A6070","tag":"대장은 문을 닫으라고 했다. 나는 문 앞에 있었다.","sp":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJAAAADACAYAAADryOpPAAACd0lEQVR42u3dQUrrUBSA4US6CkFoEQS34MiZe3DkEroUl+DIPThz5BYEQQwIjt1BO3BypUQS05B77v2+0ZsIad/POdy0xqYBAAAAAAAAAAAAAIBKtd6CH6dnm91/f/br86Pa9/FEOggIKyza2rLOTCAEhBVWwNqqeZ2ZQAgIASEgBAROYcuevGo7kZlACAgBISAEBAJCQAiIOqy8BbHc3m1H3RR9fLif9QamCYSAsMJmlX4O5RuJJhACQkAgIASEU1hJJzK/2gwCwgoLtM48YAoEhIAQEAICASEgBETpwt9IzOHJG8e6hog3JE0gBISAEBACgpJOYVfXN6NON937W7j/gPX5RfrvXbTrN4EQEFYYf6259aUJhBUGAkJACAgBgYAQEIsq6kZi+rlSzp+LpddpAmGFgYAQEAJCQCAgBISAEBAIiNkU+6X6pf5G2JDrifj7XyYQAkJACAgEhFPYoZfnpzbadQ55AknXvWb7Gk0gBIQV1owZ6UPkcPOw73qmPM43fX9yWGcmEAJCQAgIAUH0U1hJJ6/o12kCISAEhIBAQDiFHYr4B1b6rj/ig6dMIASEgBAQAoIaTmHRT14lnchMIASEFTZK33gf8iXzsV+lmPKUjyFfnj/WLxGYQAgIAYGAEBACQkAgIObU1vaCc7uRaAJhhYGAEBACQkAgIASEgBAQCAgBISAEBL+tKnzN3wv9rAkEAsIKs8JMIAQEVpgVZgIhIKwwK8wEAgFhhVlhJhACAivMCjOBEBBWmBVmhZlACAgrzAozgUBAWGFWmAmEgLDCrDArzARCQFhhVpgJBALCCrPCTCAEBFaYFWYCISAAAABggj1TvZGuwHlAIQAAAABJRU5ErkJggg==","trait":{"id":"먼저나선다","name":"먼저 나선다","line":"제가 앞에 서겠습니다","w":{"guard":2.6,"advance":1.2,"retreat":-2.0}},"skills":[{"n":"배수로","t":"액티브","d":"가장 잔존이 낮은 아군 하나를 즉시 전열에서 빼내고 피해를 대신 받는다."},{"n":"이름 없는 자리","t":"패시브","d":"24층에서 전투 시 모든 스탯이 크게 상승한다."}]},{"id":"baker_18f","name":"빵을 굽던 사람","r":3,"role":"헌신","floor":13,"era":"종말기","cls":"장인","trade":"화덕","hp":420,"atk":60,"def":58,"spd":82,"pw":312,"col":"#C4763A","tag":"다들 배가 고팠으니까요.","sp":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJAAAADACAYAAADryOpPAAACjUlEQVR42u3czUlzQRiG4ShpIoKgCJaQRXDhzhpsxCJSih24cyEpQhAFwbVgAbpwkQRyQHPmZOY973Xtvg8Ef27mYfI3mQAAAAAAAAAAAAAAQFJHfgW/Tk7Pv/f92o/317S/x2PpICBMWLTZMmdOIASECRvBbGWeMycQAkJACAgBgVtY3ZtXthuZEwgBISAEhIBAQAgIASEgEBAComFekTggr0gEASEgBISAwC1s6BuZtzaDgDBhgebMB0yBgBAQAkJAICAEhIAYu/APgLXwyRulRHxA0gmEgBAQAkJAkO0WFv1GFv2lIE4gBISAEBACAgEhIAREDiEfxFpc3+x8wPDt5Tncz3J2cbnz/1ePDyH+Nk4gBIQJ23u2urQ8Z12z1aXlOXMCISDqmUafqrFazr/W/5gvivxOrpar4lPoBEJAJL+FDTFbUW5hW1NVSZ9pcwJhwkgyYYe8YbU8Yfe3s2a/t//OmRMIE0Y9B30gcfM5nSHmrOs5oxbeL7b9/q/ZaB4sdQIhIJJM2NCziBMIAZFJmOfC+kxVe7ewtae7RfXvzXNhmDBMWJEJK3WravnDpv7yoVJDTJtXJGLCMGEhRJ8wJxAmDFJNmI/5dQIhIAQEAkJAuIW5eY37RuYEQkAICAEhIMhwCxvTzSv6jcwJhIAwYc3O3+aU9PlaJxAICAEhIAQEAkJACAgBISAQEAJCQAgIBISAEBACAgEhIASEgEBAFDJN+DN/VvpaJxAICBNmwpxACAhMmAlzAiEgTJgJcwKBgDBhJswJhIDAhJkwJxACwoSZMBPmBEJAmDAT5gQCAWHCTJgTCAFhwkyYCXMCISBMmAlzAoGAMGEmzAmEgMCEmTAnEAICAAAAevgBWtuevhWennAAAAAASUVORK5CYII=","trait":{"id":"먹인다","name":"먹인다","line":"다들 배가 고팠으니까요","w":{"heal":2.8,"retreat":0.4}},"skills":[{"n":"서른일곱 개","t":"액티브","d":"아군 전체의 잔존을 소량 회복하고, 다음 턴 받는 피해를 감소시킨다."},{"n":"꺼지지 않은 불","t":"패시브","d":"전투 중 매 턴 아군 전체가 잔존을 조금씩 회복한다."}]},{"id":"someones_mother","name":"누군가의 어머니","r":2,"role":"헌신","floor":18,"era":"종말기","cls":"하인","trade":"물장수","hp":313,"atk":42,"def":44,"spd":70,"pw":239,"col":"#9A7A88","tag":"…이름을 부르는 소리만 남았다.","sp":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJAAAADACAYAAADryOpPAAACw0lEQVR42u3dMUoDURQF0CiuQhAUwUWk0spVCFa6BbFKJW5BW1dhZ+UiBIkQSO0OYmEz6gyM8/OZ/+edUwaiyXh5lzfOJLMZAAAAAAAAAAAAAAAEteMQfNs/ONoMfe56tQx7HHdFBwFChdVWW+rMBEKAUGETqK3IdWYCIUAIEAKEAIEtbNzNK9pGZgIhQAgQAoQAgQAhQAgQAgQChABRMFckZuSKRBAgBAgBQoDAFpZ7I3NrMwgQKqyiOvMBUyBACBAChACBACFACBBTV/0JsBI+eWNbajwhaQIhQAgQAoQAQbQtrPaNrPZLQUwgBAgBQoAQIBAgBAgBIoYqT2LNT89bTxh+vL9V914Oj09aH399ea7ib2MCIUCosMG11aXkOuuqrS4l15kJhAAxnr3aqyqCrmNSQrWZQAgQwStMbaUft7HqzARCgAhSYarqr8v5Wevji6eHf/2cPjcULC6uWx+/ursZXH8mECqMIBXW3BRy1FnXJlLC/WLN+7/Wq2WzwjZttdVVNyly/HwTCAFiPKP9L2VbFdbnBFppFdb12nLUVp86S7m92gRChRFkC0vZyGq5yDyx2qr7RmkTCAEiYIXlrqrSPmyq+Xqm9P1iJhACRPAKm+qGZQKBABFqC5vS5hVhIzOBECAECAFCgCDaFlb7V17W/vpNIASI8fjW5oI0Tyo+3t5v/X2l3MJsAqHCsIWprYm9LxMIAUKFDd5WctdE83elPHeAKurMBEKAUGH8kuOknwmEACFAIEAIEAKEACFAIEAIEAKEAIEAIUAIEAIEAoQAIUAIEPwU8aL6z5GeawKBAKHCVJgJhACBClNhJhAChApTYSYQCBAqTIWZQAgQqDAVZgIhQKgwFabCTCAECBWmwkwgECBUmAozgRAgVJgKU2EmEAKEClNhJhAIECpMhZlACBCoMBVmAiFAAAAAQIIvV3m5kZjn8RAAAAAASUVORK5CYII=","trait":{"id":"감싼다","name":"감싼다","line":"거기 있니","w":{"heal":2.2,"guard":1.8,"retreat":-0.5}},"skills":[{"n":"감싸기","t":"액티브","d":"아군 하나에게 보호막을 부여한다. 보호막이 유지되는 동안 그 아군은 흐려지지 않는다."},{"n":"두 음절","t":"패시브","d":"잔존이 30% 이하인 아군이 있을 때 자신의 회복량이 크게 증가한다."}]},{"id":"ash_sweeper","name":"재를 쓸던 사람","r":3,"role":"수호","floor":5,"era":"종말기","cls":"장인","trade":"담장","hp":415,"atk":57,"def":79,"spd":66,"pw":313,"col":"#7A7168","tag":"길이 보여야 사람이 오지요.","sp":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJAAAADACAYAAADryOpPAAACdUlEQVR42u3dsUrzUBiA4UR6FYJgEdxdnbp5K66uXkBXV2/FrZOruyAVBGfvoB1cIiXlxDTkfOc8z/QvQtr/5fs4aY1NAwAAAAAAAAAAAAAAlWq9Bb/OL5a7//7s99e22vfxTDoICCss2tqyzkwgBIQVVsDaqnmdmUAICAEhIAQETmHznrxqO5GZQAgIASEgBAQCQkAIiDosvAWxPD7cD7opun56nvQGpgmEgLDCJtX9HMo3Ek0gBISAQEAICKewkk5kfrUZBIQVFmidecAUCAgBISAEBAJCQAiI0oW/kZjDkzdOdQ0Rb0iaQAgIASEgBAQlncJuV3eDTjefH+/h/gMur667/95Fu34TCAFhhXHE6mZpAmGFgYAQEAJCQCAgBMSsirqR2P1cKefPxbrXaQJhhYGAEBACQkAgIASEgBAQCIjJFPul+rn+RljK9UT8/S8TCAEhIAQEAsIp7NDr5qWNdp0pTyDZvG2zfY0mEALCCmuGjPQUOdw87LueMY/z7b4/OawzEwgBISAEhIAg+imspJNX9Os0gRAQAkJAICCcwg5F/AMrfdcf8cFTJhACQkAICAFBDaew6Cevkk5kJhACwgobpG+8p3zJfOhXKcY85SPly/On+iUCEwgBISAQEAJCQAgIBMSU2tpecG43Ek0grDAQEAJCQAgIBISAEBACAgEhIASEgOCvRYWv+WemnzWBQEBYYVaYCYSAwAqzwkwgBIQVZoWZQCAgrDArzARCQGCFWWEmEALCCrPCrDATCAFhhVlhJhAICCvMCjOBEBBWmBVmhZlACAgrzAozgUBAWGFWmAmEgMAKs8JMIAQEAAAAjLAHGxaRrrnqfkQAAAAASUVORK5CYII=","trait":{"id":"길을낸다","name":"길을 낸다","line":"앞이 보여야 사람이 옵니다","w":{"advance":2.2,"guard":1.4,"retreat":-1.0}},"skills":[{"n":"스무 걸음","t":"액티브","d":"아군 전체가 다음 1턴간 받는 피해를 줄인다."},{"n":"비질 자국","t":"패시브","d":"같은 층에서 전투를 반복할수록 아군 전체의 자취가 누적 상승한다."}]},{"id":"counting_child","name":"셈하던 아이","r":3,"role":"탐구","floor":11,"era":"종말기","cls":"관리","trade":"서고","hp":330,"atk":73,"def":48,"spd":102,"pw":312,"col":"#8C93A6","tag":"세면 안 잊어버려요.","sp":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJAAAADACAYAAADryOpPAAACrUlEQVR42u3dMUokQRgF4FI8hSAogocwMjPXzMQTmHkMM+/gHcyMPIQgCoKxN9BAGAqlceye7qq/6vvinWUZHu9t9XTPpAQAAAAAAAAAAAAAAJ3a8hZ82907+Bz72ve3l27fx23RQYAwYdFmy5xpIAQIE9bAbPU8ZxoIAUKAECAECJzCyp68ejuRaSAEiHJ2vAVxHZ+crqb58eG+yERqIAQIpzCnsBGzNWTJOdNACBBOYcx0Opt72jQQAoRTWJMnsiVPXqVOZBoIAcIpjA3OlgbChGHCmpSfjFp9tNlnYZgwTJg5W3i2opy8NBAChAkj6MlLAyFAmDBS3bdqaCAEiLqFvyOxhme+NmX/8MiEYcLAKaxVNcyWBkKAMGGjDV18e31+av7kpYEwYeAU1vnJ6+b2bvXfgOuri9F/vwbChGHCmDhDGggThgljYWfnl+v8mWpvWdFACBAmbCPyz5Vq/lzsx6PQoe+o1EAIECbsTxG/uUIDgQAhQAgQAgQChAAhQLSi2ds5avtcbO5vsJ9yY7wGwoRhwqqSP0sV5UuoSs2QBkKAMGF0MlsaCAHChM2qtpNX/u+p4WcxNRAChAAhQCBAOIX95lkwDYQAQdAJ+68o31Tf0kVFDYQAIUAIEAIEAoQAIUD0IfyFxIg/c5mLflFRAyFAlBP+5u4ojy2vw4RhwqD5CWtptqLPmQZCgBAgBAgBAgFCgBAg+hDmQmIPFw+H1HxRUQMhQAgQAoQAQaunsFKnufwENOW1GggECAFCgBAgSCn1+XthH4Veq4FAgDBhJkwDIUBgwkyYBkKAMGEmTAOBAGHCTJgGQoDAhJkwDYQAYcJMmAnTQAgQJsyEaSAQIEyYCdNACBAmzISZMA2EAGHCTJgGAgHChJkwDYQAgQkzYRoIAQIAAAAm+AIlxq/iFzij/QAAAABJRU5ErkJggg==","trait":{"id":"세어둔다","name":"세어 둔다","line":"세면 안 잊어버려요","w":{"mark":2.4,"keepdist":1.8,"retreat":0.8}},"skills":[{"n":"예순셋","t":"액티브","d":"적 하나의 남은 잔존을 표시하고 약점을 노출시킨다."},{"n":"줄어드는 속도","t":"패시브","d":"적의 잔존이 줄어들수록 아군 전체의 의지가 상승한다."}]},{"id":"last_watercarrier","name":"마지막 물장수","r":4,"role":"헌신","floor":16,"era":"종말기","cls":"하인","trade":"물장수","hp":558,"atk":88,"def":71,"spd":102,"pw":410,"col":"#5F8AA6","tag":"마르면 더 깊이 파면 됩니다.","sp":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJAAAADACAYAAADryOpPAAACxklEQVR42u3dMUoDURQF0CiuQhAU0UVY2YjgEmyyAlsbaxtbV2DjHsTGykUIEiGQ2h3EwmbUGRjn5zP/zzunDEST8fIub5xJZjMAAAAAAAAAAAAAAAhqyyH4trt3sB763NVyEfY4bosOAoQKq6221JkJhAChwiZQW5HrzARCgBAgBAgBAlvYuJtXtI3MBEKAECAECAECAUKAECAECAQIAaJgrkjMyBWJIEAIEAKEAIEtLPdG5tZmECBUWEV15gOmQIAQIAQIAQIBQoAQIKau+hNgJXzyxqbUeELSBEKAECAECAGCaFtY7RtZ7ZeCmEAIEAKEACFAIEAIEAJEDFWexDo5PW89Yfjx/lbde9k/PG59/PXlqYq/jQmEAKHCBtdWl5LrrKu2upRcZyYQAsR4dmqvqgi6jkkJ1WYCIUAErzC1lX7cxqozEwgBIkiFqaq/ji7mrY8/39/86+f0uaHg7Oq29fGH68vB9WcCocIIUmHNTSFHnXVtIiXcL9a8/2u1XDQrbN1WW111kyLHzzeBECDGM9r/UjZVYX1OoJVWYV2vLUdt9amzlNurTSBUGEG2sJSNrJaLzBOrrbpvlDaBECACVljuqirtw6aar2dK3y9mAiFABK+wqW5YJhAIEKG2sCltXhE2MhMIAUKAECAECKJtYbV/5WXtr98EQoAYj29tLkjzpOL87nHj7yvlFmYTCBWGLUxtTex9mUAIECps8LaSuyaavyvluQNUUWcmEAKECuOXHCf9TCAECAECAUKAECAECAECAUKAECAECAQIAUKAECAQIAQIAUKA4KeIF9V/jvRcEwgECBWmwkwgBAhUmAozgRAgVJgKM4FAgFBhKswEQoBAhakwEwgBQoWpMBVmAiFAqDAVZgKBAKHCVJgJhAChwlSYCjOBECBUmAozgUCAUGEqzARCgECFqTATCAECAAAAEnwBhCC5kdjPCwMAAAAASUVORK5CYII=","trait":{"id":"마르지않는다","name":"마르지 않는다","line":"마르면 더 깊이 파면 됩니다","w":{"heal":2.6,"advance":0.6}},"skills":[{"n":"같은 시각","t":"액티브","d":"아군 전체를 회복시킨다. 전투가 길어질수록 회복량이 증가한다."},{"n":"마르지 않는 통","t":"패시브","d":"잔존이 20% 이하인 아군이 생기면 즉시 회복시킨다. 전투당 2회."}]},{"id":"dorn","name":"도른","r":4,"role":"저항","floor":21,"era":"붕괴기","cls":"장인","trade":"대장간","hp":411,"atk":140,"def":64,"spd":93,"pw":411,"col":"#A6552F","tag":"농기구는 이제 안 만듭니다.","sp":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJAAAADACAYAAADryOpPAAACo0lEQVR42u3dMUozQRgG4Ch7CkFQBFt7KztPYOMBbTyBnZW9rSARAqm9QSwCyxQGstnZ3W9mnqf6EfK7hpfvZXYmm9UKAAAAAAAAAAAAAAAadeYt2Lu4vN6d+trtZt3s+3guOggQKqy02lJnJhAChAqroLbG1NnL091u6ffk+fXz5ByYQKgwBAgBQoBgoM7Ka57fW+sNRhMIAUKAECAECAQIAUKAECAQIASIwJrYC0v3oaKdSDSBUGFwKofqC6uwodd/dXPb//vj/S379ZhACBAqrJo6m3rlNabCUrnqzARCgFBhRdfZnDcMc1VYrjozgVBhLKfzFsR3//DY19bP91eW/9MqDBWGCmOiqpqCvTBUGCoslKWevBHtGuasLRMIAUKAECAECFpbhR264ZZrn2hOxxy3MIFQYSBACBAChACBACFALM2JxAKkRzKiHR0xgRAgVFgW6b5S5H2x9KPQ2826/3m6xzf1SUITCAFChc1m6s9MRVttmUCoMBAgBAgBQoBAgBAgIinmxtWYG4kR9sVq/e4wEwgBYjnVnkiMfIrPBAIBQoAQIAQIq7D6RFt5pddT001FEwgBQoAQIAQIWl6FlfKY35pWZCYQAoQK+1cLH2c2gRAgaHYVVuIXrNS0IjOBECAECAFCgKCFVVjpK6+aVmQmEAKEChvkmG86PvTI3KGH7dMqGfNaEwgEiKYqrMQnt5tAIEAIEAKEAIEAIUAIEAIEAoQAIUAIEAgQAoQAIUAIEAgQAkQ5ugb/5t+FXmsCgQChwlSYCYQAgQpTYSYQAoQKU2EmEAgQKkyFmUAIEKgwFWYCIUCoMBWmwkwgBAgVpsJMIBAgVJgKM4EQIFSYClNhJhAChApTYSYQCBAqTIWZQAgQqDAVZgIhQAAAAMAIf+r/qGnbsSdhAAAAAElFTkSuQmCC","trait":{"id":"앞뒤가없다","name":"앞뒤가 없다","line":"막으면 뚫으면 됩니다","w":{"attack":2.4,"advance":1.6,"retreat":-2.5}},"skills":[{"n":"마흔 자루","t":"액티브","d":"적 전체에게 피해를 준다. 아군 수가 적을수록 피해가 증가한다."},{"n":"자기 몫","t":"패시브","d":"자신의 잔존이 절반 이하일 때 의지가 크게 상승한다."}]},{"id":"left_behind","name":"짐을 두고 온 사람","r":2,"role":"도피","floor":22,"era":"붕괴기","cls":"장인","trade":"목공","hp":231,"atk":56,"def":29,"spd":93,"pw":241,"col":"#6E7A5E","tag":"무거운 것부터 버렸어요. 순서대로.","sp":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJAAAADACAYAAADryOpPAAACuklEQVR42u3dPUrEUBgF0FHcgJUQCBgEV2A1INi5i3EHLsBGbFyAS3AXdlZTuQJBIgQG7NyBFsIQwYD5m7yXd05loTM6XL7Llz8XCwAAAAAAAAAAAAAASNSej+BHlhdfXX92U5XJfo77ooMAocJiqy11ZgIhQKiwGdRWynVmAiFACBAChACBLWzazSu1jcwEQoAQIAQIAQIBQoAQIAQIBAgBImCuSByRKxJBgBAgBAgBAlvY2BuZW5tBgFBhEdWZB0yBACFACBACBAKEACFAzF30B8BCePLGUGI8IGkCIUAIEAKEAEEKW9jy4vLPzev97dXmZQIhQAgQCBAChAAhQCBAjODARzCt+kHR9fOTyzlQYZBmhR2fnG6/Dvm8WP33NIFQYTD7Cmu6hMNG1t/1zWr7vg/3j63e1wRChaHC6FBn9eoxgVBhqDB24Gx51PL7V8FuoCYQAoQKG1xo58V+3/91PpuDoiYQAoQKo6e257BMIFQYKixY9fNHIT9H8WX9YQKhwqCTaO5DantFYsgX1Tc9VKrt3xjCfWQmEAKELYyIassEQoCwhQ2+hc3pMb+xPLXDBEKAsIUR+LZlAiFA2MJsXh02MhMIFQYChAAhQMxIlAcS57R51dUv/o9lIzOBECBUWCv/edJ707mktveI1aukz8+aQCBAqLCe2w0mEAKECtuBGP8FpAkEAoQKm9BQBwBjPLdlAiFACBACBAKEACFACBAIEAKEACFAIEAIEFNL5XKOz8BexwQCAUKFNcnyohy6ejZVedjw+iYQCBAqLMDNy0ZmAiFAqDAVZgKBAKHCVJgJhAChwlSYCjOBECBUmAozgUCAUGG7r5hNVd6N+fpZXtz2eC8TCBUGKswWZgIhQKiwAGV5caXCTCAECBVm81JhJhAChApTYSYQCBAqTIWZQAgQAAAAMIFvhHKyXndMgXoAAAAASUVORK5CYII=","trait":{"id":"버리고간다","name":"버리고 간다","line":"무거운 것부터 버렸어요","w":{"retreat":2.6,"advance":0.9}},"skills":[{"n":"순서대로","t":"액티브","d":"자신의 자취를 버리고 그만큼 공명을 얻는다. 되돌릴 수 없다."},{"n":"돌아가려 함","t":"패시브","d":"회피에 성공할 때마다 아군 전체의 공명이 소폭 상승한다."}]},{"id":"cart_pusher","name":"수레를 밀던 사람","r":3,"role":"저항","floor":23,"era":"붕괴기","cls":"장인","trade":"채석","hp":386,"atk":86,"def":66,"spd":57,"pw":314,"col":"#8A7B4F","tag":"비켜서 가면 되잖습니까. 왜 다들.","sp":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJAAAADACAYAAADryOpPAAAClUlEQVR42u3dMUozQRgG4CgWnkEQFMFDmMbOMjlNGus03ialnZWHECRCILU30EIIW7iYTWbcmfmep/wh4B9e3pfZTTaTCQAAAAAAAAAAAAAABHXiLfhxcXn9dehrt5t12PfxVHQQIExYbbNlzjQQAoQJa2C2Is+ZBkKAECAECAECp7BxT17RTmQaCAFCgBAgBAgECAFCgIjhzFtQl6fH2aCLoovlKusFTA2EAGHCsureh/KJRA2EAGHCqMLd/cNusl9fnpNPqgZCgDBhzZzISj555ZgzDYQAYcKqnrMaLximmjMNhAnDhLHn3KTiFIYJw4RR+FTlmC0NhABhwpIo4ckbJfwN/zlbGggBQoAQIAQIop3C+i64fby/Vfd/ubq51UCYMIgzYdHMp+caCBMGAoQAIUAIEAgQAsSomrqQ2L2vVPJ9se5Xobeb9e7f+75uPJ/Oiv3EowZCgDBhf8r9nakS5P4AvAZCgBAgECAECAFCgBAgOFSzH6ov7b5Yq78dpoEQIExYct37SiU/AEoDIUBgwhq2WK6KPcFpIAQIE5ZcaSev7t/T0kVFDYQAIUAIEAIEkU9htTzmt6UTmQZCgDBhv4rwdWYNhABB2FNYjT+w0tKJTAMhQAgQAoQAQYRTWO0nr5ZOZBoIAcKEDbLPLx33PTJ36Iftu1NyzGs1EAgQoSasxie3ayAQIAQIAUKAQIAQIAQIAQIBQoAQIAQIBAgBQoAQIAQIBAgBoh4Rfy/sc6TXaiAQIEyYCdNACBCYMBOmgRAgTJgJ00AgQJgwE6aBECAwYSZMAyFAmDATZsI0EAKECTNhGggECBNmwjQQAoQJM2EmTAMhQJgwE6aBQIAwYSZMAyFAYMJMmAZCgAAAAIAjfAMfNqUFtnCNPgAAAABJRU5ErkJggg==","trait":{"id":"멈추지않는다","name":"멈추지 않는다","line":"비켜서 가면 되잖습니까","w":{"advance":2.4,"attack":1.4,"retreat":-2.0}},"skills":[{"n":"한가운데","t":"액티브","d":"적 진형 정중앙에 피해를 주고 1턴간 밀어낸다."},{"n":"멈추지 않음","t":"패시브","d":"행동을 방해받을 때마다 의지가 누적 상승한다."}]},{"id":"yuan","name":"유안","r":5,"role":"탐구","floor":29,"era":"붕괴기","cls":"장인","trade":"약방","hp":610,"atk":137,"def":85,"spd":165,"pw":552,"col":"#4E7A6B","tag":"문 안쪽에서도 사람이 죽고 있습니다. 왜입니까.","sp":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJAAAADACAYAAADryOpPAAACsElEQVR42u3dPUozURQG4Im4BCtBUAwuIpWdXTbiDlyAO3AjdnZWWYQoCoKVhTvQQghjMcTJ/Nx77n2e6isMfIaX83Jm7oxNAwAAAAAAAAAAAAAAlVr4Cn4dn5x97/vZj/fXar/HA9FBgFBh0WpLnZlACBAqrIDaqrnOTCAECAFCgBAgsIWl3bxq28hMIASIdA59BXGtLq+21bx5fEhSkSYQAoQtzBa2R211mbPOTCAECFsYE21nU1ebCYQAYQsrciObc/NKtZGZQAgQtjBGrC0TCBWGCitSezMq9dFm98JQYagwdTZzbUXZvEwgBAgVRtDNywRCgFBhNHkf1TCBECDyFv5EYg7PfI3l9PxChaHCwBYW3dFqufNn1qtlr/q+v73zXBgqDBWWVtfFt7eXp+I3LxMIFQYChAAhQNjCmMLn5nn77/9cVOwyxcVDEwgBQoXR/D2S0fXm+b73vEwgVBgqLJz2faWc74t1PQqdwwlDEwgBQoWNLuKbK0wgECAECAFCgECAECAEiFKEufcy5EJiDvfFxnoV8Prmeuf3MPUpRBMIASIPxZ5IbB+NKOklVCYQAgQChAAhQNjC8pTb5tX+/+TwZzFNIAQIFcbM5rzPZQIhQOQt622g7xGOiK/5jb6RmUAIEAKEACFA0FP4C4kRN6+26PfITCAECAFCgBAgqGELi755lbSRmUAIEOksavuF+x62b1fJkM+aQCBACBAChACBACFACBAChACBACFACBACBAKEACFACBAIEAKEACFAIECMpMY31X8l+qwJBAKEClNhJhACBCpMhZlACBAqTIWZQCBAqDAVZgIhQKDCVJgJhAChwlSYCjOBECBUmAozgUCAUGEqzARCgFBhKkyFmUAIECpMhZlAIECoMBVmAiFAoMJUmAmEAAEAAAAD/AAiOLAo5PxUSgAAAABJRU5ErkJggg==","trait":{"id":"원인을본다","name":"원인을 본다","line":"왜입니까","w":{"mark":2.6,"attack":1.2,"keepdist":1.0}},"skills":[{"n":"증상 기록","t":"액티브","d":"적 전체의 상태를 노출시키고 3턴간 받는 피해를 증가시킨다."},{"n":"사흘","t":"패시브","d":"전투가 3턴 지날 때마다 아군 전체의 의지와 공명이 상승한다."},{"n":"문 밖이 아니었다","t":"잠금","d":"각성 5에서 해금된다."}]},{"id":"flagbearer","name":"깃발을 든 사람","r":3,"role":"수호","floor":32,"era":"붕괴기","cls":"병졸","trade":"망루","hp":498,"atk":47,"def":89,"spd":44,"pw":312,"col":"#7E8288","tag":"어느 쪽이든 들어야 했습니다.","sp":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJAAAADACAYAAADryOpPAAACu0lEQVR42u3dQUrrUBSAYSNdhSBUCl2EI2duRHELjjroyC2IbsSZIxchiILQsTuoEwcRCSYkac7N+b6xz1ftzznctonVESGdnJ7t//ua3ed7NfXjPPZUISAEhIAQEAgIASEgBAQCQkDEVfkVHN5me7ef4v/dbm4Hf75NIASEgBAQAgIBISAERA5eSPzR5kPsTfp8uH3sFxXHePHQBEJAxLCwtob9PhGu1TKBEBBWmLVlnZlACAgBISAQEE5hAU9emU9kJhACYjop3reZaoXVtVlhQ320Y+yPcJhACAgBISAEBAJCQAiIfNJdF3bIFxV9IhEEhIAQEAICp7CxT2QubQYBYYUVtM6yrS0TCAEhIASEgEBACAgBkU/xL4BFuGx5KCW+IGkCISAEhIAQEMzpFHZ+cdnphPXx9lrcE7BcrTt9/cvzU6jnzARCQAgIASEgEBACQkDkkOKPrVxd30z+GB4f7k0gEBBWWJP6+0qR3xfr+v6XCYQVBgJCQAgIp7CyzPVFPBMIASEgEBACwiksjvqdLiLcwaP+eJar9WzuKGICISAEhIAQEGQ+hUW7c0Wbx9n1DiQmEFYYhF1hQ430aLf/rT+ePrfzrf9+IqxsEwgBISAEhICg9FPYnE5epT9OEwgBISAEBALCKeyvEv/AStPjL/HGUyYQAkJACAgBQYZTWOknrzmdyEwgBISAEBACggynsKYTSpvrpLp+GrDPjaraXP/l0masMBAQAkJAJFNl+4GjncJMIKwwEBACQkAICASEgBAQAgIBISAEhIDgt0XCn/lron9rAoGAsMKsMBMIAYEVZoWZQAgIK8wKM4FAQFhhVpgJhIDACrPCTCAEhBVmhVlhJhACwgqzwkwgEBBWmBVmAiEgrDArzAozgRAQVpgVZgKBgLDCrDATCAGBFWaFmUAICAAAAOjhGxoOnOoBLt9EAAAAAElFTkSuQmCC","trait":{"id":"양쪽을본다","name":"양쪽을 본다","line":"어느 쪽이든 들어야 했습니다","w":{"guard":1.8,"keepdist":1.2}},"skills":[{"n":"양쪽의 깃발","t":"액티브","d":"적 전체의 표적을 자신에게 돌리고 2턴간 자취가 크게 오른다."},{"n":"쏘지 않았다","t":"패시브","d":"전투 시작 후 3턴 동안 받는 피해가 절반이 된다."}]},{"id":"name_writer","name":"이름을 적던 병사","r":4,"role":"탐구","floor":33,"era":"붕괴기","cls":"관리","trade":"서고","hp":375,"atk":98,"def":68,"spd":140,"pw":408,"col":"#6D7A84","tag":"적어 두면 누가 없어졌는지 압니다.","sp":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJAAAADACAYAAADryOpPAAACq0lEQVR42u3dQUojQRgF4FI8hSAoghdwFxDceRovIC7FC3gad648hCAKgmtvoAshFEpj7E531V/1fevJMITHe1Od7iQlAAAAAAAAAAAAAADo1I634Nv+wdHn2Ne+v710+z7uig4ChAmLNlvmTAMhQJiwBmar5znTQAgQAoQAIUDgFFb25NXbiUwDIUCUs+ctiGt1frGe5seH+yITqYEQIJzCnMJGzNaQJedMAyFAOIUx0+ls7mnTQAgQTmFNnsiWPHmVOpFpIAQIpzC2OFsaCBOGCWtSfjJq9dFmn4VhwjBh5mzh2Ypy8tJACBAmjKAnLw2EAGHCSHXfqqGBECDqFv6OxBqe+dqWw+MTE4YJA6ewVtUwWxoIAcKEjTZ08e31+an5k5cGwoSBU1jnJ6/Lq5v1fwPubq9H//0aCBOGCWPiDGkgTBgmjIWdrs42+TPV3rKigRAgTNhW5J8r1fy52I9HoUPfUamBECBM2J8ifnOFBgIBQoAQIAQIBAgBQoBoRbO3c9T2udjc32A/5cZ4DYQJw4RVJX+WKsqXUJWaIQ2EAGHC6GS2NBAChAmbVW0nr/zfU8PPYmogBAgBQoBAgHAK+82zYBoIAYKgE/ZfUb6pvqWLihoIAUKAECAECAQIAUKA6EP4C4kRf+YyF/2iogZCgCgn/M3dUR5b3oQJw4RB8xPW0mxFnzMNhAAhQAgQAgQChAAhQPQhzIXEHi4eDqn5oqIGQoAQIAQIAYJWT2GlTnP5CWjKazUQCBAChAAhQJBS6vP3wj4KvVYDgQBhwkyYBkKAwISZMA2EAGHCTJgGAgHChJkwDYQAgQkzYRoIAcKEmTATpoEQIEyYCdNAIECYMBOmgRAgTJgJM2EaCAHChJkwDQQChAkzYRoIAQITZsI0EAIEAAAATPAF+Iqv4nBOeC8AAAAASUVORK5CYII=","trait":{"id":"세어둔다","name":"세어 둔다","line":"세면 안 잊어버려요","w":{"mark":2.4,"keepdist":1.8,"retreat":0.8}},"skills":[{"n":"벽의 이름","t":"액티브","d":"적 전체의 약점을 노출시킨다. 적 수가 많을수록 효과가 크다."},{"n":"급해지는 글씨","t":"패시브","d":"아군이 흐려질 때마다 남은 아군 전체의 의지가 영구 상승한다."}]},{"id":"pathpointer","name":"길을 가리키던 사람","r":3,"role":"헌신","floor":36,"era":"붕괴기","cls":"관리","trade":"등대","hp":432,"atk":60,"def":58,"spd":79,"pw":312,"col":"#8B8467","tag":"저는 그냥 가리켰을 뿐입니다.","sp":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJAAAADACAYAAADryOpPAAAC4UlEQVR42u3dPUoEQRAG0F3xFIKgCB7CyMyjeAIzQzNP4FHMjDyEIAqCsTfQxGCDbXZnZ3q6euq9UPwdP+qj2hl3vWIRTk7Pf3e9z/fXx3rqr3vk0iNACBAChACBACFACBACBAKEABHX2iWI7/Hh9rfF1727f9qZDxMIFYYAIUAIEAgQAoQAkYODxH/73JReUuNm9ZLah4r7HB6aQKgwYjhWW9N+njnrzARCgFBhaqvS589QZyYQAoQAIUAIENjC5t+8Mm9kJhACRDsp/m7TqsI21aiwqW7tGHoLhwmECkOAECAECAQIAUKAyCfdc2FzHiq6IxEECAFCgBAgsIXV3sg82gwChArrqM6y1ZYJhAAhQAgQAgQChAAhQOTT/QFYhMeWp9LjgaQJhAAhQAgQAgTZtrDeN7LebwUxgRAgBAgBQoBAgBAgBIgcujzEurq+2Xpg+Pn+1t3PcnZxufXtry/PXfxuTCAECBV2cG2VRK6zUm2VRK4zEwgBop1wL3k5tKoyKF2TCNVmAiFAJK8wtTX+urWqMxMIASJJhamq5W1qJhACRDvNDqJq1FlpXEd4Xqz0/Nec18EEQoVhCwullzv39vn+e9xSTSAEiIRb2NBNZExVRd7CIlwfEwgVhi0s1FYV7Z9NbX4/Q+usdE0ibG0mEAJE8i2sdmVEs6SXyDSBECAECAFCgCDzFuY/1ZtACBACBAKEACFACBAIEHV0f5DY4+FhSY+HiiYQAoQAIUAIEGTYwpa0efW+kZlACBAChAAhQCBACBACRA7dHCRmODwsiXyoaAIhQAgQAoQAwVK3sFbb3OYGNOZjTSAQIAQIAUKAYLVaLeAlLw/w0+hjTSAQIFSYCjOBECBQYSrMBEKAUGEqzAQCAUKFqTATCAECFabCTCAECBWmwlSYCYQAocJUmAkEAoQKU2EmEAKEClNhKswEQoBQYSrMBAIBQoWpMBMIAQIVpsJMIAQIAAAAGOEPv7S7CI5LUPYAAAAASUVORK5CYII=","trait":{"id":"길을낸다","name":"길을 낸다","line":"앞이 보여야 사람이 옵니다","w":{"advance":2.2,"guard":1.4,"retreat":-1.0}},"skills":[{"n":"두 갈래","t":"액티브","d":"아군 하나를 즉시 후열로 보내고 회복시킨다."},{"n":"사흘 동안","t":"패시브","d":"전투가 길어질수록 아군 전체의 회복량이 증가한다."}]},{"id":"rean","name":"레안","r":5,"role":"저항","floor":39,"era":"붕괴기","cls":"병졸","trade":"망루","hp":571,"atk":190,"def":92,"spd":118,"pw":558,"col":"#3F4E63","tag":"절반은 들어왔다. 그거면 됐다고 생각했다.","sp":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJAAAADACAYAAADryOpPAAACwklEQVR42u3dMUokTRjHYVvmFIKgiOamJoqJmZfwXF7CzEQ0MTVXRGFgYm+ggTB0MIMzdldXvVXPE358u+juj/dPOzrb7RDW+fXNd8rf/+nutvvr/9n118AQAkJACAgBISAQEAJCQAgIBISAEBACghU6fwR1GOtbOzb5Fg4XCBOGgBAQAoIBZv4Ifu3tH/77KWYx/2j2adYFQkDk0/QXEofMljlzgRAQJqyC2Wp5zlwgBISAEBACAk9heZ+8Wnsic4EQEAJCQAgIBISAEBACAgEhIArmOxITyvX619nF1fJzfH68T/oxuEAICBNmwkacrXVSzJkLhIAwYdXMWWmzlXrOXCAEhAkLPWdRZivFnLlAmDDy8R6JAZQ2Wy4QJgwTxgRTlWK2XCAEhAkbRQnvvFHCxzDlbLlACAgTRtDZcoEQEGUI+e0c677g9vn+Gu5zOTg6CTdbLhACwlMYQWfLBUJAmDCCzpYLhIAwYZM5Pr3M/jG8vTxUM1suEALChI2u/7pSya+L9X8UejH/WP73Kd/b0AVCQJiwyaT+makSRJktFwgBYcImM+SLeLhACAgBISAQEJ7CNlHa62K5/u0wFwgBYcLC6b+uVPIbQLlACAgEhIAQEJ7C6lDak1f/46npi4ouEAJCQAgIAUHLT2FR3ua3picyFwgBYcJWauHHmV0gBATNPoVF/AdWanoic4EQEAJCQAgIWngKi/7kVdMTmQuEgBAQAkJAsKWutU94258X6z8NDfm1LhAICAEhIAQEAkJACAgBISAQEAJCQAgIBISAEBACAgEhIMoza/Bz/sr0a10gEBAmzIS5QAgITJgJc4EQECbMhLlAICBMmAlzgRAQmDAT5gIhIEyYCTNhLhACwoSZMBcIBIQJM2EuEALChJkwE+YCISBMmAlzgUBAmDAT5gIhIDBhJswFQkAAAADAAD9OX7DL5Qm7ggAAAABJRU5ErkJggg==","trait":{"id":"내려오지않는다","name":"내려오지 않는다","line":"계산은 맞았다","w":{"attack":2.0,"keepdist":1.4,"retreat":-3.0}},"skills":[{"n":"절반","t":"액티브","d":"적 전체에게 큰 피해를 준다. 자신의 잔존이 절반으로 줄어든다."},{"n":"성벽 위","t":"패시브","d":"후열 아군이 흐려질 때마다 자신의 의지가 크게 상승한다."},{"n":"세 번 다시 셌다","t":"잠금","d":"각성 5에서 해금된다."}]},{"id":"ledger_keeper","name":"장부를 맞추던 사람","r":2,"role":"탐구","floor":46,"era":"균열기","cls":"관리","trade":"서고","hp":241,"atk":54,"def":36,"spd":84,"pw":239,"col":"#7C7A6E","tag":"숫자는 맞아야지요.","sp":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJAAAADACAYAAADryOpPAAACqklEQVR42u3dQUojQRgF4FI8hSAogt4hK3HjbTyAuBQP4G3cufIQgigIrr2BLoRQKI2xO91Vf9X3rSfDEB7vTXW6k5QAAAAAAAAAAAAAAKBTO96Cb/sHR59jX/v+9tLt+7grOggQJizabJkzDYQAYcIamK2e50wDIUAIEAKEAIFTWNmTV28nMg2EAFHOnrcgrtXZxXqaHx/ui0ykBkKAcApzChsxW0OWnDMNhADhFMZMp7O5p00DIUA4hTV5Ilvy5FXqRKaBECCcwtjibGkgTBgmrEn5yajVR5t9FoYJw4SZs4VnK8rJSwMhQJgwgp68NBAChAkj1X2rhgZCgKhb+DsSa3jma1sOj09MGCYMnMJaVcNsaSAECBM22tDFt9fnp+ZPXhoIEwZOYZ2fvK6vLtf/Dbi5vRv992sgTBgmjIkzpIEwYZgwFna+Ot3kz1R7y4oGQoAwYVuRf65U8+diPx6FDn1HpQZCgDBhf4r4zRUaCAQIAUKAECAQIAQIAaIVzd7OUdvnYnN/g/2UG+M1ECYME1aV/FmqKF9CVWqGNBAChAmjk9nSQAgQJmxWtZ288n9PDT+LqYEQIAQIAQIBwinsN8+CaSAECIJO2H9F+ab6li4qaiAECAFCgBAgECAECAGiD+EvJEb8mctc9IuKGggBopzwN3dHeWx5EyYMEwbNT1hLsxV9zjQQAoQAIUAIEAgQAoQA0YcwFxJ7uHg4pOaLihoIAUKAECAECFo9hZU6zeUnoCmv1UAgQAgQAoQAQUqpz98L+yj0Wg0EAoQJM2EaCAECE2bCNBAChAkzYRoIBAgTZsI0EAIEJsyEaSAECBNmwkyYBkKAMGEmTAOBAGHCTJgGQoAwYSbMhGkgBAgTZsI0EAgQJsyEaSAECEyYCdNACBAAAAAwwRd1Dq/idZnBSgAAAABJRU5ErkJggg==","trait":{"id":"세어둔다","name":"세어 둔다","line":"세면 안 잊어버려요","w":{"mark":2.4,"keepdist":1.8,"retreat":0.8}},"skills":[{"n":"사십 년","t":"액티브","d":"적 하나의 방어를 무시하고 고정 피해를 준다."},{"n":"맞는 숫자","t":"패시브","d":"같은 적을 세 번 공격하면 이후 그 적에게 주는 피해가 증가한다."}]},{"id":"crack_child","name":"균열을 들여다본 아이","r":2,"role":"도피","floor":51,"era":"균열기","cls":"하인","trade":"물장수","hp":197,"atk":56,"def":27,"spd":102,"pw":239,"col":"#5A6B78","tag":"안에 뭐가 있는지 보고 싶었어요.","sp":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJAAAADACAYAAADryOpPAAAC20lEQVR42u3dPUoDURQG0ChuwHYgkCGQJlVaq3R2toKNC3ADdmLnBtyCYGtnZ+UiBIkQSO0OYiGEh2QwPzOZ9+adU0nASQgf9+MmM5NeDwAAAAAAAAAAAAAAMnXkLfhV9Mvlrv+7mM+yfR+PRQcBQoWlVlvqzARCgFBhHaitnOvMBEKAECAECAECW1i7m1duG5kJhAAhQAgQAgQChAAhQAgQCBACRMSckdggZySCACFACBACBLawpjcylzaDAKHCEqozN5gCAUKAECAECAQIAUKA6LrkPwCL4c4bdUnxA0kTCAFCgBAgBAhy2MLOpudrN6+vzw+blwmEACFAIEAIEAKEAIEA0YATb0G7wg9F399enc6BCoM8K2wwHK3+jvl7sfB1mkCoMOh8hVWdwmEjM4FQYagw1JkJhAChwtjcYDxZ+/jby/Pq77ou355eXK59/OnxYeeKNIFQYaiw+qshsu/Fwuu/BsPR8r/aqqqbfTRxfBMIAUKFZavp2qrawsLnNYFQYaiwqITfH8V2H8XwtbV1mkpddwUxgRAgVFjtYqut8PWE9RHW2WA8Se6sSxMIAUKAECAECHLewlK5zW/VRmYCocJAgBAgBAhbWLs2OdUhxR9YqdrITCBUGHSmwnITXmJ8dXO7bPL4JhAqDBXWitQ3ry5tZCYQAoQK28omd3qvuq/gtjURnm6xz//uIIk6M4EQIFSY7eaPJj70M4EQIFTYwaT4E5AmEAgQKqxFdV2r1aXrv0wgBAgBQoBAgBAgBAgBQoBAgBAgBAgBAgHiUHI5neM7suOYQCBAqLAqRb+c1V09i/nstOL4JhAIECosws3LRmYCIUCoMBVmAoEAocJUmAmEAKHCVJgKM4EQIFSYCjOBQIBQYYevmMV8dt/k8Yt+ebfHc5lAqDBQYbYwEwgBQoVFqOiX1yrMBEKAUGE2LxVmAiFAqDAVZgKBAKHCVJgJhAABAAAALfgBxfC4u4vj/mUAAAAASUVORK5CYII=","trait":{"id":"가까이간다","name":"가까이 간다","line":"안에 뭐가 있는지 보고 싶었어요","w":{"advance":2.6,"attack":1.2,"retreat":-1.5}},"skills":[{"n":"한 걸음 더","t":"액티브","d":"즉시 추가 행동을 얻는다. 이후 2턴간 받는 피해가 증가한다."},{"n":"물러서지 않은 쪽","t":"패시브","d":"전투 시작 시 회피율이 크게 오르고 매 턴 감소한다."}]},{"id":"festival_maker","name":"축제를 준비하던 사람","r":3,"role":"헌신","floor":53,"era":"균열기","cls":"유랑","trade":"악기","hp":406,"atk":62,"def":55,"spd":87,"pw":313,"col":"#9C7B4E","tag":"다들 웃어야 하지 않겠습니까.","sp":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJAAAADACAYAAADryOpPAAACuElEQVR42u3cMUrsUBgF4BkZcA+CoAguQhs7Oxch7kKwcxdWLsHOzsoN2AnigGDtDrQQ5IITSDJJbv57v696hcKb8XAON5PJYgEAAAAAAAAAAAAAAJVaegt+7e0ffvf93c+P92rfxx3RQYAwYdFmy5xpIAQIE1bAbNU8ZxoIAUKAECAECJzC8p68ajuRaSAECAFCgBAgECAECAGiDitvQVxNF0invGipgRAgTNio0kp3R6IGQoAQIBAgBAinsJJOZL7aDAKECQs0Zx4wBQKEACFACBAIEAKEAFG6oi4k5noKR80XITUQAoQAIUAIEAgQAoQAIUAgQAgQMxb+s7A5PIVeA4EAYcJaOjk7/5ut9dtr6D9A+lpSz0+PIW7z0EAIECasd9VHdHB03On1znnONBAChAkrcqqGcnd9sfE9ubl/6fTzV7cPg0+hBkKAqHzCzNZ/l6e7o07hUHOmgRAgKpkwUzX9bI09ZxoIE0Y+2T5jGWrOIt7OkT6Ro+miXy5d50wDYcIQIAQIAYKOsn0Wlt5l1+ZElv6874JpIAQIZnhHYpTvQw0lvXCX66Kiz8IwYcQUci5KOoU1Pal+7DlzRyImDBNmwkaasDHmzPfCMGGYMBM28YRpIEwYmDBzpoEQIAQIBAgBwinMKSz0iUwDIUDkE+ZJ9RFnK52hUmdXAyFAmLDJTjG5pmRu/x8NhABhwkLMVsSTWvrvOb8uDYQAYcKKn6pt5kwDYcJgk2VtL3jKaSh1ajUQAoQAIUAIEGxh5S1of5LyhHwNhAAhQAgQCBBOYT18ZfpdDQQChAkzYRoIAQITZsI0EAKECTNhGggECBNmwjQQAgQmzIRpIAQIE2bCTJgGQoAwYSZMA4EAYcJMmAZCgDBhJsyEaSAECBNmwjQQCBAmzIRpIAQITJgJ00AIEAAAALCFH7KTywJcNofwAAAAAElFTkSuQmCC","trait":{"id":"먹인다","name":"먹인다","line":"다들 배가 고팠으니까요","w":{"heal":2.8,"retreat":0.4}},"skills":[{"n":"네 번째 축제","t":"액티브","d":"아군 전체의 잔존을 회복하고 1턴간 의지를 올린다."},{"n":"더 크게","t":"패시브","d":"아군이 흐려질수록 남은 아군의 회복량이 증가한다."}]},{"id":"alley_filler","name":"골목을 메우던 사람","r":4,"role":"저항","floor":58,"era":"균열기","cls":"장인","trade":"채석","hp":429,"atk":134,"def":76,"spd":83,"pw":411,"col":"#6F6A5C","tag":"돌로 막으면 됩니다. 안 됩니까?","sp":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJAAAADACAYAAADryOpPAAACl0lEQVR42u3dMUozQRgG4ChewUYQFMEifRorOy+RE9h4ljQ5QS5hZ+UhBIkQSO0NtBDCFC5mkx13Zr7nKX8I+IeX92V2k81kAgAAAAAAAAAAAAAAQZ14C35cXF5/Hfra7WYd9n08FR0ECBNW22yZMw2EAGHCGpityHOmgRAgBAgBQoDAKWzck1e0E5kGQoAQIAQIAQIBQoAQIGI48xbU5elx3uui6GK5ynoBUwMhQJiwrNL7UD6RqIEQIEwYVbi7f9hN9uvL8+CTqoEQIExYMyeykk9eOeZMAyFAmLCq56zGC4ZDzZkGwoRhwthzbobiFIYJw4RR+FTlmC0NhABhwgZRwpM3Svgb/nO2NBAChAAhQAgQRDuFdV1w+3h/q+7/cnVzq4EwYRBnwqKZTc81ECYMBAgBQoAQIBAgBIhRNXUhMb2vVPJ9sfSr0NvNevfvXV83nk3nxX7iUQMhQJiwP+X+zlQJcn8AXgMhQAgQCBAChAAhQAgQHKrZD9WXdl+s1d8O00AIECZscOl9pZIfAKWBECAwYQ1bLFfFnuA0EAKECRtcaSev9O9p6aKiBkKAECAECAGCyKewWh7z29KJTAMhQJiwX0X4OrMGQoAg7Cmsxh9YaelEpoEQIAQIAUKAIMIprPaTV0snMg2EAGHCetnnl467Hpnb98P26ZQc81oNBAJEqAmr8cntGggECAFCgBAgECAECAFCgECAECAECAECAUKAECAECAECAUKAqEfE3wv7HOm1GggECBNmwjQQAgQmzIRpIAQIE2bCNBAIECbMhGkgBAhMmAnTQAgQJsyEmTANhABhwkyYBgIBwoSZMA2EAGHCTJgJ00AIECbMhGkgECBMmAnTQAgQmDATpoEQIAAAAOAI35/opObEU84hAAAAAElFTkSuQmCC","trait":{"id":"메운다","name":"메운다","line":"돌로 막으면 됩니다","w":{"guard":2.2,"attack":1.5,"retreat":-2.0}},"skills":[{"n":"열두 대","t":"액티브","d":"적 전체에게 피해를 주고 1턴간 이동을 봉쇄한다."},{"n":"바닥이 없다","t":"패시브","d":"공격이 막히거나 무효화될 때마다 의지가 누적 상승한다."}]}],"floors":[{"n":14,"name":"말","era":"종말기","teams":1,"slot":4,"need":4,"base":1237,"env":["재"],"envInfo":[{"n":"재","name":"쌓인 재","desc":"발이 잠긴다. 모든 유닛의 이동력 -1"}],"goal":{"t":"전멸","name":"수호자를 전부 흐리게 한다"},"note":"종말기의 재. 느리게 시작한다","routes":[{"id":"force","pw":1.0,"cond":[]},{"id":"devote","pw":0.75,"cond":[{"t":"역할","v":"헌신","n":1}]}]},{"n":20,"name":"칼자국","era":"종말기","teams":3,"slot":5,"need":15,"base":4388,"env":["재"],"envInfo":[{"n":"재","name":"쌓인 재","desc":"발이 잠긴다. 모든 유닛의 이동력 -1"}],"goal":{"t":"생존","n":8,"name":"8턴을 버틴다"},"note":"관문. 세 팀이 버틴다","routes":[{"id":"force","pw":1.0,"cond":[]},{"id":"guard","pw":0.72,"cond":[{"t":"역할","v":"수호","n":1}]},{"id":"seek","pw":0.75,"cond":[{"t":"역할","v":"탐구","n":1}]},{"id":"weak","pw":0.65,"cond":[{"t":"약체","v":"평균 선명도 3 이하","n":3}]}]},{"n":24,"name":"북문","era":"붕괴기","teams":1,"slot":5,"need":5,"base":2609,"env":["좁음"],"envInfo":[{"n":"좁음","name":"좁은 통로","desc":"가장 앞선 두 명만 교전할 수 있다"}],"goal":{"t":"대피","n":3,"name":"피난민 3명을 오른쪽 끝으로 내보낸다"},"note":"북문. 배수로로 사람을 빼낸다","routes":[{"id":"force","pw":1.0,"cond":[]},{"id":"trade","pw":0.45,"cond":[{"t":"생업","v":"담장","n":1}]},{"id":"guard","pw":0.6,"cond":[{"t":"역할","v":"수호","n":1}]},{"id":"era","pw":0.62,"cond":[{"t":"층범위","v":"21~27","n":1}]}]},{"n":25,"name":"문 바깥","era":"붕괴기","teams":2,"slot":5,"need":10,"base":4532,"env":["붕괴"],"envInfo":[{"n":"붕괴","name":"무너지는 벽","desc":"매 턴 무작위 한 명이 낙석 피해를 받는다"}],"goal":{"t":"생존","n":10,"name":"10턴을 버틴다"},"note":"문 바깥. 문은 열리지 않는다","routes":[{"id":"force","pw":1.0,"cond":[]},{"id":"flee","pw":0.7,"cond":[{"t":"역할","v":"도피","n":1}]}]},{"n":28,"name":"문의 안과 밖","era":"붕괴기","teams":1,"slot":5,"need":5,"base":2784,"env":["좁음","어둠"],"envInfo":[{"n":"좁음","name":"좁은 통로","desc":"가장 앞선 두 명만 교전할 수 있다"},{"n":"어둠","name":"먼지와 어둠","desc":"모든 사거리 -1. 붙어야 보인다"}],"goal":{"t":"전멸","name":"수호자를 전부 흐리게 한다"},"note":"문의 안과 밖","routes":[{"id":"force","pw":1.0,"cond":[]},{"id":"guard","pw":0.65,"cond":[{"t":"역할","v":"수호","n":2}]},{"id":"era","pw":0.6,"cond":[{"t":"층범위","v":"25~31","n":1}]}]},{"n":30,"name":"종소리","era":"붕괴기","teams":3,"slot":5,"need":15,"base":6857,"env":["종"],"envInfo":[{"n":"종","name":"종소리","desc":"세 턴마다 아군 전체가 회복한다"}],"goal":{"t":"전멸","name":"수호자를 전부 흐리게 한다"},"note":"위층에서 종소리가 들린다","routes":[{"id":"force","pw":1.0,"cond":[]},{"id":"guard","pw":0.7,"cond":[{"t":"역할","v":"수호","n":2}]},{"id":"seek","pw":0.72,"cond":[{"t":"역할","v":"탐구","n":1}]},{"id":"weak","pw":0.62,"cond":[{"t":"약체","v":"평균 선명도 3 이하","n":3}]}]},{"n":35,"name":"같은 방향","era":"붕괴기","teams":2,"slot":5,"need":10,"base":6173,"env":["붕괴"],"envInfo":[{"n":"붕괴","name":"무너지는 벽","desc":"매 턴 무작위 한 명이 낙석 피해를 받는다"}],"goal":{"t":"생존","n":9,"name":"9턴을 버틴다"},"note":"모두 종소리 쪽을 본다","routes":[{"id":"force","pw":1.0,"cond":[]},{"id":"guard","pw":0.7,"cond":[{"t":"역할","v":"수호","n":2}]},{"id":"devote","pw":0.74,"cond":[{"t":"역할","v":"헌신","n":1}]}]},{"n":38,"name":"표식의 수","era":"붕괴기","teams":1,"slot":5,"need":5,"base":3763,"env":["어둠"],"envInfo":[{"n":"어둠","name":"먼지와 어둠","desc":"모든 사거리 -1. 붙어야 보인다"}],"goal":{"t":"도달","name":"한 명이라도 반대편에 닿는다"},"note":"표식이 있는 벽까지 간다","routes":[{"id":"force","pw":1.0,"cond":[]},{"id":"seek","pw":0.62,"cond":[{"t":"역할","v":"탐구","n":2}]},{"id":"era","pw":0.55,"cond":[{"t":"층범위","v":"35~41","n":1}]}]},{"n":39,"name":"아직 선 성","era":"붕괴기","teams":1,"slot":5,"need":5,"base":4055,"env":["붕괴"],"envInfo":[{"n":"붕괴","name":"무너지는 벽","desc":"매 턴 무작위 한 명이 낙석 피해를 받는다"}],"goal":{"t":"생존","n":12,"name":"12턴을 버틴다"},"note":"성벽 위. 레안이 서 있던 자리","routes":[{"id":"force","pw":1.0,"cond":[]},{"id":"trade","pw":0.55,"cond":[{"t":"생업","v":"망루","n":1}]},{"id":"resist","pw":0.66,"cond":[{"t":"역할","v":"저항","n":2}]}]},{"n":41,"name":"서쪽 종탑","era":"균열기","teams":1,"slot":5,"need":5,"base":4404,"env":["균열","종"],"envInfo":[{"n":"균열","name":"벌어진 균열","desc":"전장 가운데에 서면 매 턴 잔존이 깎인다"},{"n":"종","name":"종소리","desc":"세 턴마다 아군 전체가 회복한다"}],"goal":{"t":"타종","n":5,"name":"종을 5번 친다"},"note":"서쪽 종탑. 종을 쳐야 한다","routes":[{"id":"force","pw":1.0,"cond":[]},{"id":"trade","pw":0.5,"cond":[{"t":"생업","v":"종탑","n":1}]},{"id":"devote","pw":0.66,"cond":[{"t":"역할","v":"헌신","n":2}]}]}]}
 </script>
 <script>
 const D = JSON.parse(document.getElementById('DATA').textContent);
@@ -222,7 +234,7 @@ let battle = null;
 
 const el = id => document.getElementById(id);
 const flat = () => teams.flat().filter(Boolean);
-const owned = () => D.chars.filter(c => c.floor <= cur.n + 6);   // 그 층 근처까지 모았다고 가정
+const owned = () => D.chars;   // 시험판은 실험대다. 22명 전원을 아무 층에나 쓸 수 있다
 
 function resetTeams(){
   teams = Array.from({length: cur.teams}, () => Array(cur.slot).fill(null));
@@ -260,33 +272,187 @@ const ROUTE_NAME = {force:'돌파', guard:'수호의 길', seek:'탐구의 길',
   weak:'이름 없는 길', wall:'담의 약점', drain:'배수로', unseen:'묘수'};
 
 /* ── 전투 ── */
+/* ── 전장 ──────────────────────────────────────────────
+   x 0…13. 아군은 왼쪽에서 오른쪽으로, 수호자는 반대로.
+   역할마다 사거리와 이동력이 다르고, 매 턴 스스로 판단한다. */
+const X_MIN = 0, X_MAX = 13;
+const KIT = {
+  '수호': {rng:1, mv:2, mult:0.85},
+  '저항': {rng:1, mv:2, mult:1.85},
+  '헌신': {rng:4, mv:1, mult:0.75},
+  '탐구': {rng:5, mv:1, mult:1.00},
+  '도피': {rng:2, mv:3, mult:1.20},
+  '미상': {rng:2, mv:2, mult:1.00},
+};
+function envOn(id){ return (cur.env||[]).includes(id); }
+function rngOf(u){ return Math.max(1, (KIT[u.role]||KIT['미상']).rng - (envOn('어둠')?1:0)); }
+function mvOf(u){ return Math.max(1, (KIT[u.role]||KIT['미상']).mv - (envOn('재')?1:0)); }
+const near = (a,b) => Math.abs(a.x - b.x);
+function inRange(a,t){ return near(a,t) <= rngOf(a); }
+function alive(l){ return l.filter(u => u.hp > 0); }
+
+/** 좁은 통로 — 가장 앞선 두 명만 교전한다 */
+function engageable(u, foes){
+  const l = alive(foes);
+  if (!envOn('좁음')) return l;
+  const sorted = u.foe ? [...l].sort((a,b)=>b.x-a.x) : [...l].sort((a,b)=>a.x-b.x);
+  return sorted.slice(0,2);
+}
+function stepToward(u, tx){
+  const mv = mvOf(u);
+  const d = Math.sign(tx - u.x);
+  u.x = Math.max(X_MIN, Math.min(X_MAX, u.x + d * Math.min(mv, Math.abs(tx - u.x))));
+}
+
+/* ── 캐릭터 AI ────────────────────────────────────────
+   고정 순서가 아니라, 매 턴 선택지에 점수를 매겨 가장 높은 것을 고른다.
+   점수는 그 사람의 성향이 흔든다. 같은 상황에서도 카브릴과 미로는 다르게 고른다. */
+function decide(u, B){
+  const foes  = u.foe ? alive(B.allies) : alive(B.foes);
+  const mates = u.foe ? alive(B.foes)   : alive(B.allies);
+
+  // 수호자는 단순하다. 앞의 것을 친다.
+  if (u.foe){
+    let pool = engageable(u, B.allies);
+    if (B.goal.t === '대피' && !pool.some(x => inRange(u,x))){
+      const r = alive(B.refugees||[]).filter(x => inRange(u,x));
+      if (r.length) pool = r;
+    }
+    const t = pool.filter(f => inRange(u,f)).sort((x,y)=>x.hp-y.hp)[0];
+    if (t) return {a:'hit', t};
+    const n = pool.sort((x,y)=>near(u,x)-near(u,y))[0];
+    return n ? {a:'move', x:n.x, why:'close'} : {a:'wait'};
+  }
+
+  const W = (u.trait && u.trait.w) || {};
+  const w = k => 1 + (W[k] || 0) * 0.55;
+  const opts = [];
+  const pool = engageable(u, B.foes);
+  const inR  = pool.filter(f => inRange(u,f));
+  const ratio = u.hp / u.max;
+  const goalT = B.goal.t;
+
+  // 친다 — 약한 것부터
+  if (inR.length){
+    const t = [...inR].sort((x,y)=>x.hp-y.hp)[0];
+    opts.push({a:'hit', t, why:'attack', s: (1.0 + (1 - t.hp/t.max)*0.7) * w('attack')});
+  }
+  // 약점을 본다
+  if (inR.length){
+    const t = [...inR].sort((x,y)=>y.hp-x.hp)[0];
+    opts.push({a:'hit', t, mark:true, why:'mark', s: 0.85 * w('mark')});
+  }
+  // 살린다
+  const hurt = mates.filter(m => m.hp < m.max*0.95).sort((x,y)=>x.hp/x.max - y.hp/y.max)[0];
+  if (hurt){
+    const need = 1 - hurt.hp/hurt.max;
+    if (near(u,hurt) <= rngOf(u)) opts.push({a:'heal', t:hurt, why:'heal', s:(0.5 + need*1.8) * w('heal')});
+    else opts.push({a:'move', x:hurt.x, why:'heal', s:(0.3 + need*0.9) * w('heal')});
+  }
+  // 앞을 막는다
+  if (foes.length){
+    const front = Math.max(...mates.map(m => m.x));
+    if (u.x < front) opts.push({a:'move', x:Math.min(X_MAX, front+1), why:'guard', s: 0.75 * w('guard')});
+    else opts.push({a:'move', x:Math.min(X_MAX, u.x+1), why:'guard', s: 0.55 * w('guard')});
+  }
+  // 나아간다 — 목표가 앞에 있을 때
+  if (goalT === '도달' || goalT === '타종' || goalT === '대피'){
+    opts.push({a:'move', x:X_MAX, why:'advance', s: 1.25 * w('advance')});
+  }
+  // 종을 친다
+  if (goalT === '타종' && u.x >= X_MAX - 1) opts.push({a:'ring', why:'ring', s: 3.2 * w('ring')});
+  // 물러선다
+  if (ratio < 0.6) opts.push({a:'move', x:u.x - mvOf(u), why:'retreat', s: (1-ratio)*1.7 * w('retreat')});
+  // 거리를 둔다
+  if (rngOf(u) >= 3 && foes.some(f => near(u,f) <= 1))
+    opts.push({a:'move', x:u.x - mvOf(u), why:'keepdist', s: 0.95 * w('keepdist')});
+  // 다가간다
+  if (!inR.length && pool.length){
+    const n = [...pool].sort((x,y)=>near(u,x)-near(u,y))[0];
+    opts.push({a:'move', x:n.x, why:'close', s: 0.8});
+  }
+
+  if (!opts.length) return {a:'wait'};
+  opts.sort((x,y) => y.s - x.s);
+  return opts[0];
+}
+
+/* ── 환경 효과 ── */
+function envTick(B, round){
+  if (envOn('붕괴')){
+    const all = alive([...B.allies, ...B.foes]);
+    if (all.length){
+      const v = all[Math.floor(Math.random()*all.length)];
+      const d = Math.round(v.max * 0.045);
+      v.hp = Math.max(0, v.hp - d);
+      B.ev.push({k:'env', t:v.uid, d, hp:v.hp, s:'낙석'});
+      B.log.push({cls:'fade', s:`  · 벽이 무너져 ${v.nm}에게 ${d}`});
+      if (v.hp === 0){ B.ev.push({k:'fall', t:v.uid}); v.fellAt = round; }
+    }
+  }
+  if (envOn('균열')){
+    alive([...B.allies, ...B.foes]).forEach(v => {
+      if (v.x >= 6 && v.x <= 7){
+        const d = Math.round(v.max * 0.05);
+        v.hp = Math.max(0, v.hp - d);
+        B.ev.push({k:'env', t:v.uid, d, hp:v.hp, s:'균열'});
+        if (v.hp === 0){ B.ev.push({k:'fall', t:v.uid}); v.fellAt = round; }
+      }
+    });
+  }
+  if (envOn('종') && round % 3 === 0){
+    alive(B.allies).forEach(v => {
+      const h = Math.round(v.max * 0.06);
+      const b = v.hp; v.hp = Math.min(v.max, v.hp + h);
+      if (v.hp > b){ v.healed += v.hp - b; B.ev.push({k:'heal', a:v.uid, t:v.uid, d:v.hp-b, hp:v.hp}); }
+    });
+    B.log.push({cls:'heal', s:'  · 위층에서 종이 울린다'});
+  }
+}
+
 /* 수호자는 층의 절대 요구치에서 만든다. 열쇠를 열면 요구치가 내려가 상대가 약해진다. */
+const START_X = {'수호':6,'저항':5,'도피':5,'헌신':3,'탐구':2,'미상':4};
+function mkRefugees(n){
+  const out=[];
+  for(let i=0;i<n;i++) out.push({nm:`피난민 ${i+1}`, ref:true, uid:'r'+i,
+    hp:300, max:300, atk:0, def:40, spd:60, role:'미상', x:3-i, out:false, dbuf:0,
+    dealt:0, taken:0, healed:0, fellAt:0});
+  return out;
+}
 function mkFoes(req, n){
   // 수호자 수를 아군 수에 맞춘다. 1:5 면 행동 횟수가 5배라 어떤 수치를 줘도 승부가 안 된다.
+  // 전멸이 목표가 아닌 층은 버티고 통과하는 싸움이므로 화력을 낮춘다.
+  const soft = ((cur.goal && cur.goal.t !== '전멸') ? 0.86 : 1)
+             * (cur.teams >= 3 ? 0.80 : 1);   // 관문은 15명을 채우느라 평균 전력이 떨어진다
   const out = [];
   const NAMES = ['재','잔해','그림자','메아리','잔불'];
   for (let i = 0; i < n; i++)
     out.push({ nm:`${cur.n}층의 ${NAMES[i % NAMES.length]}`, foe:true,
       hp: Math.round(req*2.7/n), max: Math.round(req*2.7/n),
-      atk: Math.round(req*0.070/Math.sqrt(n)*2), def: Math.round(req*0.022/Math.sqrt(n)),
-      spd: 88 + i*4, role:'저항', dbuf:0, uid:'f'+i, dealt:0, taken:0, healed:0, fellAt:0 });
+      atk: Math.round(req*0.28/n*soft), def: Math.round(req*0.022/Math.sqrt(n)),
+      spd: 88 + i*4, role:'저항', dbuf:0, uid:'f'+i, dealt:0, taken:0, healed:0, fellAt:0,
+      x: Math.min(X_MAX, 9 + i) });
   return out;
 }
 function mkAlly(id){
   const c = CH[id];
   return { nm:c.name, id, hp:c.hp, max:c.hp, atk:c.atk, def:c.def, spd:c.spd,
            role:c.role, sk:c.skills, col:c.col, sp:c.sp, dbuf:0,
-           dealt:0, taken:0, healed:0, fellAt:0, uid:'a'+id };
+           dealt:0, taken:0, healed:0, fellAt:0, uid:'a'+id, x: START_X[c.role] ?? 4,
+           trait: c.trait || {} };
 }
 function startBattle(){
   const t0 = teams.map(t => t.filter(Boolean));
-  if (t0.some(t => t.length === 0)) return;
+  if (t0.some(t => t.length === 0)){ battle = null; return; }
   const rt = t0.map(bestRoute);
   // 층의 절대 요구치를 쓴다. 팀 전투력에 비례시키면 편성 차이가 상쇄되어 사라진다.
   const req = t0.map((t,i) => Math.round(cur.base / cur.teams * rt[i].pw));
   const allies = t0.flat().map(mkAlly);
   const foes = mkFoes(req.reduce((a,b)=>a+b,0), Math.max(2, allies.length));
-  battle = { allies, foes, log: [], ev: [], round: 0, done: false, win: false, routes: rt, req };
+  const goal = cur.goal || {t:'전멸', name:'수호자를 전부 흐리게 한다'};
+  const refugees = goal.t === '대피' ? mkRefugees(goal.n) : [];
+  battle = { allies, foes, refugees, log: [], ev: [], round: 0, done: false, win: false,
+             routes: rt, req, goal, rings: 0, escaped: 0, reason: '' };
   run();
   play();          // 계산은 끝났고, 이제 시간에 맞춰 재생한다
   render();
@@ -304,68 +470,76 @@ function dmg(a, t, mult){
   if (battle) battle.ev.push({k:'hit', a:a.uid, t:t.uid, d, hp:t.hp});
   return d;
 }
+function checkGoal(B, round){
+  const G = B.goal;
+  if (alive(B.allies).length === 0){ B.done=true; B.win=false; B.reason='아군이 전부 흐려졌다'; return; }
+  if (G.t === '전멸' && alive(B.foes).length === 0){ B.done=true; B.win=true; B.reason='수호자를 전부 흐리게 했다'; }
+  else if (G.t === '생존' && round >= G.n){ B.done=true; B.win=true; B.reason=`${G.n}턴을 버텼다`; }
+  else if (G.t === '대피' && B.escaped >= G.n){ B.done=true; B.win=true; B.reason=`${G.n}명을 내보냈다`; }
+  else if (G.t === '도달' && alive(B.allies).some(u => u.x >= X_MAX)){ B.done=true; B.win=true; B.reason='반대편에 닿았다'; }
+  else if (G.t === '타종' && B.rings >= G.n){ B.done=true; B.win=true; B.reason=`종을 ${G.n}번 쳤다`; }
+  if (G.t === '대피' && alive(B.refugees).length === 0 && B.escaped < G.n){
+    B.done=true; B.win=false; B.reason='피난민이 남지 않았다'; }
+}
 function run(){
   const B = battle, L = (cls, s) => B.log.push({cls, s});
   L('t', `── ${cur.n}층 ${cur.name} ──`);
+  (cur.envInfo||[]).forEach(e => L('sk', `환경 · ${e.name} — ${e.desc}`));
+  L('sk', `목표 · ${B.goal.name}`);
   B.routes.forEach((r,i) => L('sk',
     `${B.routes.length>1?(i+1)+'팀 ':''}${ROUTE_NAME[r.id]||r.id} · 요구 ${Math.round(r.pw*100)}%`));
+
   for (let round = 1; round <= 40 && !B.done; round++){
     B.round = round; L('t', `[${round}턴]`); B.ev.push({k:'turn', n:round});
-    const order = [...B.allies, ...B.foes].filter(u => u.hp > 0).sort((a,b) => b.spd - a.spd);
+    envTick(B, round);
+
+    // 피난민은 스스로 오른쪽으로 간다
+    if (B.goal.t === '대피'){
+      alive(B.refugees).forEach(r => {
+        r.x = Math.min(X_MAX, r.x + 1);
+        B.ev.push({k:'move', t:r.uid, x:r.x});
+        if (r.x >= X_MAX && !r.out){ r.out = true; r.hp = 0; B.escaped++;
+          L('heal', `  ${r.nm} 빠져나갔다 (${B.escaped}/${B.goal.n})`);
+          B.ev.push({k:'escape', t:r.uid}); }
+      });
+    }
+
+    const order = [...alive(B.allies), ...alive(B.foes)].sort((a,b) => b.spd - a.spd);
     for (const u of order){
       if (u.hp <= 0 || B.done) continue;
-      if (u.foe){
-        const guard = B.allies.find(a => a.hp > 0 && a.role === '수호');
-        let t = pick(B.allies); if (!t) break;
-        if (guard && guard !== t && Math.random() < .6){ L('hit', `  ${u.nm} → ${t.nm} … ${guard.nm}가 막아섰다`); t = guard; }
-        const d = dmg(u, t, 1);
-        L('hit', `  ${u.nm} → ${t.nm} ${d}`);
-        if (t.hp === 0){ L('fade', `  ${t.nm} 흐려졌다`); B.ev.push({k:'fall', t:t.uid}); }
-      } else {
-        const sk = u.sk[0] ? u.sk[0].n : '공격';
-        B.ev.push({k:'act', a:u.uid, sk});
-        if (u.role === '헌신'){
-          const hurt = B.allies.filter(a => a.hp > 0).sort((a,b) => a.hp/a.max - b.hp/b.max)[0];
-          const h = Math.round(u.atk*1.7);
-          const before = hurt.hp;
-          hurt.hp = Math.min(hurt.max, hurt.hp + h);
-          u.healed += hurt.hp - before;
-          battle.ev.push({k:'heal', a:u.uid, t:hurt.uid, d:hurt.hp-before, hp:hurt.hp});
-          L('heal', `  ${u.nm} 「${sk}」 → ${hurt.nm} +${h}`);
-        } else if (u.role === '탐구'){
-          const t = pick(B.foes); if (!t) break;
-          t.dbuf = .35;
-          const d = dmg(u, t, 1.0);
-          L('sk', `  ${u.nm} 「${sk}」 → ${t.nm} 약점 노출 · ${d}`);
-        } else if (u.role === '수호'){
-          const t = pick(B.foes); if (!t) break;
-          u.def = Math.round(u.def*1.03);
-          const d = dmg(u, t, .8);
-          L('hit', `  ${u.nm} 「${sk}」 → ${t.nm} ${d}`);
-        } else if (u.role === '도피'){
-          const t = pick(B.foes); if (!t) break;
-          const d1 = dmg(u, t, 1.15);
-          L('hit', `  ${u.nm} 「${sk}」 → ${t.nm} ${d1}`);
-          if (Math.random() < .35 && t.hp > 0){
-            const d2 = dmg(u, t, .9);
-            L('sk', `  ${u.nm} 한 번 더 → ${t.nm} ${d2}`);
-          }
-        } else {
-          const t = pick(B.foes); if (!t) break;
-          const d = dmg(u, t, 1.85);
-          L('hit', `  ${u.nm} 「${sk}」 → ${t.nm} ${d}`);
-        }
-        const dead = B.foes.filter(f => f.hp === 0 && !f.said);
-        dead.forEach(f => { f.said = 1; L('fade', `  ${f.nm} 무너졌다`); B.ev.push({k:'fall', t:f.uid}); });
+      const d = decide(u, B);
+      const WHY = {advance:'앞으로', retreat:'물러선다', guard:'막아선다',
+                   keepdist:'거리를 둔다', heal:'다가간다', close:'붙는다'};
+      if (d.a === 'move'){
+        const from = u.x; stepToward(u, d.x);
+        if (u.x !== from){
+          B.ev.push({k:'move', t:u.uid, x:u.x, why:WHY[d.why]||''});
+          L('t', `  ${u.nm} — ${WHY[d.why]||'이동'}`); }
+      } else if (d.a === 'ring'){
+        B.rings++; B.ev.push({k:'ring', a:u.uid, n:B.rings});
+        L('heal', `  ${u.nm} 종을 쳤다 (${B.rings}/${B.goal.n})`);
+      } else if (d.a === 'heal'){
+        const h = Math.round(u.atk * 1.7), before = d.t.hp;
+        d.t.hp = Math.min(d.t.max, d.t.hp + h); u.healed += d.t.hp - before;
+        B.ev.push({k:'act', a:u.uid, sk:(u.sk&&u.sk[0]?u.sk[0].n:'회복')});
+        B.ev.push({k:'heal', a:u.uid, t:d.t.uid, d:d.t.hp-before, hp:d.t.hp});
+        L('heal', `  ${u.nm} → ${d.t.nm} +${d.t.hp-before}`);
+      } else if (d.a === 'hit'){
+        const sk = u.sk && u.sk[0] ? u.sk[0].n : '공격';
+        B.ev.push({k:'act', a:u.uid, sk, trait:(u.trait&&u.trait.name)||''});
+        if (d.mark) d.t.dbuf = 0.35;
+        const dd = dmg(u, d.t, (KIT[u.role]||KIT['미상']).mult);
+        L('hit', `  ${u.nm} 「${sk}」 → ${d.t.nm} ${dd}`);
+        if (d.t.hp === 0){ d.t.fellAt = round; B.ev.push({k:'fall', t:d.t.uid});
+          L('fade', `  ${d.t.nm} 흐려졌다`); }
       }
-      if (B.foes.every(f => f.hp === 0)){ B.done = true; B.win = true; }
-      else if (B.allies.every(a => a.hp === 0)){ B.done = true; B.win = false; }
+      checkGoal(B, round);
     }
+    if (!B.done) checkGoal(B, round);
   }
-  if (!B.done){ B.done = true; B.win = false; L('t','── 40턴 초과 ──'); }
-  L(B.win ? 'heal' : 'fade', B.win ? '── 층을 열었다 ──' : '── 전부 흐려졌다 ──');
+  if (!B.done){ B.done = true; B.win = false; B.reason = '40턴을 넘겼다'; L('t','── 40턴 초과 ──'); }
+  L(B.win ? 'heal' : 'fade', `── ${B.reason} ──`);
 }
-
 
 /* ── 재생 ── */
 let timer = null;
@@ -373,9 +547,10 @@ function play(){
   const B = battle;
   B.pb = { i:0, done:false, speed:1 };
   B.disp = {};
-  [...B.allies, ...B.foes].forEach(u => B.disp[u.uid] = {hp:u.max, max:u.max, fell:false});
+  [...B.allies, ...B.foes, ...(B.refugees||[])].forEach(u =>
+    B.disp[u.uid] = {hp:u.max, max:u.max, fell:false, x:u.x});
 }
-function unitByUid(uid){ return [...battle.allies, ...battle.foes].find(u => u.uid === uid); }
+function unitByUid(uid){ return [...battle.allies, ...battle.foes, ...(battle.refugees||[])].find(u => u.uid === uid); }
 function stepEvent(){
   const B = battle;
   if (!B.pb || B.pb.i >= B.ev.length){ finishPlay(); return; }
@@ -388,6 +563,11 @@ function stepEvent(){
     const t = document.createElement('div'); t.className='turnbig'; t.textContent = e.n;
     fld.appendChild(t); setTimeout(()=>t.remove(), 700);
   } else if (e.k === 'act'){
+    const au = unitByUid(e.a);
+    if (au) el('ticker').innerHTML =
+      `<b style="color:var(--ink)">${au.nm}</b>` +
+      (e.trait ? ` <span style="color:var(--ember)">「${e.trait}」</span>` : '') +
+      ` — ${e.sk}`;
     const d = dom(e.a); if (d){ d.classList.add('act');
       const n = document.createElement('div'); n.className='skname'; n.textContent = `「${e.sk}」`;
       d.appendChild(n); setTimeout(()=>{ d.classList.remove('act'); n.remove(); }, 900); }
@@ -402,6 +582,29 @@ function stepEvent(){
       pop.textContent = (e.k==='hit' ? '-' : '+') + e.d;
       T.appendChild(pop); setTimeout(()=>pop.remove(), 900);
     }
+  } else if (e.k === 'move'){
+    B.disp[e.t].x = e.x;
+    const T = dom(e.t); if (T) T.style.left = xPct(e.x) + '%';
+    const mu = unitByUid(e.t);
+    if (mu && e.why) el('ticker').innerHTML =
+      `<b style="color:var(--ink)">${mu.nm}</b> — ${e.why}` +
+      (mu.trait && mu.trait.line ? ` <span style="color:var(--faint)">「${mu.trait.line}」</span>` : '');
+  } else if (e.k === 'ring'){
+    B.rings = e.n;
+    const A = dom(e.a);
+    if (A){ const n=document.createElement('div'); n.className='skname'; n.textContent='종';
+      A.appendChild(n); setTimeout(()=>n.remove(), 1100); }
+    el('ticker').textContent = `종을 쳤다 ${e.n}/${B.goal.n}`;
+  } else if (e.k === 'escape'){
+    B.escaped++; B.disp[e.t].fell = true;
+    const T = dom(e.t); if (T) T.classList.add('gone');
+    el('ticker').textContent = `빠져나갔다 ${B.escaped}/${B.goal.n}`;
+  } else if (e.k === 'env'){
+    B.disp[e.t].hp = e.hp;
+    const T = dom(e.t);
+    if (T){ const bar=T.querySelector('.hb>i'); if(bar) bar.style.width=(e.hp/B.disp[e.t].max*100)+'%';
+      const pop=document.createElement('div'); pop.className='pop d'; pop.textContent=`${e.s} -${e.d}`;
+      T.appendChild(pop); setTimeout(()=>pop.remove(), 900); }
   } else if (e.k === 'fall'){
     B.disp[e.t].fell = true;
     const T = dom(e.t); if (T){ T.classList.add('fell');
@@ -423,7 +626,10 @@ function skipPlay(){
   if (timer){ clearInterval(timer); timer = null; }
   while (battle.pb.i < battle.ev.length){
     const e = battle.ev[battle.pb.i++];
-    if (e.k==='hit'||e.k==='heal') battle.disp[e.t].hp = e.hp;
+    if (e.k==='hit'||e.k==='heal'||e.k==='env') battle.disp[e.t].hp = e.hp;
+    if (e.k==='move') battle.disp[e.t].x = e.x;
+    if (e.k==='ring') battle.rings = e.n;
+    if (e.k==='escape'){ battle.escaped++; battle.disp[e.t].fell = true; }
     if (e.k==='fall') battle.disp[e.t].fell = true;
   }
   finishPlay();
@@ -533,7 +739,8 @@ function renderRoster(){
        <img src="${c.sp}" alt="">
        <span><b>${c.name}</b>
          <span class="st">${'★'.repeat(c.r)}</span>
-         <span>${c.role} · ${c.trade} · ${c.pw}</span></span>
+         <span>${c.role} · ${c.trade} · ${c.pw}</span>
+         <span class="tr">${c.trait&&c.trait.name?'「'+c.trait.name+'」':''}</span></span>
      </button>`).join('');
 }
 function renderMain(){
@@ -543,6 +750,8 @@ function renderMain(){
   const ready = teams.every(t => t.filter(Boolean).length > 0);
   el('main').innerHTML = `
    <h2 style="font-size:1.15rem">${cur.n}층 · ${cur.name}<span style="font-size:.72rem;color:var(--faint);margin-left:.6rem" class="mono">${cur.era} · ${cur.teams}팀 ${cur.need}명</span></h2>
+   <div class="goalbar"><span class="g">${(cur.goal||{}).name||''}</span></div>
+   <div class="envs">${(cur.envInfo||[]).map(e=>`<span class="env"><b>${e.name}</b> · ${e.desc}</span>`).join('')}</div>
    <div class="teams">${teams.map((t,i)=>`
      <div class="team"><div class="lab">${cur.teams>1?(i+1)+'팀':'편성'} · ${teamPower(t)} / ${needs[i]}
        <span class="${tp[i]>=needs[i]?'ok':'no'}" style="color:${tp[i]>=needs[i]?'var(--ok)':'var(--bad)'}">${tp[i]>=needs[i]?'충족':'부족'}</span></div>
@@ -563,28 +772,46 @@ function renderMain(){
      <button id="clr">비우기</button>
      ${ready?'':'<span class="warn">각 팀에 최소 1명</span>'}
    </div>
+   <p class="hint" style="color:var(--ember)">각 잔상은 자기 성향대로 판단합니다. 카브릴은 물러서지 않고, 미로는 위험하면 빠집니다.</p>
    <p class="hint">슬롯을 누르면 로스터에서 고를 수 있습니다. 전투력이 부족해도 등반은 됩니다 — 이길 수 있는지가 다를 뿐입니다.</p>`;
 }
+const X_SPAN = 13;
+function xPct(x){ return 6 + (x / X_SPAN) * 88; }
 function unitCard(u, side){
   const d = battle.disp[u.uid];
   const pct = d.hp / d.max * 100;
   const art = u.sp ? `<img src="${u.sp}" alt="">` : `<div class="fg"></div>`;
-  return `<div class="un ${side}${d.fell?' fell':''}" data-u="${u.uid}">
+  const cls = ['un', side, d.fell?'fell':'', u.ref?'ref':''].filter(Boolean).join(' ');
+  return `<div class="${cls}" data-u="${u.uid}" style="left:${xPct(d.x)}%">
     ${art}<div class="hb"><i style="width:${pct}%"></i></div>
     <div class="un-nm">${u.nm}</div></div>`;
+}
+function goalLine(B){
+  const G = B.goal;
+  let prog = '';
+  if (G.t==='생존') prog = `${B.round} / ${G.n}턴`;
+  else if (G.t==='대피') prog = `${B.escaped} / ${G.n}명`;
+  else if (G.t==='타종') prog = `${B.rings} / ${G.n}번`;
+  else if (G.t==='전멸') prog = `${B.foes.filter(f=>battle.disp[f.uid].hp>0).length}명 남음`;
+  else if (G.t==='도달') prog = `${Math.max(...B.allies.map(a=>Math.round(battle.disp[a.uid].x)))} / ${X_SPAN}`;
+  return `<div class="goalbar"><span class="g">${G.name}</span><span class="prog">${prog}</span></div>`;
 }
 function renderBattle(){
   const B = battle;
   const playing = B.pb && !B.pb.done;
-  const field = `<div class="field" id="field">
-      <div class="side">${B.allies.map(u=>unitCard(u,'ally')).join('')}</div>
-      <div class="vs">대치</div>
-      <div class="side foe">${B.foes.map(u=>unitCard(u,'foe')).join('')}</div>
+  const crack = (cur.env||[]).includes('균열')
+    ? `<div class="zone" style="left:${xPct(6)}%;width:${xPct(8)-xPct(6)}%"></div>` : '';
+  const post = (B.goal.t==='도달'||B.goal.t==='대피'||B.goal.t==='타종')
+    ? `<div class="goalpost" style="left:${xPct(X_SPAN)}%"></div>` : '';
+  const field = `<div class="field" id="field"><div class="lane"></div>${crack}${post}
+      ${B.allies.map(u=>unitCard(u,'ally')).join('')}
+      ${(B.refugees||[]).map(u=>unitCard(u,'ally')).join('')}
+      ${B.foes.map(u=>unitCard(u,'foe')).join('')}
     </div>
     <div class="ticker" id="ticker"></div>`;
 
   if (playing){
-    el('main').innerHTML = field + `
+    el('main').innerHTML = goalLine(B) + field + `
       <div class="ctl">
         <button id="pause">멈춤</button>
         <button id="spd">속도 ×${B.pb.speed}</button>
@@ -596,9 +823,10 @@ function renderBattle(){
 
   const A = analyze(B);
   const top = [...B.allies].sort((x,y)=>y.dealt-x.dealt)[0];
-  el('main').innerHTML = field + `
+  el('main').innerHTML = goalLine(B) + field + `
    <div class="res ${B.win?'win':'lose'}">
      <div class="verdict">${B.win?'층을 열었다':'실패'}</div>
+     <div style="font-size:.86rem;margin-top:.2rem">${B.reason||''}</div>
      <div class="pwline">${B.routes.map((r,i)=>`<span>${B.routes.length>1?(i+1)+'팀 ':''}<b>${ROUTE_NAME[r.id]||r.id}</b> 경로 · 요구 ${Math.round(r.pw*100)}%</span>`).join('')}
        <span>${B.round}턴</span></div>
    </div>

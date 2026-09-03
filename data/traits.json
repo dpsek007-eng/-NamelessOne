@@ -1,0 +1,33 @@
+{
+  "설명": "성향 — 캐릭터가 전장에서 무엇을 먼저 생각하는가. 생전의 삶에서 나온다.",
+  "성향": {
+    "길을낸다":   {"name":"길을 낸다",     "line":"앞이 보여야 사람이 옵니다",   "w":{"advance":2.2,"guard":1.4,"retreat":-1.0}},
+    "먼저나선다": {"name":"먼저 나선다",   "line":"제가 앞에 서겠습니다",       "w":{"guard":2.6,"advance":1.2,"retreat":-2.0}},
+    "물러서지않는다":{"name":"물러서지 않는다","line":"돌아선 적 없습니다",      "w":{"guard":2.0,"attack":1.3,"retreat":-4.0}},
+    "앞뒤가없다": {"name":"앞뒤가 없다",   "line":"막으면 뚫으면 됩니다",       "w":{"attack":2.4,"advance":1.6,"retreat":-2.5}},
+    "멈추지않는다":{"name":"멈추지 않는다", "line":"비켜서 가면 되잖습니까",     "w":{"advance":2.4,"attack":1.4,"retreat":-2.0}},
+    "먹인다":     {"name":"먹인다",       "line":"다들 배가 고팠으니까요",     "w":{"heal":2.8,"retreat":0.4}},
+    "감싼다":     {"name":"감싼다",       "line":"거기 있니",                "w":{"heal":2.2,"guard":1.8,"retreat":-0.5}},
+    "마르지않는다":{"name":"마르지 않는다", "line":"마르면 더 깊이 파면 됩니다", "w":{"heal":2.6,"advance":0.6}},
+    "세어둔다":   {"name":"세어 둔다",     "line":"세면 안 잊어버려요",        "w":{"mark":2.4,"keepdist":1.8,"retreat":0.8}},
+    "기록한다":   {"name":"기록한다",     "line":"아무도 안 믿어도 남습니다",  "w":{"mark":2.8,"keepdist":1.6}},
+    "원인을본다": {"name":"원인을 본다",   "line":"왜입니까",                 "w":{"mark":2.6,"attack":1.2,"keepdist":1.0}},
+    "돌아서지않는다":{"name":"돌아서지 않는다","line":"이번엔 안 돌아갔어",     "w":{"retreat":2.4,"attack":1.1,"advance":0.8}},
+    "버리고간다": {"name":"버리고 간다",   "line":"무거운 것부터 버렸어요",     "w":{"retreat":2.6,"advance":0.9}},
+    "가까이간다": {"name":"가까이 간다",   "line":"안에 뭐가 있는지 보고 싶었어요","w":{"advance":2.6,"attack":1.2,"retreat":-1.5}},
+    "양쪽을본다": {"name":"양쪽을 본다",   "line":"어느 쪽이든 들어야 했습니다","w":{"guard":1.8,"keepdist":1.2}},
+    "내려오지않는다":{"name":"내려오지 않는다","line":"계산은 맞았다",          "w":{"attack":2.0,"keepdist":1.4,"retreat":-3.0}},
+    "종을친다":   {"name":"종을 친다",     "line":"아직 늦지 않았습니다",       "w":{"heal":2.4,"ring":3.0,"retreat":-1.0}},
+    "메운다":     {"name":"메운다",       "line":"돌로 막으면 됩니다",        "w":{"guard":2.2,"attack":1.5,"retreat":-2.0}}
+  },
+  "배정": {
+    "ash_sweeper":"길을낸다", "north_gatekeeper":"먼저나선다", "kabril":"물러서지않는다",
+    "dorn":"앞뒤가없다", "cart_pusher":"멈추지않는다", "baker_18f":"먹인다",
+    "someones_mother":"감싼다", "last_watercarrier":"마르지않는다", "counting_child":"세어둔다",
+    "idel":"기록한다", "yuan":"원인을본다", "miro":"돌아서지않는다",
+    "left_behind":"버리고간다", "crack_child":"가까이간다", "flagbearer":"양쪽을본다",
+    "rean":"내려오지않는다", "seren":"종을친다", "alley_filler":"메운다",
+    "name_writer":"세어둔다", "ledger_keeper":"세어둔다", "pathpointer":"길을낸다",
+    "festival_maker":"먹인다"
+  }
+}
