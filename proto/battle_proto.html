@@ -137,6 +137,7 @@ header.top p{font-size:.85rem;color:var(--muted);margin:.5rem 0 0;max-width:44re
 .un.ref img,.un.ref .fg{opacity:.75}
 .un.ref .un-nm{color:var(--ember)}
 .un.gone{opacity:0;transform:translateY(-14px)}
+.un.alert .un-nm{color:var(--ember)}
 .un.fell{opacity:.22;filter:grayscale(1)}
 .un img{width:100%;height:2.2rem;object-fit:contain;image-rendering:pixelated;display:block}
 .un .fg{width:1.5rem;height:2.2rem;margin:0 auto;background:var(--bad);opacity:.55;
@@ -369,6 +370,51 @@ function moveTo(u, tx, ty){
   return true;
 }
 
+/* ── 시야 ──────────────────────────────────────────────
+   벽은 시선을 막는다. 높은 곳에 서면 넘겨다본다.
+   보이지 않는 것은 모른다 — 알기 전에는 대응할 수 없다. */
+const SIGHT = {'수호':6,'저항':6,'헌신':7,'탐구':10,'도피':8,'미상':7};
+function sightOf(u){
+  const base = u.foe ? 6 : (SIGHT[u.role] ?? 7);
+  return Math.max(2, base - (envOn('어둠') ? 3 : 0) + (onHigh(u) ? 3 : 0));
+}
+/** 두 칸 사이에 벽이 있는가 — 브레젠험 */
+function hasLOS(a, b){
+  if (onHigh(a)) return true;                 // 높은 곳에서는 넘겨다본다
+  let x0=a.x, y0=a.y; const x1=b.x, y1=b.y;
+  const dx=Math.abs(x1-x0), dy=Math.abs(y1-y0);
+  const sx=x0<x1?1:-1, sy=y0<y1?1:-1;
+  let err=dx-dy, guard=0;
+  while ((x0!==x1 || y0!==y1) && guard++ < 200){
+    const e2=2*err;
+    if (e2 > -dy){ err-=dy; x0+=sx; }
+    if (e2 <  dx){ err+=dx; y0+=sy; }
+    if (x0===x1 && y0===y1) break;
+    if (terr(cellAt(x0,y0)).block) return false;
+  }
+  return true;
+}
+function canSee(u, t){
+  return dist(u,t) <= sightOf(u) && hasLOS(u,t);
+}
+/** 아는 적만 추린다. 쏘고 나면 들통난다. */
+function knownFoes(u, B){
+  const side = u.foe ? alive(B.allies) : alive(B.foes);
+  const out = [];
+  for (const t of side){
+    if (canSee(u,t)) { u.known.set(t.uid, B.round); out.push(t); continue; }
+    const last = u.known.get(t.uid);
+    if (last !== undefined && B.round - last <= 3) out.push(t);   // 놓쳐도 잠깐은 기억한다
+  }
+  return out;
+}
+/** 원거리 공격은 위치를 드러낸다 */
+function reveal(attacker, B){
+  const other = attacker.foe ? alive(B.allies) : alive(B.foes);
+  other.forEach(o => { if (!o.known.has(attacker.uid)) B.ev.push({k:'spot', a:o.uid, t:attacker.uid});
+                       o.known.set(attacker.uid, B.round); });
+}
+
 /* ── 환경 효과 ── */
 function envTick(B, round){
   if (envOn('붕괴')){
@@ -406,14 +452,23 @@ function envTick(B, round){
    고정 순서가 아니라, 매 턴 선택지에 점수를 매겨 가장 높은 것을 고른다.
    점수는 그 사람의 성향이 흔든다. 같은 상황에서도 카브릴과 미로는 다르게 고른다. */
 function decide(u, B){
-  const foes  = u.foe ? alive(B.allies) : alive(B.foes);
-  const mates = u.foe ? alive(B.foes)   : alive(B.allies);
+  const seen  = knownFoes(u, B);
+  const mates = u.foe ? alive(B.foes) : alive(B.allies);
+  const foes  = seen;
+  const wasAlert = u.alert;
+  u.alert = seen.length > 0;
+  if (u.alert && !wasAlert) B.ev.push({k:'spot', a:u.uid});
 
-  // 수호자는 단순하다. 앞의 것을 친다.
+  // 수호자는 자기 자리를 지킨다. 누가 보여야 움직인다.
   if (u.foe){
-    let pool = engageable(u, B.allies);
+    if (!seen.length){
+      const p = u.post || {x:u.x, y:u.y};
+      if (u.x !== p.x || u.y !== p.y) return {a:'move', x:p.x, y:p.y, why:'post'};
+      return {a:'wait'};                      // 보이는 것이 없으면 그대로 선다
+    }
+    let pool = engageable(u, seen);
     if (B.goal.t === '대피' && !pool.some(x => inRange(u,x))){
-      const r = alive(B.refugees||[]).filter(x => inRange(u,x));
+      const r = alive(B.refugees||[]).filter(x => inRange(u,x) && canSee(u,x));
       if (r.length) pool = r;
     }
     const t = pool.filter(f => inRange(u,f)).sort((x,y)=>x.hp-y.hp)[0];
@@ -440,7 +495,7 @@ function decide(u, B){
   }
   const lanes = [0,1,2].filter(y => passable(u.x,y) || y===u.y);
   const pickLane = lanes.sort((p,q) => laneScore(q) - laneScore(p))[0] ?? u.y;
-  const pool = engageable(u, B.foes);
+  const pool = engageable(u, seen);
   const inR  = pool.filter(f => inRange(u,f));
   const ratio = u.hp / u.max;
   const goalT = B.goal.t;
@@ -486,6 +541,12 @@ function decide(u, B){
     opts.push({a:'move', x:n.x, y:n.y, why:'close', s: 0.8});
   }
 
+  if (!seen.length){
+    // 아직 아무것도 못 봤다. 목표 행동이 있으면 그것부터, 없으면 나아간다.
+    const obj = opts.find(o => o.a === 'ring' || o.a === 'heal');
+    if (obj) return obj;
+    return {a:'move', x:X_MAX, y:pickLane, why:'advance'};
+  }
   if (!opts.length) return {a:'wait'};
   opts.sort((x,y) => y.s - x.s);
   return opts[0];
@@ -528,7 +589,7 @@ function mkFoes(req, n){
       hp: Math.round(req*2.7/n*K.hp), max: Math.round(req*2.7/n*K.hp),
       atk: Math.round(req*0.31/n*soft*K.atk), def: Math.round(req*0.022/Math.sqrt(n)),
       spd: K.spd + i, role:'저항', dbuf:0, uid:'f'+i, dealt:0, taken:0, healed:0, fellAt:0,
-      rngX: K.rng, mvX: K.mv,
+      rngX: K.rng, mvX: K.mv, known: new Map(), post: null, alert: false,
       x: Math.max(0, X_MAX - 1 - (i%3)), y: (1 + i*2) % MAPH });
   }
   return out;
@@ -538,7 +599,8 @@ function mkAlly(id){
   return { nm:c.name, id, hp:c.hp, max:c.hp, atk:c.atk, def:c.def, spd:c.spd,
            role:c.role, sk:c.skills, col:c.col, sp:c.sp, dbuf:0,
            dealt:0, taken:0, healed:0, fellAt:0, uid:'a'+id,
-           x: START_X[c.role] ?? 1, y: START_Y[c.role] ?? 1, trait: c.trait || {} };
+           x: START_X[c.role] ?? 1, y: START_Y[c.role] ?? 1, trait: c.trait || {},
+           known: new Map(), post: null, alert: false };
 }
 function startBattle(){
   const t0 = teams.map(t => t.filter(Boolean));
@@ -551,7 +613,7 @@ function startBattle(){
     allies.forEach(u => { const c = freeCell(u.x, u.y, taken); u.x=c.x; u.y=c.y; }); }
   const foes = mkFoes(req.reduce((a,b)=>a+b,0), Math.max(2, allies.length));
   { const taken = new Set();
-    foes.forEach(u => { const c = freeCell(u.x, u.y, taken); u.x=c.x; u.y=c.y; }); }
+    foes.forEach(u => { const c = freeCell(u.x, u.y, taken); u.x=c.x; u.y=c.y; u.post={x:c.x,y:c.y}; }); }
   const goal = cur.goal || {t:'전멸', name:'수호자를 전부 흐리게 한다'};
   const refugees = goal.t === '대피' ? mkRefugees(goal.n) : [];
   battle = { allies, foes, refugees, log: [], ev: [], round: 0, done: false, win: false,
@@ -614,7 +676,8 @@ function run(){
       if (u.hp <= 0 || B.done) continue;
       const d = decide(u, B);
       const WHY = {advance:'앞으로', retreat:'물러선다', guard:'막아선다',
-                   keepdist:'거리를 둔다', heal:'다가간다', close:'붙는다'};
+                   keepdist:'거리를 둔다', heal:'다가간다', close:'붙는다',
+                   post:'자리로 돌아간다'};
       if (d.a === 'move'){
         const fx = u.x, fy = u.y;
         moveTo(u, Math.max(0,Math.min(X_MAX,d.x)), d.y ?? u.y);
@@ -635,6 +698,7 @@ function run(){
         B.ev.push({k:'act', a:u.uid, sk, trait:(u.trait&&u.trait.name)||''});
         if (d.mark) d.t.dbuf = 0.35;
         const dd = dmg(u, d.t, (KIT[u.role]||KIT['미상']).mult);
+        if (dist(u, d.t) > 1) reveal(u, B);        // 멀리서 쏘면 위치가 드러난다
         L('hit', `  ${u.nm} 「${sk}」 → ${d.t.nm} ${dd}`);
         if (d.t.hp === 0){ d.t.fellAt = round; B.ev.push({k:'fall', t:d.t.uid});
           L('fade', `  ${d.t.nm} 흐려졌다`); }
@@ -688,6 +752,13 @@ function stepEvent(){
       pop.textContent = (e.k==='hit' ? '-' : '+') + e.d;
       T.appendChild(pop); setTimeout(()=>pop.remove(), 900);
     }
+  } else if (e.k === 'spot'){
+    const su = unitByUid(e.a), tu = e.t ? unitByUid(e.t) : null;
+    const S = dom(e.a);
+    if (S){ const n=document.createElement('div'); n.className='skname'; n.textContent='!';
+      S.appendChild(n); setTimeout(()=>n.remove(), 900); S.classList.add('alert'); }
+    if (su) el('ticker').innerHTML =
+      `<b style="color:var(--ink)">${su.nm}</b> — ${tu ? tu.nm+'를 발견했다' : '무언가를 알아차렸다'}`;
   } else if (e.k === 'move'){
     B.disp[e.t].x = e.x; if (e.y !== undefined) B.disp[e.t].y = e.y;
     const T = dom(e.t);
@@ -738,6 +809,7 @@ function skipPlay(){
     if (e.k==='ring') battle.rings = e.n;
     if (e.k==='escape'){ battle.escaped++; battle.disp[e.t].fell = true; }
     if (e.k==='fall') battle.disp[e.t].fell = true;
+    if (e.k==='spot') { /* 건너뛸 때는 표시만 생략 */ }
   }
   finishPlay();
 }
