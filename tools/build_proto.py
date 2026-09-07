@@ -9,7 +9,7 @@
 """
 import json, re, sys
 sys.path.insert(0, 'tools')
-import art
+import art, rig
 from shade_gen4 import make
 from power import power
 
@@ -46,8 +46,8 @@ def extra_shades(traits):
             "hp": st["잔존"], "atk": st["의지"], "def": st["자취"], "spd": st["공명"],
             "pw": round(power(st)), "col": sh["visual"]["key_color"],
             "tag": sh["death"].split(". ")[0] + ".",
-            "sp": art.uri(art.sprite("s%d" % seed, sh["cls"], sh["trade"], sh["role"],
-                                     sh["visual"]["key_color"], sh["rarity"])),
+            "sp": rig.uri(rig.sheet(rig.look_of("s%d" % seed, sh["cls"], sh["trade"],
+                          sh["role"], sh["visual"]["key_color"], sh["rarity"]))),
             "trait": {"id": tid, "name": t["name"], "line": t["line"], "w": t["w"]},
             "skills": [{"n": k["name"], "t": "액티브", "d": k["effect"]} for k in sh["skills"][:2]],
             "gen": True,
@@ -63,21 +63,23 @@ def main():
     for c in D['chars']:
         s = src.get(c['id'])
         trade = s['garden']['생업'] if s else '없음'
-        c['sp'] = art.uri(art.sprite(c['id'], c.get('cls', '하인'), trade,
-                                     c['role'], c['col'], c['r']))
+        c['sp'] = rig.uri(rig.sheet(rig.look_of(c['id'], c.get('cls', '하인'), trade,
+                                    c['role'], c['col'], c['r'])))
     traits = json.load(open('data/traits.json', encoding='utf-8'))['성향']
     D['chars'] = [c for c in D['chars'] if not c.get('gen')] + extra_shades(traits)
-    D['foes'] = {k: art.uri(art.foe_sprite(k)) for k in ('재', '잔해', '그림자')}
-    D['ref']  = [art.uri(art.refugee_sprite(i)) for i in range(4)]
+    D['foes'] = {k: rig.uri(rig.sheet(rig.foe_look(k))) for k in ('재', '잔해', '그림자')}
+    D['ref']  = [rig.uri(rig.sheet(rig.refugee_look(i))) for i in range(4)]
+    D['clips'] = rig.clip_table()
+    D['nf']    = rig.NF
     D['tiles'] = {ch: [art.uri(art.tile(ch, v)) for v in range(n)]
                   for ch, n in VARIANTS.items()}
 
     blob = json.dumps(D, ensure_ascii=False, separators=(',', ':'))
     open(HTML, 'w', encoding='utf-8').write(html[:m.start(2)] + blob + html[m.end(2):])
     kb = len(blob) / 1024
-    print('DATA %.0fKB — 잔상 %d, 수호자 %d, 피난민 %d, 타일 %d'
+    print('DATA %.0fKB — 잔상 %d, 수호자 %d, 피난민 %d, 타일 %d, 프레임 %d/장'
           % (kb, len(D['chars']), len(D['foes']), len(D['ref']),
-             sum(len(v) for v in D['tiles'].values())))
+             sum(len(v) for v in D['tiles'].values()), rig.NF))
 
 if __name__ == '__main__':
     main()
