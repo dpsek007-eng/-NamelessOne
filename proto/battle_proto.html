@@ -33,13 +33,43 @@ button:hover:not(:disabled){border-color:var(--slate)}
 button:disabled{opacity:.4;cursor:not-allowed}
 button:focus-visible{outline:2px solid var(--ember);outline-offset:2px}
 .wrap{max-width:72rem;margin:0 auto;padding:0 clamp(.8rem,3vw,2rem)}
+.tabs{display:none}
 
+@media (max-width: 900px){
+  /* 한 줄로 쌓고, 탭으로 넘긴다. 전부 세로로 붙이면 전장이 화면 밖으로 내려간다. */
+  .grid{grid-template-columns:1fr;gap:0}
+  .tabpane{display:none}
+  .tabpane.on{display:block}
+  .tabs{display:flex;position:sticky;top:0;z-index:80;gap:.3rem;
+   padding:.5rem clamp(.8rem,3vw,2rem);background:var(--ground);
+   border-bottom:1px solid var(--line);margin-bottom:.8rem}
+  .tabs button{flex:1;padding:.5rem .3rem;font-size:.82rem;background:transparent;
+   border:1px solid transparent;color:var(--muted)}
+  .tabs button.on{background:var(--card);border-color:var(--slate);color:var(--ink)}
+  header.top{padding:1rem 0 .8rem;margin-bottom:0}
+  header.top h1{font-size:1.3rem}
+  header.top p{display:none}            /* 안내는 전장 화면 안에 있다 */
+
+  /* 칸을 48픽셀로 고정하고 옆으로 흐른다. 눌러서 밀 수 있다. */
+  .field{width:calc(var(--gw, 24) * 48px);height:22rem}
+  .field.prev{height:11rem;width:calc(var(--gw, 24) * 34px)}
+  .un{width:2.9rem}
+  .un .un-nm{font-size:.54rem;max-width:2.9rem}
+  .un.foe .un-nm{display:none}          /* 수호자 이름은 접는다. 겹쳐서 못 읽는다 */
+  .un.foe.act .un-nm,.un.foe.alert .un-nm{display:inline-block}
+  .roster{max-height:none}
+  .teams{gap:.5rem}
+  .team{min-width:100%}
+  .row{flex-wrap:wrap}
+  .legend{font-size:.62rem}
+}
 header.top{border-bottom:1px solid var(--line);padding:1.6rem 0 1.2rem;margin-bottom:1.4rem}
 header.top .eye{font-size:.66rem;letter-spacing:.22em;color:var(--faint);font-family:"Nanum Gothic Coding",monospace}
 header.top h1{font-size:1.7rem;font-weight:800;margin-top:.25rem}
 header.top p{font-size:.85rem;color:var(--muted);margin:.5rem 0 0;max-width:44rem}
 
 .grid{display:grid;grid-template-columns:15rem 1fr;gap:1.4rem;align-items:start}
+.grid>*{min-width:0}                     /* 넓은 전장이 칸을 밀어내지 않게 */
 .panel{background:var(--surface);border:1px solid var(--hair);border-radius:4px;padding:1rem}
 .lab{font-size:.64rem;letter-spacing:.16em;color:var(--faint);text-transform:uppercase;margin-bottom:.55rem}
 
@@ -111,6 +141,12 @@ header.top p{font-size:.85rem;color:var(--muted);margin:.5rem 0 0;max-width:44re
 
 /* ── 전투 화면 ── */
 /* 전장은 테마를 따르지 않는다. 이렘은 항상 그 색이다. */
+/* 전장은 좁은 화면에서 줄이지 않고 옆으로 흐르게 둔다.
+   24칸을 폰 너비에 우겨 넣으면 한 칸이 16픽셀이 되어 아무것도 안 보인다. */
+.fieldwrap{overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;
+ scrollbar-width:thin;margin-bottom:.6rem;border-radius:4px}
+.fieldwrap::-webkit-scrollbar{height:6px}
+.fieldwrap::-webkit-scrollbar-thumb{background:var(--line);border-radius:3px}
 .field{position:relative;background:#2A2723;border:1px solid #14161A;border-radius:4px;
  height:24rem;margin-bottom:.6rem;overflow:hidden;
  box-shadow:inset 0 0 0 1px rgba(0,0,0,.5)}
@@ -280,14 +316,19 @@ footer{border-top:1px solid var(--line);margin-top:2.5rem;padding:1.4rem 0 3rem;
  <p>실제 캐릭터 데이터와 층 사양으로 돌아갑니다. 그림은 계층·생업·성향에서 만들어집니다. 편성을 바꾸면 열쇠 경로가 열리고 요구 전투력이 내려갑니다.<br><b>전투력이 요구치의 80%를 밑돌면 거의 못 이기고, 넘어서면 대체로 이깁니다.</b> 그 사이가 승부입니다.</p>
 </div></header>
 
+<nav class="tabs" id="tabs">
+ <button data-tab="floors">층</button>
+ <button data-tab="roster">잔상</button>
+ <button data-tab="main" class="on">전장</button>
+</nav>
 <main class="wrap">
 <div class="grid">
- <div>
-  <div class="panel" style="margin-bottom:1rem">
+ <div class="col-side">
+  <div class="panel tabpane" data-pane="floors" style="margin-bottom:1rem">
    <div class="lab">층</div>
    <div id="floors"></div>
   </div>
-  <div class="panel">
+  <div class="panel tabpane" data-pane="roster">
    <div class="lab">보유 잔상 <span id="rcount"></span></div>
    <div class="roster" id="roster"></div>
    <p class="hint" style="margin:.5rem 0 0;font-size:.66rem">
@@ -295,8 +336,8 @@ footer{border-top:1px solid var(--line);margin-top:2.5rem;padding:1.4rem 0 3rem;
      이름·삶·최후·스킬·생김새가 시드마다 다릅니다.</p>
   </div>
  </div>
- <div>
-  <div class="panel" id="main"></div>
+ <div class="col-main">
+  <div class="panel tabpane" data-pane="main" id="main"></div>
  </div>
 </div>
 </main>
@@ -810,6 +851,7 @@ function startBattle(){
   run();
   play();          // 계산은 끝났고, 이제 시간에 맞춰 재생한다
   render();
+  if (narrow()) setTab('main');
   startPlay();
 }
 function pick(list){ const a = list.filter(u => u.hp > 0); return a[Math.floor(Math.random()*a.length)]; }
@@ -993,7 +1035,9 @@ function stepEvent(){
     el('ticker').textContent = `${e.n}턴`;
     const t = document.createElement('div'); t.className='turnbig'; t.textContent = e.n;
     fld.appendChild(t); setTimeout(()=>t.remove(), 700);
+    follow(null);                       // 턴이 바뀔 때 무리 쪽으로 화면을 옮긴다
   } else if (e.k === 'act'){
+    follow(e.a);
     const au = unitByUid(e.a);
     if (au) el('ticker').innerHTML =
       `<b style="color:var(--ink)">${au.nm}</b>` +
@@ -1033,6 +1077,7 @@ function stepEvent(){
       T.style.zIndex = 10 + Math.round((e.y !== undefined ? e.y : B.disp[e.t].y) * 2);
       const b = T.querySelector('.bd');
       if (b && e.x !== was) b.classList.toggle('flip', e.x < was); }
+    follow(e.t);
     const mu = unitByUid(e.t);
     if (mu && e.why) el('ticker').innerHTML =
       `<b style="color:var(--ink)">${mu.nm}</b> — ${e.why}` +
@@ -1081,6 +1126,7 @@ function startPlay(){
   const gap = 520 / (battle.pb.speed || 1);
   timer = setInterval(stepEvent, gap);
   animStart();                       // 몸은 사건과 별개로 계속 움직인다
+  requestAnimationFrame(() => follow(null));   // 첫 화면부터 무리를 잡는다
 }
 function skipPlay(){
   if (timer){ clearInterval(timer); timer = null; }
@@ -1187,6 +1233,7 @@ function analyze(B){
 }
 
 const GW = MAPW, GH = MAPH;
+document.documentElement.style.setProperty('--gw', MAPW);
 const TCLS = {'.':'t-plain','#':'t-block',':':'t-rubble','~':'t-crack','_':'t-drain',
               '^':'t-high','o':'t-cover','w':'t-water','x':'t-fire'};
 function cx(x){ return (x + 0.5) / GW * 100; }
@@ -1274,7 +1321,7 @@ function renderMain(){
    <div class="goalbar"><span class="g">${(cur.goal||{}).name||''}</span></div>
    <div class="envs">${(cur.envInfo||[]).map(e=>`<span class="env"><b>${e.name}</b> · ${e.desc}</span>`).join('')}</div>
    ${legend()}
-   <div class="field prev">${terrainLayer()}${envLayer()}</div>
+   <div class="fieldwrap"><div class="field prev">${terrainLayer()}${envLayer()}</div></div>
    <p class="hint" style="margin-top:-.4rem">${cur.mapNote||''}</p>
    <div class="teams">${teams.map((t,i)=>`
      <div class="team"><div class="lab">${cur.teams>1?(i+1)+'팀':'편성'} · ${teamPower(t)} / ${needs[i]}
@@ -1326,11 +1373,11 @@ function renderBattle(){
   const playing = B.pb && !B.pb.done;
   const post = (B.goal.t==='도달'||B.goal.t==='대피'||B.goal.t==='타종')
     ? `<div class="goalpost" style="left:${(GW-0.5)/GW*100}%"></div>` : '';
-  const field = legend() + `<div class="field" id="field">${terrainLayer()}${envLayer()}${post}
+  const field = legend() + `<div class="fieldwrap" id="fieldwrap"><div class="field" id="field">${terrainLayer()}${envLayer()}${post}
       ${B.allies.map(u=>unitCard(u,'ally')).join('')}
       ${(B.refugees||[]).map(u=>unitCard(u,'ally')).join('')}
       ${B.foes.map(u=>unitCard(u,'foe')).join('')}
-    </div>
+    </div></div>
     <div class="ticker" id="ticker"></div>`;
 
   if (playing){
@@ -1431,19 +1478,61 @@ function autoFill(){
   }
 }
 
+/* ── 탭 ────────────────────────────────────────────────────────
+   좁은 화면에서는 셋을 한 번에 못 보여 준다. 지금 필요한 것만 보인다. */
+let tab = 'main';
+const narrow = () => window.matchMedia('(max-width: 900px)').matches;
+function setTab(t){
+  tab = t;
+  document.querySelectorAll('.tabpane').forEach(p =>
+    p.classList.toggle('on', p.dataset.pane === t));
+  document.querySelectorAll('#tabs button').forEach(b =>
+    b.classList.toggle('on', b.dataset.tab === t));
+  if (narrow()) window.scrollTo({top: 0, behavior: 'smooth'});
+}
+/** 전장이 화면보다 넓을 때, 화면은 아군 무리를 따라간다.
+    사건마다 튀게 하면 눈이 따라가지 못한다. */
+function follow(uid){
+  const w = document.getElementById('fieldwrap');
+  if (!w || w.scrollWidth <= w.clientWidth + 4 || !battle) return;
+  let cx0 = null;
+  if (uid){
+    const u = battle.disp[uid];
+    const un = unitByUid(uid);
+    if (u && un && !un.ref) cx0 = u.x;         // 피난민은 따라가지 않는다
+  }
+  if (cx0 === null){
+    const live = battle.allies.filter(a => battle.disp[a.uid] && !battle.disp[a.uid].fell);
+    if (!live.length) return;
+    cx0 = live.reduce((s,a) => s + battle.disp[a.uid].x, 0) / live.length;
+  }
+  const px = (cx0 + 0.5) / GW * w.scrollWidth;
+  const to = Math.max(0, Math.min(w.scrollWidth - w.clientWidth, px - w.clientWidth / 2));
+  const d = Math.abs(w.scrollLeft - to);
+  if (d < 24) return;
+  // 많이 벌어졌으면 곧장 옮긴다. 부드럽게 굴리면 따라가다 놓친다.
+  w.scrollTo({left: to, behavior: d > w.clientWidth * 0.6 ? 'auto' : 'smooth'});
+}
+
 /* ── 입력 ── */
 let picking = null;
 document.addEventListener('click', ev => {
   const t = ev.target.closest('button'); if (!t) return;
-  if (t.dataset.f){ cur = D.floors.find(f=>f.n===+t.dataset.f); resetTeams(); render(); return; }
+  if (t.dataset.tab){ setTab(t.dataset.tab); return; }
+  if (t.dataset.f){ cur = D.floors.find(f=>f.n===+t.dataset.f); resetTeams(); render(); setTab('main');
+    if (narrow()) setTab('main'); return; }
   if (t.dataset.add){ picking = t.dataset.add.split(':').map(Number);
-    el('roster').scrollIntoView({block:'nearest'}); document.body.dataset.pick='1'; return; }
+    document.body.dataset.pick='1';
+    if (narrow()) setTab('roster'); else el('roster').scrollIntoView({block:'nearest'});
+    return; }
   if (t.dataset.rm){ const [i,j]=t.dataset.rm.split(':').map(Number); teams[i][j]=null; render(); return; }
   if (t.dataset.c){
     let slot = picking;
     if (!slot){ for (let i=0;i<teams.length&&!slot;i++){ const j=teams[i].indexOf(null); if (j>=0) slot=[i,j]; } }
     if (!slot) return;
-    teams[slot[0]][slot[1]] = t.dataset.c; picking = null; render(); return;
+    teams[slot[0]][slot[1]] = t.dataset.c; picking = null;
+    if (narrow()) setTab('main');
+    render(); return;
   }
   if (t.id==='pause'){
     if (timer){ clearInterval(timer); timer=null; t.textContent='이어서'; }
