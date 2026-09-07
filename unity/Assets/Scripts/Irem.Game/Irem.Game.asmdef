@@ -1,5 +1,10 @@
 {
   "name": "Irem.Game",
   "rootNamespace": "Irem.Game",
-  "references": ["Irem.Data", "Irem.Sim"]
+  "references": [
+    "Irem.Data",
+    "Irem.Sim",
+    "UnityEngine.UI",
+    "Unity.TextMeshPro"
+  ]
 }

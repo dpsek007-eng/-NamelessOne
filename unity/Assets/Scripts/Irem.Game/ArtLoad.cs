@@ -46,6 +46,13 @@ namespace Irem.Game
             return outp;
         }
 
+        /// 시트에서 한 프레임만. UI 는 서 있는 자세 하나면 된다.
+        public static Sprite Frame(string id, int nf, int frame = 0)
+        {
+            var f = Sheet(id, nf);
+            return f == null || f.Length == 0 ? null : f[Mathf.Clamp(frame, 0, f.Length - 1)];
+        }
+
         public static Sprite Tile(string name)
         {
             if (_tiles.TryGetValue(name, out var s)) return s;

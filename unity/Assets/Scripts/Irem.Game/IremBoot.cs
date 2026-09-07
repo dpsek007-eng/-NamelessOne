@@ -56,7 +56,7 @@ namespace Irem.Game
             var cam = Fresh("이렘 · 편성");
             var go = new GameObject("Roster");
             go.transform.SetParent(_root.transform, false);
-            go.AddComponent<RosterScreen>()
+            go.AddComponent<RosterUI>()
               .Begin(T, floor ?? _last ?? T.floors.FirstOrDefault(f => f.n == DefaultFloor) ?? T.floors[0], cam);
         }
 

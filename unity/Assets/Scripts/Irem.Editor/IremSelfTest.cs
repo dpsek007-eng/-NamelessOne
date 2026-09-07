@@ -11,6 +11,7 @@ using UnityEngine;
 using Irem.Data;
 using Irem.Game;
 using Irem.Sim;
+using TMPro;
 
 namespace Irem.Editor
 {
@@ -58,6 +59,30 @@ namespace Irem.Editor
             var font = IremUI.Face(13);
             if (font == null) NO("한글 폰트를 못 찾았습니다 (Noto Sans CJK KR / 나눔고딕 등)");
             else OK("한글 폰트 " + font.name);
+
+            // 3-b) 한글 TMP 폰트 — uGUI 는 이것으로 글자를 그린다
+            var sans = Resources.Load<TMP_FontAsset>("Irem/Fonts/NanumGothic SDF");
+            var serif = Resources.Load<TMP_FontAsset>("Irem/Fonts/NanumMyeongjo SDF");
+            Check(sans != null, "TMP 폰트 NanumGothic SDF");
+            Check(serif != null, "TMP 폰트 NanumMyeongjo SDF");
+            Check(TMP_Settings.instance != null, "TMP 설정 (Assets/TextMesh Pro)");
+
+            // 3-c) 화면을 실제로 지어 본다 — 컴파일이 된다고 서는 것은 아니다
+            try
+            {
+                var probe = new GameObject("__probe");
+                var ui = probe.AddComponent<RosterUI>();
+                ui.Begin(T, T.floors[0], null);
+                int n = probe.GetComponentsInChildren<Transform>(true).Length;
+                int labels = probe.GetComponentsInChildren<TextMeshProUGUI>(true).Length;
+                int btns = probe.GetComponentsInChildren<UnityEngine.UI.Button>(true).Length;
+                Check(n > 100 && labels > 30 && btns > 10,
+                      $"편성 화면 조립 — 오브젝트 {n}, 글자 {labels}, 단추 {btns}");
+                UnityEngine.Object.DestroyImmediate(probe);
+                var es = UnityEngine.Object.FindFirstObjectByType<UnityEngine.EventSystems.EventSystem>();
+                if (es != null) UnityEngine.Object.DestroyImmediate(es.gameObject);
+            }
+            catch (Exception e) { NO("편성 화면 조립 중 예외 — " + e.Message + "\n" + e.StackTrace); }
 
             // 4) 판정
             try

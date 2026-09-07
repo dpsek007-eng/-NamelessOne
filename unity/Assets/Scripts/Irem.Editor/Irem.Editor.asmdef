@@ -1,6 +1,15 @@
 {
   "name": "Irem.Editor",
   "rootNamespace": "Irem.Editor",
-  "references": ["Irem.Data", "Irem.Sim", "Irem.Game"],
-  "includePlatforms": ["Editor"]
+  "references": [
+    "Irem.Data",
+    "Irem.Sim",
+    "Irem.Game",
+    "UnityEngine.UI",
+    "Unity.TextMeshPro",
+    "Unity.TextMeshPro.Editor"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ]
 }

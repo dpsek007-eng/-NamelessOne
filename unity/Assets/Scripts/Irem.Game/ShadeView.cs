@@ -14,7 +14,10 @@ namespace Irem.Game
         public Sprite[] Frames;
         public BattleTables T;
 
+        public Transform Rig;                 // 그림자·고리와 함께 움직이는 부모
         SpriteRenderer _sr;
+        Color _base = Color.white;
+        float _flash;
         ClipDef _clip;
         int _f;
         float _acc, _hold;
@@ -54,14 +57,27 @@ namespace Irem.Game
         }
 
         /// 칸에서 칸으로 미끄러져 간다. 순간이동하면 살아 있는 것으로 보이지 않는다.
-        public void MoveTo(Vector3 p, float seconds = 0.30f)
+        public void MoveRig(Vector3 p, float seconds = 0.30f)
         {
-            if (p.x > transform.position.x + 0.01f) Facing = true;
-            else if (p.x < transform.position.x - 0.01f) Facing = false;
+            var t = Rig != null ? Rig : transform;
+            if (p.x > t.position.x + 0.01f) Facing = true;
+            else if (p.x < t.position.x - 0.01f) Facing = false;
             _target = p; _moveLeft = Mathf.Max(0.02f, seconds);
             Play("walk", true);
         }
-        public void Warp(Vector3 p) { transform.position = p; _target = p; _moveLeft = 0; }
+        public void Warp(Vector3 p)
+        {
+            var t = Rig != null ? Rig : transform;
+            t.position = p; _target = p; _moveLeft = 0;
+        }
+        public void SetOrder(int o) { if (_sr != null) _sr.sortingOrder = o; }
+
+        /// 맞은 순간 하얗게 튄다 — 이것이 없으면 맞았는지 알 수 없다
+        public void Flash(Color c)
+        {
+            _base = c; _flash = 0.18f;
+            if (_sr != null) _sr.color = c;
+        }
         public void Face(bool right) => Facing = right;
 
         void Apply()
@@ -78,12 +94,20 @@ namespace Irem.Game
         {
             float dt = Time.deltaTime;
 
+            if (_flash > 0)
+            {
+                _flash -= dt;
+                if (_sr != null)
+                    _sr.color = Color.Lerp(Color.white, _base, Mathf.Clamp01(_flash / 0.18f));
+            }
+
             if (_moveLeft > 0)
             {
+                var tr = Rig != null ? Rig : transform;
                 float k = Mathf.Min(1f, dt / _moveLeft);
-                transform.position = Vector3.Lerp(transform.position, _target, k);
+                tr.position = Vector3.Lerp(tr.position, _target, k);
                 _moveLeft -= dt;
-                if (_moveLeft <= 0) transform.position = _target;
+                if (_moveLeft <= 0) tr.position = _target;
             }
 
             if (_clip == null) return;
