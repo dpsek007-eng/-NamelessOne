@@ -63,6 +63,34 @@ Assets/Resources/Irem/
 `Irem.Sim` 은 `noEngineReferences: true` 다. 전투 판정에 `UnityEngine` 이 한 줄도 없다.
 그래서 유니티 없이 콘솔에서 그대로 돌려 검증할 수 있고, 실제로 그렇게 검증했다.
 
+## 화면
+
+![편성](../docs/shots/unity-roster.png)
+![전투](../docs/shots/unity-battle.png)
+
+UI 는 **uGUI + TextMeshPro** 다. IMGUI 로 그리면 유니티 에디터 툴처럼 보인다 —
+그건 툴 그리는 물건이지 게임 화면이 아니다.
+
+한글은 **나눔글꼴(OFL)을 프로젝트에 넣어** TMP 폰트 에셋으로 굽는다.
+OS 폰트에 기대면 안드로이드·iOS 빌드에서 깨진다.
+동적 아틀라스라 2350자를 미리 굽지 않고 쓰는 글자만 올린다.
+
+### 화면을 찍어 확인하는 법
+
+컴파일이 되고 오브젝트가 서 있어도, 자리가 어긋나 있으면 눈으로 봐야만 안다.
+
+```bash
+Xephyr :9 -screen 1280x800 -ac -noreset &
+DISPLAY=:9 IREM_SHOTS=/tmp/shots \
+  Unity -projectPath <이 폴더> -iremShots -logFile -
+```
+
+재생에 들어가 편성 화면과 전투를 네 장 찍고 스스로 끝낸다.
+이 방법으로 실제로 두 가지 자리 버그를 잡았다 —
+`VerticalLayoutGroup.childControlHeight` 와 `HorizontalLayoutGroup.childControlWidth` 를
+끄면 `LayoutElement` 의 크기가 무시되고 각 칸이 기본 100px 을 쓴다.
+목록이 세로로 늘어지고 단추가 화면 밖으로 밀려났다.
+
 ## 편성 화면
 
 `Irem.Game/RosterScreen.cs`. IMGUI 로 그린다 — 렌더 파이프라인이 무엇이든 나오고,

@@ -232,7 +232,9 @@ namespace Irem.Game
             var vl = content.gameObject.AddComponent<VerticalLayoutGroup>();
             vl.spacing = spacing;
             vl.padding = new RectOffset(pad, pad, pad, pad);
-            vl.childControlWidth = true; vl.childControlHeight = false;
+            // childControlHeight 를 끄면 LayoutElement 의 높이를 무시하고
+            // 각 칸이 기본 100px 을 그대로 쓴다. 그러면 목록이 세로로 늘어진다.
+            vl.childControlWidth = true; vl.childControlHeight = true;
             vl.childForceExpandWidth = true; vl.childForceExpandHeight = false;
             var fit = content.gameObject.AddComponent<ContentSizeFitter>();
             fit.verticalFit = ContentSizeFitter.FitMode.PreferredSize;

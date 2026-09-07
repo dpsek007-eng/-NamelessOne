@@ -16,7 +16,7 @@ namespace Irem.Game
         public FloorDef Floor;
         public List<List<CharDef>> Teams = new();
 
-        RectTransform _floorList, _midBody, _rosterList;
+        RectTransform _floorList, _midBody, _midBar, _rosterList;
         TextMeshProUGUI _rosterCount;
         (int t, int s) _picking = (-1, -1);
         string _filter = "";
@@ -106,8 +106,15 @@ namespace Irem.Game
             var mid = UIKit.Panel(root, "mid", Pal.Panel, 12, Pal.Line);
             UIKit.Col(mid.rectTransform, 258, 708, 84, 16);
             var (_, mc) = UIKit.List(mid.transform, "list", 8, 14);
-            UIKit.Stretch((RectTransform)mc.parent.parent, 4, 6, 4, 6);
+            UIKit.Stretch((RectTransform)mc.parent.parent, 4, 6, 4, 62);   // 아래 62 는 단추 띠
             _midBody = mc;
+            _midBar = UIKit.Rect(mid.transform, "bar");
+            _midBar.anchorMin = new Vector2(0, 0); _midBar.anchorMax = new Vector2(1, 0);
+            _midBar.pivot = new Vector2(0.5f, 0);
+            _midBar.offsetMin = new Vector2(12, 10); _midBar.offsetMax = new Vector2(-12, 56);
+            var mbl = _midBar.gameObject.AddComponent<HorizontalLayoutGroup>();
+            mbl.spacing = 8; mbl.childControlWidth = true; mbl.childForceExpandWidth = false;
+            mbl.childAlignment = TextAnchor.MiddleLeft;
 
             var right = UIKit.Panel(root, "roster", Pal.Panel, 12, Pal.Line);
             UIKit.Col(right.rectTransform, 978, 286, 84, 16);
@@ -143,7 +150,7 @@ namespace Irem.Game
                 bool on = f.n == Floor.n;
                 var row = UIKit.Panel(_floorList, "f" + f.n, on ? Pal.Card : Pal.Panel, 8,
                                       on ? Pal.Slate : Pal.Panel);
-                UIKit.Fit(row, 34);
+                UIKit.Fit(row, 30);
                 var b = row.gameObject.AddComponent<Button>();
                 b.targetGraphic = row;
                 var ff = f;
@@ -221,11 +228,9 @@ namespace Irem.Game
                 UIKit.At(pw.rectTransform, -12, -5, 60, 18, new Vector2(1, 1));
             }
 
-            // 단추
-            var bar = UIKit.Rect(_midBody, "bar"); UIKit.Fit(bar, 46);
-            var hl = bar.gameObject.AddComponent<HorizontalLayoutGroup>();
-            hl.spacing = 8; hl.childControlWidth = false; hl.childForceExpandWidth = false;
-            hl.childAlignment = TextAnchor.MiddleLeft; hl.padding = new RectOffset(4, 4, 6, 6);
+            // 단추 — 스크롤 밖. 언제나 보여야 한다.
+            Clear(_midBar);
+            var bar = _midBar;
             bool ready = Teams.All(t => Clean(t).Count > 0);
             var go = UIKit.Btn(bar, "등반", () =>
                      IremBoot.StartBattle(Floor, Teams.Select(Clean).ToList()),
@@ -239,8 +244,16 @@ namespace Irem.Game
             UIKit.Fit(cl, 34); cl.GetComponent<LayoutElement>().preferredWidth = 90;
             if (!ready)
             {
-                var w = UIKit.Label(bar, "각 팀에 최소 1명", 12, Pal.Bad);
-                UIKit.Fit(w, 34); w.GetComponent<LayoutElement>().preferredWidth = 160;
+                var w = UIKit.Label(bar, "각 팀에 최소 1명", 13, Pal.Bad);
+                UIKit.Fit(w, 34); w.GetComponent<LayoutElement>().preferredWidth = 170;
+            }
+            else
+            {
+                int tot = Teams.Sum(t => Setup.TeamPower(Clean(t)));
+                int req = Teams.Sum(t => Setup.Required(Floor, Clean(t)));
+                var w = UIKit.Label(bar, $"전투력 {tot} / 요구 {req}", 13,
+                                    tot >= req ? Pal.Ok : Pal.Bad);
+                UIKit.Fit(w, 34); w.GetComponent<LayoutElement>().preferredWidth = 220;
             }
         }
 
@@ -267,7 +280,7 @@ namespace Irem.Game
 
             var slots = UIKit.Rect(_midBody, "ts" + ti); UIKit.Fit(slots, 92);
             var hl = slots.gameObject.AddComponent<HorizontalLayoutGroup>();
-            hl.spacing = 8; hl.childControlWidth = false; hl.childForceExpandWidth = false;
+            hl.spacing = 8; hl.childControlWidth = true; hl.childForceExpandWidth = false;
             hl.childAlignment = TextAnchor.MiddleLeft; hl.padding = new RectOffset(4, 4, 4, 4);
             for (int si = 0; si < Floor.slot; si++)
             {

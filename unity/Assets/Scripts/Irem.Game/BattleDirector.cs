@@ -124,15 +124,33 @@ namespace Irem.Game
             }
         }
 
+        float _mapW, _mapH, _camY;
+
         void FrameCamera()
         {
-            float w = B.Map.W * (float)ArtLoad.FW / ArtLoad.PPU;
-            float h = B.Map.H * (float)ArtLoad.FH / ArtLoad.PPU * 0.62f;
+            _mapW = B.Map.W * (float)ArtLoad.FW / ArtLoad.PPU;
+            _mapH = B.Map.H * (float)ArtLoad.FH / ArtLoad.PPU * 0.62f;
             _cam.orthographic = true;
-            _camHome = new Vector3(w / 2 - 1.5f, -h / 2 + 1.5f, -10);
+            // 지도 전체를 우겨 넣으면 잔상이 점만 해진다. 높이에 맞추고 옆으로 따라간다.
+            _cam.orthographicSize = _mapH / 2 + 1.2f;
+            _camY = -_mapH / 2 + 1.5f;
+            _camHome = new Vector3(Mathf.Clamp(_mapW / 2, HalfW(), _mapW - HalfW()), _camY, -10);
             _cam.transform.position = _camHome;
-            _cam.orthographicSize = Mathf.Max(h / 2 + 1.5f, w / 2 / Mathf.Max(0.1f, _cam.aspect) + 1.5f);
-            _cam.backgroundColor = new Color32(0x1A, 0x18, 0x15, 255);
+            _cam.backgroundColor = new Color32(0x14, 0x12, 0x10, 255);
+        }
+        float HalfW() => _cam.orthographicSize * Mathf.Max(0.1f, _cam.aspect);
+
+        /// 화면은 살아 있는 아군 무리를 따라간다
+        void FollowCrowd(float dt)
+        {
+            var live = B.Units.Where(u => !u.Foe && !u.Refugee && ShownHp(u.Idx) > 0
+                                          && _views.ContainsKey(u.Idx)).ToList();
+            if (live.Count == 0) return;
+            float x = live.Average(u => _views[u.Idx].Rig.position.x);
+            float half = HalfW();
+            float tx = _mapW <= half * 2 ? _mapW / 2 : Mathf.Clamp(x, half - 1.5f, _mapW - half + 1.5f);
+            _camHome = new Vector3(Mathf.Lerp(_camHome.x, tx, 1 - Mathf.Exp(-dt * 2.2f)), _camY, -10);
+            if (_shake <= 0) _cam.transform.position = _camHome;
         }
 
         /// 공기 — 재가 날린다. 화면이 정지 화면처럼 보이지 않게.
@@ -166,6 +184,7 @@ namespace Irem.Game
         // ── 재생 ─────────────────────────────────────────────────────
         void Update()
         {
+            if (B != null) FollowCrowd(Time.deltaTime);
             if (_shake > 0)
             {
                 _shake -= Time.deltaTime * 3.4f;

@@ -56,18 +56,18 @@ namespace Irem.Game
 
             // 기록
             var log = UIKit.Panel(_root, "log", Pal.Sunk.A(0.72f), 10, Pal.Line.A(0.5f));
-            UIKit.At(log.rectTransform, 16, 16, 420, 132, new Vector2(0, 0));
-            _ticker = UIKit.Label(log.transform, "", 12, Pal.Body, TextAlignmentOptions.BottomLeft);
+            UIKit.At(log.rectTransform, 16, 16, 400, 96, new Vector2(0, 0));
+            _ticker = UIKit.Label(log.transform, "", 13, Pal.Body, TextAlignmentOptions.BottomLeft);
             UIKit.Stretch(_ticker.rectTransform, 12, 8, 12, 8);
             _ticker.enableWordWrapping = true;
             _ticker.overflowMode = TextOverflowModes.Truncate;
 
             // 단추
             var bar = UIKit.Rect(_root, "ctl");
-            UIKit.At(bar, -16, 16, 400, 36, new Vector2(1, 0));
+            UIKit.At(bar, -16, 16, 430, 36, new Vector2(1, 0));
             var hl = bar.gameObject.AddComponent<HorizontalLayoutGroup>();
             hl.spacing = 8; hl.childAlignment = TextAnchor.MiddleRight;
-            hl.childControlWidth = false; hl.childForceExpandWidth = false;
+            hl.childControlWidth = true; hl.childForceExpandWidth = false;
             _pause = UIKit.Btn(bar, "멈춤", () => { Dir.TogglePause(); RefreshCtl(); });
             UIKit.Fit(_pause, 34); _pause.GetComponent<LayoutElement>().preferredWidth = 78;
             _speed = UIKit.Btn(bar, "속도 ×1", () => { Dir.CycleSpeed(); RefreshCtl(); });
@@ -102,12 +102,12 @@ namespace Irem.Game
 
             var nm = UIKit.Label(rt, u.Short ?? u.Name, 11,
                                  u.Foe ? Pal.Bad : Pal.Body, TextAlignmentOptions.Top);
-            UIKit.At(nm.rectTransform, 0, -6, 116, 16, new Vector2(0.5f, 1));
+            UIKit.At(nm.rectTransform, 0, -5, 116, 15, new Vector2(0.5f, 1));
             nm.outlineWidth = 0.22f; nm.outlineColor = new Color32(0, 0, 0, 220);
 
-            var bub = UIKit.Panel(rt, "bub", Pal.Sunk.A(0.94f), 6, Pal.Ember.A(0.55f));
-            UIKit.At(bub.rectTransform, 0, 46, 150, 22, new Vector2(0.5f, 1));
-            var bubT = UIKit.Label(bub.transform, "", 12, Pal.Ink, TextAlignmentOptions.Center, true);
+            var bub = UIKit.Panel(rt, "bub", Pal.Sunk.A(0.95f), 6, Pal.Ember.A(0.55f));
+            UIKit.At(bub.rectTransform, 0, 84, 132, 20, new Vector2(0.5f, 1));
+            var bubT = UIKit.Label(bub.transform, "", 11, Pal.Ink, TextAlignmentOptions.Center, true);
             UIKit.Stretch(bubT.rectTransform, 6, 0, 6, 0);
             bub.gameObject.SetActive(false);
 
@@ -117,7 +117,7 @@ namespace Irem.Game
         public void Say(string s)
         {
             _lines.Add(s);
-            while (_lines.Count > 7) _lines.RemoveAt(0);
+            while (_lines.Count > 5) _lines.RemoveAt(0);
             _ticker.text = string.Join("\n", _lines);
         }
 
@@ -173,7 +173,7 @@ namespace Irem.Game
                 bool vis = sp.z > 0;
                 t.rt.gameObject.SetActive(vis);
                 if (!vis) continue;
-                t.rt.position = new Vector3(sp.x, sp.y - 4, 0);
+                t.rt.position = new Vector3(sp.x, sp.y - 2, 0);
                 float pct = Mathf.Clamp01((float)Dir.ShownHp(u.Idx) / Mathf.Max(1, u.Max));
                 t.fill.rectTransform.anchorMax = new Vector2(pct, 1);
                 bool down = Dir.ShownHp(u.Idx) <= 0;
