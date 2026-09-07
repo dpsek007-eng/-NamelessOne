@@ -97,10 +97,21 @@ POSE = {
 ROLE_ARMS = {"수호": "guard", "저항": "shoulder", "헌신": "cradle",
              "탐구": "carry", "도피": "lean", "미상": "down"}
 # 생업 소품
-TRADE_PROP = {"종탑": "rope", "대장간": "hammer", "물장수": "yoke", "서고": "book",
-              "문지기": "bar", "담장": "chisel", "등대": "lamp", "망루": "lamp",
-              "목공": "plane", "악기": "lute", "약방": "herb", "전령": "letter",
-              "채석": "chisel", "화덕": "loaf"}
+TRADE_PROP = {
+    # 47개 생업 전부. 손이 비어 있으면 무엇을 하던 사람인지 알 수 없다.
+    "종탑": "rope",     "대장간": "hammer",  "물장수": "yoke",    "서고": "book",
+    "문지기": "bar",    "담장": "chisel",    "등대": "lamp",      "망루": "lamp",
+    "목공": "plane",    "악기": "lute",      "약방": "herb",      "전령": "letter",
+    "채석": "chisel",   "화덕": "loaf",      "유리 세공": "flask", "밭": "hoe",
+    "재봉": "spool",    "마구간": "rein",    "부엌": "ladle",     "무두질": "hide",
+    "어망": "net",      "양조": "jar",       "방직": "spool",     "도공": "bowl",
+    "숯막": "coal",     "산파": "cloth",     "장의": "cloth",     "마방": "wheel",
+    "양치기": "crook",  "벌치기": "jar",     "궁정": "seal",      "영주": "seal",
+    "기사": "sword",    "사제": "book",      "징세": "book",      "상단": "chest",
+    "세탁": "cloth",    "유랑": "bundle",    "광부": "pick",      "사냥": "bow",
+    "마법사": "staff",  "정령술사": "bowl",  "점성": "rod",       "연금": "flask",
+    "성녀": "relic",    "성기사": "sword",   "사경": "book",
+}
 
 
 def _tri(d, pts, fill, ol):

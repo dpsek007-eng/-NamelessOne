@@ -294,6 +294,81 @@ def draw_prop(d, L, P):
     elif prop == "lute":
         d.ellipse([hxp-6, hyp-3, hxp+3, hyp+7], fill=A(hx("#8A5E32")), outline=A(INK))
         limb(d, (hxp+2, hyp+1), (hxp+10, hyp-8), 2.2, wood, INK)
+    elif prop == "hoe":                     # 밭 — 괭이
+        limb(d, rot(-2, 12), rot(2, -14), 2.4, wood, INK)
+        b1, b2, b3 = rot(2, -14), rot(9, -12), rot(2, -10)
+        d.polygon([b1, b2, b3], fill=A(iron), outline=A(INK))
+    elif prop == "pick":                    # 광부 — 곡괭이
+        limb(d, rot(-1, 11), rot(2, -13), 2.4, wood, INK)
+        a1 = rot(2, -13)
+        d.arc([a1[0]-8, a1[1]-4, a1[0]+8, a1[1]+7], 200, 340, fill=A(iron), width=3)
+    elif prop == "sword":                   # 기사·성기사
+        limb(d, rot(0, 5), rot(0, -16), 3.0, iron, INK)
+        g = rot(0, 3); d.rectangle([g[0]-5, g[1]-1, g[0]+5, g[1]+1], fill=A(hx("#8A6A34")), outline=A(INK))
+        t2 = rot(0, -16); d.polygon([t2, (t2[0]-2, t2[1]+4), (t2[0]+2, t2[1]+4)], fill=A(lite(iron, .3)))
+    elif prop in ("staff", "crook", "rod"):  # 마법사 · 양치기 · 점성
+        limb(d, rot(-1, 14), rot(2, -18), 2.4, wood, INK)
+        t2 = rot(2, -18)
+        if prop == "crook":
+            d.arc([t2[0]-6, t2[1]-2, t2[0]+6, t2[1]+9], 180, 360, fill=A(wood), width=3)
+        elif prop == "staff":
+            d.ellipse([t2[0]-3, t2[1]-4, t2[0]+3, t2[1]+2], fill=A(hx("#7FB2D9")), outline=A(INK))
+            d.point((t2[0], t2[1]-1), fill=A(hx("#DCF0FF")))
+        else:
+            d.rectangle([t2[0]-2, t2[1]-3, t2[0]+2, t2[1]+1], fill=A(hx("#C9A227")), outline=A(INK))
+    elif prop == "ladle":                   # 부엌 — 국자
+        limb(d, rot(0, 6), rot(2, -9), 2.2, iron, INK)
+        b = rot(2, -10); d.ellipse([b[0]-4, b[1]-3, b[0]+4, b[1]+3], fill=A(iron), outline=A(INK))
+    elif prop == "jar":                     # 양조 · 벌치기 — 항아리
+        d.ellipse([hxp-5, hyp-3, hxp+5, hyp+7], fill=A(hx("#7A5B3E")), outline=A(INK))
+        d.rectangle([hxp-3, hyp-6, hxp+3, hyp-2], fill=A(hx("#6B4E34")), outline=A(INK))
+        d.line([(hxp-4, hyp), (hxp+4, hyp)], fill=A(lite(hx("#7A5B3E"), .25)))
+    elif prop == "bowl":                    # 도공 · 정령술사 — 그릇
+        d.arc([hxp-6, hyp-5, hxp+6, hyp+6], 0, 180, fill=A(hx("#8A6E52")), width=3)
+        d.line([(hxp-6, hyp), (hxp+6, hyp)], fill=A(hx("#A08668")))
+    elif prop == "spool":                   # 방직 · 재봉 — 실패
+        d.rectangle([hxp-2, hyp-5, hxp+2, hyp+5], fill=A(hx("#C4B48A")), outline=A(INK))
+        d.rectangle([hxp-4, hyp-6, hxp+4, hyp-4], fill=A(wood))
+        d.rectangle([hxp-4, hyp+4, hxp+4, hyp+6], fill=A(wood))
+    elif prop == "cloth":                   # 산파 · 장의 · 세탁 — 천
+        d.polygon([(hxp-6, hyp-3), (hxp+5, hyp-5), (hxp+6, hyp+4), (hxp-5, hyp+6)],
+                  fill=A(hx("#CFC7B4")), outline=A(INK))
+        d.line([(hxp-4, hyp), (hxp+4, hyp-1)], fill=A(hx("#A79E8C")))
+    elif prop == "hide":                    # 무두질 — 가죽
+        d.polygon([(hxp-5, hyp-5), (hxp+4, hyp-6), (hxp+6, hyp+2), (hxp+1, hyp+7), (hxp-5, hyp+3)],
+                  fill=A(hx("#8A6440")), outline=A(INK))
+    elif prop == "net":                     # 어망
+        d.arc([hxp-7, hyp-6, hxp+7, hyp+8], 0, 180, fill=A(hx("#9A8A6E")), width=2)
+        for k in range(-2, 3):
+            d.line([(hxp + k*3, hyp - 1), (hxp + k*2, hyp + 6)], fill=A(hx("#9A8A6E")))
+    elif prop == "wheel":                   # 마방 — 수레바퀴
+        d.ellipse([hxp-7, hyp-7, hxp+7, hyp+7], outline=A(wood), width=2)
+        for k in range(4):
+            ang2 = k * math.pi / 4
+            d.line([(hxp, hyp), (hxp + math.cos(ang2)*6, hyp + math.sin(ang2)*6)], fill=A(wood))
+    elif prop == "rein":                    # 마구간 — 고삐
+        d.arc([hxp-4, hyp-2, hxp+10, hyp+12], 190, 350, fill=A(hx("#6B4A2C")), width=2)
+        d.line([(hxp, hyp), (hxp-6, hyp+8)], fill=A(hx("#6B4A2C")), width=2)
+    elif prop == "seal":                    # 궁정 · 영주 — 인장
+        d.rectangle([hxp-4, hyp-6, hxp+4, hyp+2], fill=A(hx("#C9A227")), outline=A(INK))
+        d.rectangle([hxp-2, hyp+2, hxp+2, hyp+6], fill=A(wood), outline=A(INK))
+    elif prop == "chest":                   # 상단 — 궤
+        d.rectangle([hxp-6, hyp-2, hxp+6, hyp+6], fill=A(hx("#6E4E30")), outline=A(INK))
+        d.arc([hxp-6, hyp-7, hxp+6, hyp+3], 180, 360, fill=A(hx("#7E5C3A")), width=3)
+        d.rectangle([hxp-1, hyp, hxp+1, hyp+3], fill=A(hx("#C9A227")))
+    elif prop == "bundle":                  # 유랑 — 봇짐
+        d.ellipse([hxp-6, hyp-4, hxp+6, hyp+7], fill=A(hx("#8A7A5E")), outline=A(INK))
+        d.line([(hxp-5, hyp-2), (hxp+5, hyp-2)], fill=A(hx("#6B5C42")))
+        d.polygon([(hxp-2, hyp-4), (hxp, hyp-8), (hxp+2, hyp-4)], fill=A(hx("#8A7A5E")), outline=A(INK))
+    elif prop == "relic":                   # 성녀 — 성물
+        d.line([(hxp, hyp-8), (hxp, hyp+5)], fill=A(hx("#C9A227")), width=2)
+        d.line([(hxp-4, hyp-4), (hxp+4, hyp-4)], fill=A(hx("#C9A227")), width=2)
+        d.ellipse([hxp-2, hyp-11, hxp+2, hyp-7], fill=A(hx("#F0DFA8")), outline=A(INK))
+    elif prop == "flask":                   # 연금 · 유리 세공
+        d.polygon([(hxp-2, hyp-7), (hxp+2, hyp-7), (hxp+5, hyp+5), (hxp-5, hyp+5)],
+                  fill=A(hx("#9ABBC4")), outline=A(INK))
+        d.polygon([(hxp-4, hyp+1), (hxp+4, hyp+1), (hxp+5, hyp+5), (hxp-5, hyp+5)],
+                  fill=A(hx("#5E8A6E")))
     elif prop == "bow":
         a, b, c2 = rot(-3, -14), rot(-6, 0), rot(-3, 14)
         d.arc([a[0]-2, a[1], c2[0]+2, c2[1]], 250, 110, fill=A(hx("#7A6A52")), width=2)
