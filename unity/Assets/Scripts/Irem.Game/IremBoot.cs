@@ -12,27 +12,31 @@ namespace Irem.Game
     {
         public const int DefaultFloor = 24;
         static GameObject _root;
+        static BattleTables _T;
+        static FloorDef _last;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
-        public static void Boot() => Build(DefaultFloor, 0xC0FFEEUL);
+        public static void Boot() => ShowRoster();
 
-        public static void Restart() => Build(DefaultFloor, (ulong)System.DateTime.Now.Ticks);
-
-        public static void Build(int floorNo, ulong seed)
+        /// 표는 한 번만 읽는다
+        public static BattleTables Tables()
         {
-            if (_root != null) Object.Destroy(_root);
-            _root = new GameObject("이렘");
-
+            if (_T != null) return _T;
             var ta = Resources.Load<TextAsset>("Irem/tables");
             if (ta == null)
             {
                 Debug.LogError("Assets/Resources/Irem/tables.json 이 없습니다. " +
                                "tools/export_unity.py 를 먼저 돌리십시오.");
-                return;
+                return null;
             }
-            var T = JsonUtility.FromJson<BattleTables>(ta.text);
-            var floor = T.floors.FirstOrDefault(f => f.n == floorNo) ?? T.floors[0];
+            _T = JsonUtility.FromJson<BattleTables>(ta.text);
+            return _T;
+        }
 
+        static Camera Fresh(string name)
+        {
+            if (_root != null) Object.Destroy(_root);
+            _root = new GameObject(name);
             var cam = Camera.main;
             if (cam == null)
             {
@@ -42,14 +46,45 @@ namespace Irem.Game
                 cgo.tag = "MainCamera";
             }
             cam.clearFlags = CameraClearFlags.SolidColor;
+            return cam;
+        }
 
-            var B = Setup.BuildBattle(T, floor, seed);
+        /// 편성 화면. 여기서 시작한다.
+        public static void ShowRoster(FloorDef floor = null)
+        {
+            var T = Tables(); if (T == null) return;
+            var cam = Fresh("이렘 · 편성");
+            var go = new GameObject("Roster");
+            go.transform.SetParent(_root.transform, false);
+            go.AddComponent<RosterScreen>()
+              .Begin(T, floor ?? _last ?? T.floors.FirstOrDefault(f => f.n == DefaultFloor) ?? T.floors[0], cam);
+        }
+
+        /// 사람이 짠 편성으로 등반한다
+        public static void StartBattle(FloorDef floor, System.Collections.Generic.List<
+                                       System.Collections.Generic.List<CharDef>> teams)
+            => Build(floor, teams, (ulong)System.DateTime.Now.Ticks);
+
+        public static void Restart()
+        {
+            if (_last != null) Build(_last, null, (ulong)System.DateTime.Now.Ticks);
+            else ShowRoster();
+        }
+
+        public static void Build(FloorDef floor,
+                                 System.Collections.Generic.List<
+                                 System.Collections.Generic.List<CharDef>> teams, ulong seed)
+        {
+            var T = Tables(); if (T == null) return;
+            _last = floor;
+            var cam = Fresh("이렘 · 전투");
+
+            var B = Setup.BuildBattle(T, floor, seed, teams);
             B.Run();
 
             var dgo = new GameObject("Director");
             dgo.transform.SetParent(_root.transform, false);
-            var dir = dgo.AddComponent<BattleDirector>();
-            dir.Begin(T, floor, B, cam);
+            dgo.AddComponent<BattleDirector>().Begin(T, floor, B, cam);
         }
 
     }

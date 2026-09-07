@@ -10,6 +10,27 @@ namespace Irem.Game
         static readonly Dictionary<string, Sprite[]> _sheets = new();
         static readonly Dictionary<string, Sprite> _tiles = new();
 
+        static readonly Dictionary<string, Texture2D> _tex = new();
+
+        /// 시트 원본. 편성 화면은 프레임 하나만 잘라 쓰므로 텍스처가 그대로 필요하다.
+        public static Texture2D SheetTex(string id)
+        {
+            if (_tex.TryGetValue(id, out var t)) return t;
+            t = Resources.Load<Texture2D>("Irem/Shades/" + id);
+            if (t != null) t.filterMode = FilterMode.Point;
+            _tex[id] = t;
+            return t;
+        }
+        public static Texture2D TileTex(string name)
+        {
+            var k = "#t/" + name;
+            if (_tex.TryGetValue(k, out var t)) return t;
+            t = Resources.Load<Texture2D>("Irem/Tiles/" + name);
+            if (t != null) t.filterMode = FilterMode.Point;
+            _tex[k] = t;
+            return t;
+        }
+
         public static Sprite[] Sheet(string id, int frames)
         {
             if (_sheets.TryGetValue(id, out var s)) return s;

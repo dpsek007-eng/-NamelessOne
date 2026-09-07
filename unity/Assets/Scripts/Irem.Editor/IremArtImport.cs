@@ -45,13 +45,12 @@ namespace Irem.Editor
             Debug.Log("Assets/Scenes/이렘.unity 를 만들었습니다. 재생을 누르면 전투가 섭니다.");
         }
 
-        [MenuItem("이렘/층 고르기...")]
-        public static void PickFloor()
+        /// 층은 편성 화면에서 고른다. 이 메뉴는 거기로 돌려보낼 뿐이다.
+        [MenuItem("이렘/편성 화면으로")]
+        public static void ToRoster()
         {
-            var s = EditorUtility.DisplayDialogComplex("어느 층", "층을 고르십시오", "24층 북문", "28층 문의 안과 밖", "41층 서쪽 종탑");
-            int n = s == 0 ? 24 : s == 1 ? 28 : 41;
-            if (Application.isPlaying) Irem.Game.IremBoot.Build(n, (ulong)System.DateTime.Now.Ticks);
-            else Debug.Log($"재생 중에만 바꿀 수 있습니다. IremBoot.DefaultFloor 를 {n} 으로 두거나 재생 중에 다시 고르십시오.");
+            if (Application.isPlaying) Irem.Game.IremBoot.ShowRoster();
+            else EditorApplication.EnterPlaymode();
         }
     }
 }

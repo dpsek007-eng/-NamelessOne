@@ -180,9 +180,10 @@ namespace Irem.Game
         void EnsureStyles()
         {
             if (_nm != null) return;
-            _nm  = new GUIStyle(GUI.skin.label) { fontSize = 11, alignment = TextAnchor.MiddleCenter };
-            _bub = new GUIStyle(GUI.skin.box)   { fontSize = 11, alignment = TextAnchor.MiddleCenter };
-            _hdr = new GUIStyle(GUI.skin.label) { fontSize = 13 };
+            // 유니티 기본 폰트에는 한글이 없다. OS 폰트를 끼운다.
+            _nm  = new GUIStyle { fontSize = 11, alignment = TextAnchor.MiddleCenter, font = IremUI.Face(11) };
+            _bub = new GUIStyle { fontSize = 11, alignment = TextAnchor.MiddleCenter, font = IremUI.Face(11) };
+            _hdr = new GUIStyle { fontSize = 13, font = IremUI.Face(13) };
             _nm.normal.textColor = new Color(0.82f, 0.84f, 0.86f);
             _hdr.normal.textColor = new Color(0.90f, 0.88f, 0.84f);
         }
@@ -244,10 +245,14 @@ namespace Irem.Game
             for (int i = 0; i < _ticker.Count; i++)
                 GUI.Label(new Rect(8, Screen.height - 144 + i * 15, 330, 15), _ticker[i], _nm);
 
-            if (GUI.Button(new Rect(Screen.width - 210, 30, 60, 24), _paused ? "이어서" : "멈춤")) _paused = !_paused;
-            if (GUI.Button(new Rect(Screen.width - 144, 30, 60, 24), "빠르게"))
+            if (IremUI.Btn(new Rect(Screen.width - 300, 30, 62, 26), _paused ? "이어서" : "멈춤"))
+                _paused = !_paused;
+            if (IremUI.Btn(new Rect(Screen.width - 232, 30, 62, 26), $"속도 ×{Mathf.RoundToInt(0.42f / StepSeconds)}"))
                 StepSeconds = StepSeconds > 0.12f ? StepSeconds / 2f : 0.42f;
-            if (GUI.Button(new Rect(Screen.width - 78, 30, 68, 24), "다시")) IremBoot.Restart();
+            if (IremUI.Btn(new Rect(Screen.width - 164, 30, 74, 26), "다시"))
+                IremBoot.Restart();
+            if (IremUI.Btn(new Rect(Screen.width - 84, 30, 74, 26), "편성 바꾸기", true))
+                IremBoot.ShowRoster(Floor);
         }
     }
 }

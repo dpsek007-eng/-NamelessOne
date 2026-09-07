@@ -100,7 +100,9 @@ namespace Irem.Sim
         static readonly Dictionary<string, int> StartY = new()
         { ["수호"] = 3, ["저항"] = 2, ["도피"] = 5, ["헌신"] = 4, ["탐구"] = 4, ["미상"] = 3 };
 
-        public static Battle BuildBattle(BattleTables T, FloorDef f, ulong seed)
+        /// 팀을 넘기면 그 편성으로, 안 넘기면 자동 편성으로 세운다.
+        public static Battle BuildBattle(BattleTables T, FloorDef f, ulong seed,
+                                         List<List<CharDef>> given = null)
         {
             var terr = new Dictionary<char, Terrain>();
             foreach (var t in T.terrain)
@@ -114,7 +116,7 @@ namespace Irem.Sim
                 Env = new HashSet<string>(f.env ?? new string[0]),
             };
 
-            var teams = AutoFill(T, f);
+            var teams = given ?? AutoFill(T, f);
             var taken = new HashSet<int>();
             int Free(int x, int y)
             {
@@ -131,11 +133,7 @@ namespace Irem.Sim
             int reqTotal = 0;
             foreach (var team in teams)
             {
-                var open = (f.routes ?? new RouteDef[0])
-                    .Where(r => r.cond == null || r.cond.Length == 0 ||
-                                r.cond.All(c => Meets(c, team)))
-                    .OrderBy(r => r.pw).FirstOrDefault();
-                float pw = open?.pw ?? 1f;
+                float pw = BestRoute(f, team)?.pw ?? 1f;
                 reqTotal += RoundI((float)f.baseReq / Math.Max(1, f.teams) * pw);
 
                 foreach (var c in team)
@@ -209,7 +207,20 @@ namespace Irem.Sim
             return B;
         }
 
-        static bool Meets(CondDef c, List<CharDef> team)
+        /// 이 편성으로 열리는 길 중 가장 싼 것. 없으면 돌파(조건 없음).
+        public static RouteDef BestRoute(FloorDef f, List<CharDef> team)
+            => (f.routes ?? new RouteDef[0])
+               .Where(r => r.cond == null || r.cond.Length == 0 || r.cond.All(c => Meets(c, team)))
+               .OrderBy(r => r.pw).FirstOrDefault();
+
+        /// 이 팀이 져야 할 요구 전투력
+        public static int Required(FloorDef f, List<CharDef> team)
+            => RoundI((float)f.baseReq / Math.Max(1, f.teams) * (BestRoute(f, team)?.pw ?? 1f));
+
+        public static int TeamPower(List<CharDef> team)
+            => team == null ? 0 : team.Where(c => c != null).Sum(c => c.pw);
+
+        public static bool Meets(CondDef c, List<CharDef> team)
         {
             if (team.Count == 0) return false;
             if (c.t == "약체") return team.Average(x => x.r) <= 3;

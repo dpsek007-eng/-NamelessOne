@@ -20,7 +20,7 @@ Assets/Scripts/
   Irem.Data/    Tables.cs BattleData.cs      표. 엔진을 참조하지 않는다
   Irem.Sim/     Rng ShadeGen Grid Mind Battle Setup
                                              판정. 엔진을 참조하지 않는다
-  Irem.Game/    ArtLoad ShadeView BattleDirector IremBoot
+  Irem.Game/    ArtLoad IremUI RosterScreen ShadeView BattleDirector IremBoot
                                              보여 주기. 여기만 엔진을 쓴다
   Irem.Editor/  IremArtImport                그림 임포트 설정 · 메뉴
 Assets/Resources/Irem/
@@ -31,6 +31,25 @@ Assets/Resources/Irem/
 
 `Irem.Sim` 은 `noEngineReferences: true` 다. 전투 판정에 `UnityEngine` 이 한 줄도 없다.
 그래서 유니티 없이 콘솔에서 그대로 돌려 검증할 수 있고, 실제로 그렇게 검증했다.
+
+## 편성 화면
+
+`Irem.Game/RosterScreen.cs`. IMGUI 로 그린다 — 렌더 파이프라인이 무엇이든 나오고,
+프리팹도 씬 배선도 필요 없다. (폰에 낼 때는 UGUI 로 다시 짜야 한다. 지금은
+에디터에서 규칙을 확인하려는 화면이다.)
+
+| 칸 | 무엇 |
+|---|---|
+| 왼쪽 | 층 목록 |
+| 가운데 | 목표 · 환경 · 지도 미리보기 · 팀 슬롯 · 경로 조건 · 등반 |
+| 오른쪽 | 보유 잔상 66명. 역할로 거를 수 있다 |
+
+**판정은 `Irem.Sim/Setup.cs` 하나만 쓴다.** 화면은 따로 셈하지 않는다.
+
+- `Setup.BestRoute(f, team)` — 이 편성으로 열리는 가장 싼 길
+- `Setup.Required(f, team)` — 그 길로 갈 때 져야 할 요구 전투력
+- `Setup.TeamPower(team)`
+- `Setup.BuildBattle(T, f, seed, teams)` — 팀을 넘기면 그 편성으로, 안 넘기면 자동 편성
 
 ## 마음 — 잔상마다 하나씩
 
@@ -100,6 +119,14 @@ python3 tools/export_unity.py    # 유니티 (Resources/Irem 을 통째로 다�
  39층     100%         99%
  41층     100%        100%
 ```
+
+편성 화면이 내는 값도 시험판과 같다.
+28층 자동 편성 → 전투력 2740 / 요구 1670 (`era` 0.60), 30층 → 팀마다 1600 (`guard` 0.70).
+
+사람이 짠 편성으로도 확인했다 (역할 하나씩, 60판, 오류 0):
+**24층 100% · 41층 97% · 28층 33%.**
+28층이 낮은 것은 그 편성이 `era` 조건을 못 채워 요구치가 1670 에서 2784 로 오르기
+때문이다 — 편성이 승패를 가른다는 설계가 그대로 나온 것이다.
 
 남은 2~4%p 차이는 난수(`Math.random` 대 xorshift64)와 동점 처리다.
 길찾기는 우선순위 큐 대신 시험판과 같은 SPFA 로 맞췄다 —
