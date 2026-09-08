@@ -64,6 +64,7 @@ data/    캐릭터 15명 · 층 30개 (JSON)
 python3 tools/bondi_sim.py      # 본디 분포·승급 비용
 python3 tools/fusion_sim.py     # 승급 경제
 python3 tools/gacha_sim.py      # 소환 확률
+python3 tools/summon_value.py   # 소환 1회의 값 (조각 기준)
 python3 tools/pacing_sim.py     # 1막 페이싱
 python3 tools/shade_gen.py 10   # 무명 잔상 생성
 ```

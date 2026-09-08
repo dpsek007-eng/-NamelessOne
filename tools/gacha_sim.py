@@ -23,7 +23,9 @@ def pick(d):
     return max(d)
 def eqv(r): return 2**(r-1)
 
-print("="*64); print("1. 1성 환산 기대값"); print("="*64)
+print("="*64)
+print("1. 1성 환산 기대값  ⚠ 옛 2배 승급 눈금 — 조각 기준은 summon_value.py")
+print("="*64)
 for nm,tb in (("부름",BASIC),("깊은 부름",DEEP)):
     ev=sum(p*eqv(r) for r,p in tb.items())
     print(f"  {nm:<8} {ev:>6.2f}")
