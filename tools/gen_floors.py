@@ -2,7 +2,7 @@
 """1막(1~30층) 층 사양 생성 + 클리어 가능성 검증."""
 import json, sys, collections
 sys.path.insert(0,'tools')
-from power import power
+from power import power, level_mult, level_cap
 
 NAMES={1:"재",2:"빈 집",3:"이름 없는 자",4:"부름",5:"첫 대답",6:"갈 곳",7:"층수 없는 층",
 8:"뜰",9:"첫 생업",10:"복원",11:"그릇 둘",12:"굽는 소리",13:"화덕",14:"말",15:"그 뒤",
@@ -62,10 +62,21 @@ chars=[c for c in d['characters'] if c.get('floor')]
 PULL_AVG=0.4*146+0.3*190+0.2*253+0.08*337+0.02*446   # 무명 잔상 기대 전투력
 
 def roster_at(f):
-    """f층 도달 시점의 보유 전력 목록(추정)"""
+    """f층 도달 시점의 보유 전력 목록(추정).
+
+    레벨은 여기서 곱해지는 lv 하나가 전부다. 상한이 도달 최고층이므로
+    f층에 서 있는 플레이어의 로스터는 **전원이** 레벨 f 다 — 아껴 둘 수도,
+    뒤처질 수도 없다(`docs/02-캐릭터-시스템.md` 4-1). 그래서 로스터 전체에
+    같은 배수를 건다.
+
+    이 한 줄이 탑 난이도의 전부라는 점을 적어 둔다. 빼고 돌리면 요구치가
+    스탯 풀만 남아 평평해지고, 본디 1 짜리가 3000층까지 버틴다.
+    반대로 스탯 풀은 ★5 에서 멈추므로(`power.star_pool`), 60층 위의 난이도는
+    **오로지 이 계수와 요구치의 관계**로만 결정된다.
+    """
     owned=[power(c['stats']) for c in chars if c['floor']<=f]
     owned+= [PULL_AVG]*int(f*0.7)          # 뽑기로 얻는 무명 잔상
-    lv=1+0.028*f                            # 레벨 성장 계수
+    lv=level_mult(level_cap(f))             # 축 1. 레벨 — 상한 = 도달 최고층
     return sorted((p*lv for p in owned), reverse=True)
 
 floors=[]
