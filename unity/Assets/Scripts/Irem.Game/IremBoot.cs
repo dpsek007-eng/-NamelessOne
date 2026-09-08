@@ -15,8 +15,17 @@ namespace Irem.Game
         static BattleTables _T;
         static FloorDef _last;
 
+        /// 확인용으로 지은 신에서는 아무것도 세우지 않는다.
+        /// 편성 화면이 전체 화면을 덮어서 늘어놓은 잔상을 다 가려 버린다.
+        public const string CharScene = "캐릭터";
+
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
-        public static void Boot() => ShowRoster();
+        public static void Boot()
+        {
+            if (UnityEngine.SceneManagement.SceneManager.GetActiveScene().name == CharScene)
+                return;
+            ShowRoster();
+        }
 
         /// 표는 한 번만 읽는다
         public static BattleTables Tables()
