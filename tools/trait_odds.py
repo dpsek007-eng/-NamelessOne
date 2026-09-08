@@ -25,11 +25,12 @@
 바닥값은 계산이 아니라 **결정**이다. `04-본디.md` 가 지켜야 한다고 못박은
 「★1 본디 10의 꼬리」를 0으로 만들지 않기 위해 남긴다.
 """
-import sys, os
+import sys, os, random
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from fusion_sim import shades_for, BONDI
 from power import STAR_CAP_EARLY
 from summon_value import BASIC, DEEP, DEEP_COST, BOND
+from shade_gen import ROLES
 
 CAP = STAR_CAP_EARLY
 
@@ -65,8 +66,45 @@ def per_pull(table, cap=CAP):
     return sum(p * p_good(r, cap) for r, p in table.items())
 
 
+# 빌린 특성이 몇 종인가는 새로 정하지 않는다. **역할 5종을 그대로 쓴다** —
+# 플레이어가 이미 캐릭터 카드와 열쇠 조건에서 매일 보는 낱말이라
+# (`06-층-공략.md` 의 「수호 2명 이상」), 다섯을 써도 외울 것이 하나도 안 는다.
+#
+# 어느 것이 나오는지는 굴리지 않는다. **겹친 사람들의 역할 다수결**이다.
+# 고유/빌린이 갈리는 것은 확률이지만, 빌린 쪽의 방향은 플레이어가 정한다.
+N_BORROWED = len(ROLES)
+TRIALS = 4000
+
+
+def steer(k, n, trials=TRIALS):
+    """n명 중 k명을 같은 역할로 골라 넣었을 때 그 역할이 단독 최다일 확률"""
+    if n <= 0:
+        return 0.0
+    R = len(ROLES)
+    win = 0
+    for _ in range(trials):
+        c = [0] * R
+        c[0] = k
+        for _ in range(n - k):
+            c[random.randrange(R)] += 1
+        m = max(c)
+        if c[0] == m and c.count(m) == 1:
+            win += 1
+    return win / trials
+
+
+def steer_cost(r, conf=0.95, cap=CAP):
+    """출발 r 이 빌린 특성을 conf 확률로 지정하려면 몇 명을 골라 넣어야 하는가"""
+    n = int(round(borrowed(r, cap)))
+    for k in range(n + 1):
+        if steer(k, n) >= conf:
+            return n, k
+    return n, None
+
+
 if __name__ == "__main__":
     assert 0.0 < OWN_FLOOR < 1.0
+    assert N_BORROWED == 5, "빌린 특성 종수는 역할 종수를 따라간다 (`06-층-공략.md` 열쇠 조건)"
     assert abs(p_own(CAP) - 1.0) < 1e-9, "직뽑 ★6 은 한 명도 겹치지 않았으므로 100% 고유여야 한다"
     for a, b in zip(range(1, CAP), range(2, CAP + 1)):
         assert p_own(a) <= p_own(b) + 1e-12, f"고유 확률이 ★{a}→★{b} 에서 뒤집힌다"
@@ -114,10 +152,36 @@ if __name__ == "__main__":
 
     print()
     print("=" * 74)
-    print("4. 남는 문제")
+    print(f"4. 빌린 특성은 {N_BORROWED}종 — 역할 그대로다")
+    print("=" * 74)
+    print("  " + " \u00b7 ".join(ROLES))
+    print("  새 낱말을 만들지 않는다. 열쇠 조건이 이미 이 다섯으로 쓰여 있다.")
+    print("  세기도 열쇠로 갈린다 — 고유는 혼자 「수호 2명」을 열고(2명분),")
+    print("  빌린 것은 자기 역할에 하나를 겸할 뿐이다(2역할, 그래도 1명분).")
+    print()
+    print("  어느 역할이 나올지는 굴리지 않는다 — 겹친 사람들의 다수결이다.")
+    random.seed(7)
+    print()
+    print(f"{'출발':>4}{'겹칠 잔상':>11}{'아무나 넣으면':>16}{'95%로 정하려면':>18}")
+    for r in range(1, CAP):
+        n, k = steer_cost(r)
+        if n == 0:
+            continue
+        print(f"\u2605{r:<3}{n:>10}명{steer(0, n):>14.1%}{k:>13}명 ({k/n:>3.0%})")
+    print()
+    print("  뒤집혀 있다. 흐리게 시작한 사람일수록 방향을 **싸게** 정한다 —")
+    print("  ★1은 128명 중 15명(12%)만 맞춰 넣으면 되고, ★5는 8명 중 4명(50%)이 든다.")
+    print("  겹칠 사람이 많다는 것이 여기서는 손해가 아니라 표본이 크다는 뜻이 된다.")
+    print()
+    print("  ★1이 받는 보상은 「더 세다」가 아니라 「고를 수 있다」다.")
+    print("  세기로 보상하면 앞 절이 막 뒤집은 약속이 되살아난다.")
+
+    print()
+    print("=" * 74)
+    print("5. 남는 문제")
     print("=" * 74)
     print("  · 상한이 ★8, ★10 으로 열리면 겹칠 명수가 다시 벌어지므로 이 표를 다시 잰다.")
     print("    정의가 명수 비율이라 자동으로 따라오지만, 바닥값 5%는 손으로 확인해야 한다.")
-    print("  · 「빌린 특성」이 몇 종이고 얼마나 약한지는 아직 안 정했다 (`02-캐릭터-시스템.md`).")
+    print("  · 빌린 특성 다섯의 실제 문장은 아직 안 썼다. 형태만 정해져 있다.")
     print("  · `04-본디.md` 의 「저등급 출신은 마지막 스킬이 더 강하다」와 정면으로 어긋난다.")
     print("    그 문장은 이 결정으로 대체된다.")
