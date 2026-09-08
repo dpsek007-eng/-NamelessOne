@@ -27,3 +27,15 @@ Thumbs.db
 # .NET 빌드 산출물
 bin/
 obj/
+
+# 만들어 내는 것 — 소스에서 다시 나온다. 무겁고 이진이라 넣지 않는다.
+# 다만 실루엣 대조표(sheet.png)는 남긴다. 그것이 옷 규격의 검사 기록이다.
+# 부모 폴더째 무시하면 git 이 안으로 들어가지 않아 예외가 먹지 않는다.
+# 그래서 층마다 열어 준다.
+chars/out/*
+!chars/out/garments
+chars/out/garments/*
+!chars/out/garments/sheet.png
+pipeline3d/out/
+pipeline3d/cache/
+pipeline3d/vendor/
