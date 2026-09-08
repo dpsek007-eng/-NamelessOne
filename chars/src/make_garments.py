@@ -287,7 +287,18 @@ def add_cape(bm_obj, sp, L):
 
 # ---------------------------------------------------------------- 마무리
 def paint(ob, sp, L, mat_cloth, mat_accent):
-    """머티리얼 두 칸. 0번은 천, 1번은 강조색 자리."""
+    """머티리얼 두 칸. 0번은 천, 1번은 강조색 자리.
+
+    면의 무게중심 높이로만 고르면 강조색 경계가 톱니처럼 뜯긴다.
+    케이지 격자가 가로줄에 맞춰져 있지 않아서, 띠 높이를 걸친 면들이
+    들쭉날쭉 잘리기 때문이다. 웹 뷰어에서 왕실 어깨 장식이 찢어진
+    종이처럼 보였다.
+
+    그래서 먼저 띠의 위·아래 높이에서 메시를 실제로 자른다. 자르고 나면
+    어떤 면도 경계를 걸치지 않으므로 무게중심으로 골라도 선이 곧다.
+    셰이더로 처리하지 않고 지오메트리로 푸는 이유는, 이렇게 해 두면
+    유니티든 웹이든 무엇으로 그리든 같은 선이 나오기 때문이다.
+    """
     ob.data.materials.append(mat_cloth)
     ob.data.materials.append(mat_accent)
     band = sp["accent"]
@@ -295,8 +306,20 @@ def paint(ob, sp, L, mat_cloth, mat_accent):
         return 0
     lo = L["z0"] + band[0] * L["height"]
     hi = L["z0"] + band[1] * L["height"]
+
+    b = bmesh.new()
+    b.from_mesh(ob.data)
+    for z in (lo, hi):
+        bmesh.ops.bisect_plane(
+            b, geom=list(b.verts) + list(b.edges) + list(b.faces),
+            plane_co=Vector((0.0, 0.0, z)), plane_no=Vector((0.0, 0.0, 1.0)),
+            dist=1e-5)
+    b.to_mesh(ob.data)
+    b.free()
+
     n = 0
     for p in ob.data.polygons:
+        p.use_smooth = True
         z = sum(ob.data.vertices[i].co.z for i in p.vertices) / len(p.vertices)
         if lo <= z <= hi:
             p.material_index = 1
