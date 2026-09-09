@@ -340,9 +340,18 @@ def join(objs, name):
 
 
 def bind(ob, arm):
-    """뼈에 물린다. 웨이트는 케이지에서 따라왔으므로 모디파이어만 붙이면 된다."""
+    """뼈에 물린다. 웨이트는 케이지에서 따라왔으므로 모디파이어만 붙이면 된다.
+
+    **이미 붙어 있으면 그것을 쓴다.** 옷은 맨몸이라 새로 붙이면 되지만,
+    몸에는 MPFB 의 add_builtin_rig 가 이미 ARMATURE 를 하나 달아 놓았다.
+    거기에 하나를 더 붙이면 뼈 회전이 **두 번** 먹는다. 손가락 24도가
+    48도가 되고, 휘두름의 80도는 살이 국수처럼 늘어나 터진다.
+    실제로 그렇게 터진 것을 확인 시트에서 보고 여기까지 왔다.
+    """
     ob.parent = arm
-    m = ob.modifiers.new("Armature", "ARMATURE")
+    m = next((x for x in ob.modifiers if x.type == "ARMATURE"), None)
+    if m is None:
+        m = ob.modifiers.new("Armature", "ARMATURE")
     m.object = arm
     # 뼈가 아닌 그룹(helper-* · joint-* 등)은 내보낼 때 짐만 된다.
     names = {b.name for b in arm.data.bones}

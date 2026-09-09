@@ -117,6 +117,35 @@ def arms():
     return out
 
 
+def demo():
+    """한 사람 시연 — 몸·옷·리그·동작 네 벌이 GLB 한 장에 들어 있다.
+
+    chars/out/demo 는 .gitignore 가 막는다 (소스에서 다시 나온다). 없으면
+    None 을 돌려주고, 뷰어가 「아직 안 만들었다」고 적는다. 만드는 법:
+
+        blender --background --python chars/src/make_demo.py -- \
+                --role 수호 --cls 병졸 --out chars/out/demo
+    """
+    d = os.path.join(ROOT, "chars/out/demo")
+    rp = os.path.join(d, "report.json")
+    if not os.path.exists(rp):
+        return None
+    with open(rp, encoding="utf-8") as f:
+        rep = json.load(f)
+    glb = rep["slug"] + ".glb"
+    if not os.path.exists(os.path.join(d, glb)):
+        return None
+    # 초상은 focus_stack.py --pick 이 재서 골라 둔 장을 쓴다. 손으로 안 고른다.
+    port = None
+    pp = os.path.join(ROOT, "pipeline3d/out/faces/pick.json")
+    if os.path.exists(pp):
+        with open(pp, encoding="utf-8") as f:
+            got = json.load(f).get(rep["slug"])
+        if got:
+            port = "/pipeline3d/out/faces/" + got["image"]
+    return {**rep, "url": f"/chars/out/demo/{glb}", "portrait": port}
+
+
 def build_manifest():
     m = {
         "sprites": [{"name": f[:-4], "url": f"/art/shades/{f}"}
@@ -131,6 +160,7 @@ def build_manifest():
                   for f in ls("pipeline3d/out/props", ".glb")],
         "faces": faces(),
         "arms": arms(),
+        "demo": demo(),
         "roles": [{"slug": s, "ko": k} for s, k in ROLES],
         "tiers": [{"slug": s, "ko": k} for s, k in TIERS],
     }
@@ -154,6 +184,9 @@ def main():
         print(f"  {k:<9} {len(man[k])}")
     for a in man["arms"]:
         print(f"  팔 {a['ko']:<8} {a['n']}장")
+    dm = man["demo"]
+    print(f"  한 사람    {dm['slug']} · 동작 {len(dm['clips'])}벌" if dm
+          else "  한 사람    아직 없음 (chars/src/make_demo.py)")
 
     try:
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)

@@ -57,6 +57,17 @@ label{color:var(--dim);font-size:13px}
 #lightbox{position:fixed;inset:0;background:#000c;display:none;align-items:center;justify-content:center;z-index:9}
 #lightbox.on{display:flex}
 #lightbox img{max-width:88vw;max-height:88vh;border-radius:6px}
+.btn{background:var(--panel);color:var(--fg);border:1px solid var(--line);border-radius:4px;
+  padding:6px 12px;font:400 13px "IBM Plex Sans KR";cursor:pointer}
+.btn:hover{border-color:var(--acc);color:#eceef2}
+.onewrap{display:flex;gap:18px;align-items:flex-start;flex-wrap:wrap}
+.onestagewrap{position:relative;flex:1 1 520px;min-width:0}
+#onestage{width:100%;height:620px;background:#0e1013;border:1px solid var(--line);border-radius:5px;display:block}
+#onelabels{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+#onelabels span{position:absolute;transform:translate(7px,-50%);font:400 11px "IBM Plex Sans KR";
+  color:#f0d98a;text-shadow:0 0 4px #000,0 0 4px #000,0 0 4px #000;white-space:nowrap}
+.oneside{width:300px;flex:0 0 300px}
+.oneside img{width:100%;border-radius:5px;border:1px solid var(--line);display:block;background:#0e1013}
 </style>
 
 <header>
@@ -66,6 +77,7 @@ label{color:var(--dim);font-size:13px}
     <button data-t="s2d" class="on">2D 스프라이트</button>
     <button data-t="sil">실루엣 55종</button>
     <button data-t="d3">3D 뷰어</button>
+    <button data-t="one">한 사람</button>
     <button data-t="face">초상 78종</button>
     <button data-t="focus">초점 시연</button>
     <button data-t="arm">역할 실험</button>
@@ -112,6 +124,30 @@ label{color:var(--dim);font-size:13px}
   <div class="note">드래그 = 회전 · 휠 = 확대 · 우클릭 드래그 = 이동.<br>
   <b>몸 5종에는 얼굴 지오메트리가 들어 있다</b> (MakeHuman 기반, 13,380 verts · 53 bones).
   지금까지 전부 실루엣으로만 찍어서 안 보였을 뿐이다. 머리를 확대해 보라.</div>
+</section>
+
+<section id="one">
+  <h2>한 사람 — 얼굴 · 관절 · 동작</h2>
+  <div id="onenote"></div>
+  <div class="bar">
+    <label>동작</label><select id="oneclip"></select>
+    <button id="oneplay" class="btn">멈춤</button>
+    <label>속도</label><input type="range" id="onespeed" min="5" max="200" value="100" style="width:140px">
+    <span class="sub" id="onespeedv">1.00배</span>
+    <label><input type="checkbox" id="onecloth" checked> 옷</label>
+    <label><input type="checkbox" id="onebone" checked> 뼈대</label>
+    <label><input type="checkbox" id="onejoint" checked> 관절점</label>
+    <label><input type="checkbox" id="onelabel" checked> 이름표</label>
+    <button id="onehead" class="btn">얼굴로</button>
+    <button id="onefull" class="btn">전신으로</button>
+  </div>
+  <div class="onewrap">
+    <div class="onestagewrap"><canvas id="onestage"></canvas><div id="onelabels"></div></div>
+    <div class="oneside">
+      <div id="oneport"></div>
+      <div class="readout" id="onefacts" style="margin-top:10px"></div>
+    </div>
+  </div>
 </section>
 
 <section id="face">
@@ -215,7 +251,9 @@ label{color:var(--dim);font-size:13px}
     <tr><td>역할별 옷단</td><td><code>docs/22</code> 「옷을 짧게」</td><td>역할 2.13→2.15%, 계층 8.67→5.86% — 옷 때문이 아니었다</td></tr>
     <tr><td>머리·두건 6종</td><td><code>docs/22</code> 발주 표</td><td>모두 맨머리</td></tr>
     <tr><td>소품 47종 손 부착</td><td><code>docs/22</code> 손 앵커</td><td>메시는 있으나 안 붙었다</td></tr>
-    <tr><td>대기·호흡·눈깜빡임</td><td>—</td><td>전부 T포즈 정지</td></tr>
+    <tr><td>대기·호흡 <b class="good">— 만들었다</b></td><td><a href="#one" style="color:var(--acc)">한 사람</a></td><td>숨·걷기·휘두름·돌아본다 네 벌. 한 사람(수호·병졸)만</td></tr>
+    <tr><td><b>얼굴 뼈</b> — 표정·눈깜빡임</td><td><code>docs/22</code> 「리그에 얼굴 뼈가 없다」</td><td>뼈 53개 중 <b class="bad">0개</b>. 표정은 원리적으로 불가 — 목·머리 회전까지</td></tr>
+    <tr><td>동작 — 나머지 54종</td><td>—</td><td>역할 5 × 계층 11 중 한 사람만 움직인다</td></tr>
   </table>
 </section>
 </main>
@@ -243,6 +281,7 @@ function showTab(t){
   document.querySelectorAll('section').forEach(x=>x.classList.remove('on'));
   b.classList.add('on'); document.getElementById(t).classList.add('on');
   if(t==='d3') resize(stage,rend,cam);
+  if(t==='one' && window.__oneResize) window.__oneResize();
 }
 document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{
   history.replaceState(null,'','#'+b.dataset.t); showTab(b.dataset.t);
@@ -352,6 +391,147 @@ document.getElementById('silh').onchange = applyMat;
 fillItems();
 addEventListener('resize', ()=>resize(stage,rend,cam));
 (function loop(){ ctrl.update(); resize(stage,rend,cam); rend.render(sc,cam); requestAnimationFrame(loop); })();
+
+/* ---------- 한 사람 — 얼굴 · 관절 · 동작 ---------- */
+/* 실루엣만 찍어 온 탓에 지금까지 얼굴도 관절도 화면에 나온 적이 없다.
+   여기서는 셋을 한꺼번에 보여준다 — 돌려 보는 몸, 그 위에 겹친 뼈대와
+   관절점, 그리고 재생되는 동작. 리그에 **얼굴 뼈가 하나도 없어서**
+   표정은 못 움직인다. 그건 숨기지 않고 아래에 적어 둔다. */
+{
+const D = M.demo;
+const note = document.getElementById('onenote');
+if(!D){
+  note.innerHTML = `<div class="note warn"><b>아직 안 만들었다.</b>
+    <code>chars/out/demo/</code> 가 비어 있다. 만드는 법:<br>
+    <code>blender --background --python chars/src/make_demo.py -- --role 수호 --cls 병졸 --out chars/out/demo</code></div>`;
+} else {
+  const nf = D.face_bones.length;
+  note.innerHTML = `<div class="note"><b>${D.role}·${D.cls}</b> 한 사람.
+    몸·옷·리그·동작 ${D.clips.length}벌이 GLB 한 장(<code>${D.slug}.glb</code>)에 들어 있다.
+    드래그 = 회전 · 휠 = 확대.<br>
+    <b>얼굴 지오메트리는 있다.</b> 「얼굴로」를 누르면 눈·코·입이 보인다.
+    <b class="bad">그런데 얼굴 뼈는 ${nf}개다</b> — 뼈 ${D.bones}개 중에 턱·눈·눈썹·입술이 하나도 없다.
+    그래서 <b>표정은 원리적으로 못 움직인다.</b> 이 리그로 낼 수 있는 얼굴 움직임은
+    목과 머리를 돌리는 것(<b>돌아본다</b>)까지다. 표정이 필요하면 초상(2D)이 맡거나
+    리그에 얼굴 뼈를 새로 심어야 한다 — 지금은 없다.</div>`;
+
+  const cv = document.getElementById('onestage');
+  const {rend:orend, sc:osc, cam:ocam, ctrl:octrl} = makeScene(cv);
+  window.__oneResize = ()=>resize(cv,orend,ocam);
+
+  const LABEL = {pelvis:'골반', spine_01:'허리', spine_03:'가슴', neck_01:'목', head:'머리',
+    clavicle_l:'쇄골', clavicle_r:'쇄골', upperarm_l:'위팔', upperarm_r:'위팔',
+    lowerarm_l:'아래팔', lowerarm_r:'아래팔', hand_l:'손', hand_r:'손',
+    thigh_l:'넓적다리', thigh_r:'넓적다리', calf_l:'정강이', calf_r:'정강이',
+    foot_l:'발', foot_r:'발'};
+
+  const gltf = await loader.loadAsync(D.url);
+  const root = gltf.scene; osc.add(root);
+
+  const bones = []; let cloth = null;
+  root.traverse(n=>{
+    if(n.isBone) bones.push(n);
+    if(n.isMesh && n.name.startsWith('garment')) cloth = n;
+    if(n.isMesh) n.frustumCulled = false;   // 팔을 들면 상자가 화면 밖으로 나가 사라진다
+  });
+
+  /* 뼈대 — 깊이 검사를 끈다. 살 안에 묻힌 뼈가 안 보이면 볼 이유가 없다. */
+  const helper = new THREE.SkeletonHelper(root);
+  helper.material.depthTest = false; helper.material.transparent = true;
+  helper.material.linewidth = 2; helper.renderOrder = 10;
+  osc.add(helper);
+
+  /* 관절점 — 뼈마다 머리 위치에 점 하나. 매 프레임 다시 찍는다. */
+  const jg = new THREE.BufferGeometry();
+  jg.setAttribute('position', new THREE.BufferAttribute(new Float32Array(bones.length*3), 3));
+  const dots = new THREE.Points(jg, new THREE.PointsMaterial({
+    color:0xffcf4a, size:7, sizeAttenuation:false, depthTest:false, transparent:true}));
+  dots.renderOrder = 11; dots.frustumCulled = false; osc.add(dots);
+
+  /* 이름표 — 주요 관절만. 53개를 다 적으면 글자밖에 안 보인다. */
+  const lbox = document.getElementById('onelabels');
+  const labelled = bones.filter(b=>LABEL[b.name]);
+  lbox.innerHTML = labelled.map(b=>`<span>${LABEL[b.name]}</span>`).join('');
+  const lspans = [...lbox.children];
+
+  /* 동작 */
+  const mixer = new THREE.AnimationMixer(root);
+  const clipSel = document.getElementById('oneclip');
+  clipSel.innerHTML = gltf.animations.map((a,i)=>`<option value="${i}">${a.name}</option>`).join('');
+  let action = null;
+  function playClip(i){
+    const nx = mixer.clipAction(gltf.animations[i]);
+    if(action && action !== nx){ action.fadeOut(0.25); }
+    nx.reset().setEffectiveWeight(1).fadeIn(0.25).play();
+    action = nx;
+  }
+  playClip(0);
+  clipSel.onchange = ()=>playClip(clipSel.value|0);
+
+  const playBtn = document.getElementById('oneplay');
+  let running = true;
+  playBtn.onclick = ()=>{ running = !running; playBtn.textContent = running ? '멈춤' : '재생'; };
+  const sp = document.getElementById('onespeed'), spv = document.getElementById('onespeedv');
+  sp.oninput = ()=>{ const v = sp.value/100; mixer.timeScale = v; spv.textContent = v.toFixed(2)+'배'; };
+
+  document.getElementById('onecloth').onchange = e=>{ if(cloth) cloth.visible = e.target.checked; };
+  document.getElementById('onebone').onchange  = e=>helper.visible = e.target.checked;
+  document.getElementById('onejoint').onchange = e=>dots.visible = e.target.checked;
+  document.getElementById('onelabel').onchange = e=>lbox.style.display = e.target.checked ? '' : 'none';
+  document.getElementById('onehead').onclick = ()=>frame(root, ocam, octrl, true);
+  document.getElementById('onefull').onclick = ()=>frame(root, ocam, octrl, false);
+
+  /* 초상 — focus_stack.py --pick 이 골라 둔 장. 옆에 나란히 둔다.
+     3D 가 못 하는 표정을 지금 무엇이 대신하고 있는지 눈으로 대 보라고. */
+  document.getElementById('oneport').innerHTML = D.portrait
+    ? `<img src="${D.portrait}"><div class="sub" style="margin-top:6px">
+       초상 (SDXL) — 3D 리그가 못 내는 표정은 지금 이쪽이 맡는다</div>`
+    : `<div class="sub">초상 없음</div>`;
+
+  document.getElementById('onefacts').innerHTML = [
+    ['뼈', D.bones + '개'],
+    ['얼굴 뼈', `<b class="bad">${nf}개</b>`],
+    ['몸 삼각형', D.body_tris.toLocaleString()],
+    ['옷 삼각형', D.garment_tris.toLocaleString()],
+    ['키', D.height_m.toFixed(3) + ' m'],
+    ...D.clips.map(c=>['동작 · '+c.name, c.frames + '프레임']),
+  ].map(r=>`<div><span>${r[0]}</span><span>${r[1]}</span></div>`).join('');
+
+  /* 첫 프레임을 한 번 굴린 뒤에 화면을 잡는다. 굴리기 전에 잡으면 뼈가
+     아직 바인드 자세라 월드 행렬이 갱신되지 않아, 상자가 발치만 한
+     크기로 나오고 카메라가 발을 확대한다. 실제로 그렇게 나왔다. */
+  mixer.update(0);
+  root.updateMatrixWorld(true);
+  frame(root, ocam, octrl, false);
+  resize(cv, orend, ocam);
+  addEventListener('resize', ()=>resize(cv,orend,ocam));
+
+  const clock = new THREE.Clock();
+  const v = new THREE.Vector3();
+  (function oneLoop(){
+    requestAnimationFrame(oneLoop);
+    const dt = clock.getDelta();
+    if(running) mixer.update(dt);
+    octrl.update(); resize(cv,orend,ocam);
+    if(dots.visible){
+      const a = jg.attributes.position;
+      bones.forEach((b,i)=>{ b.getWorldPosition(v); a.setXYZ(i, v.x, v.y, v.z); });
+      a.needsUpdate = true;
+    }
+    if(lbox.style.display !== 'none'){
+      const w = cv.clientWidth, h = cv.clientHeight;
+      labelled.forEach((b,i)=>{
+        b.getWorldPosition(v); v.project(ocam);
+        const on = v.z < 1;
+        const el = lspans[i];
+        el.style.display = on ? '' : 'none';
+        if(on){ el.style.left = ((v.x*.5+.5)*w)+'px'; el.style.top = ((-v.y*.5+.5)*h)+'px'; }
+      });
+    }
+    orend.render(osc, ocam);
+  })();
+}
+}
 
 /* ---------- 초상 ---------- */
 /* 카드는 v0 를 보여주고, 밑줄에 변형 전부를 작게 깐다. 어느 장을 쓸지
