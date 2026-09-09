@@ -81,9 +81,9 @@ FIGURE_NEGATIVE = ", ".join(
 TIERS = ["peasant", "clerk", "merchant"]   # 기본은 셋. --tiers all 이면 11종 전부
 
 
-def rows(tiers):
+def rows(tiers, arm="pose"):
     out = []
-    for rs, (rk, rd) in POSE_ROLE.items():
+    for rs, (rk, rd) in (ACTION_ROLE if arm == "action" else POSE_ROLE).items():
         for ts in tiers:
             tk, td = F.TIER_FACE[ts]
             out.append({"id": f"{rs}_{ts}", "ko": f"{rk}·{tk}",
@@ -101,10 +101,29 @@ FRAME_NEGATIVE = FIGURE_NEGATIVE + (
     ", bust, head and shoulders portrait, close up, cropped at the chest, "
     "cropped at the waist, seated, sitting")
 
+# --- 팔 6 「행동으로 적는다」 --------------------------------------------
+# 세 판 다 도피 하나를 빼면 1.20~1.25 로 주저앉았다. 그리고 도피는 세 판 모두
+# 18칸 전부 전신으로 나온 **유일한** 역할이다. 헌신이 그 다음이다.
+# 둘의 공통점은 역할 말이 몸 전체가 하는 짓을 적었다는 것이다 — 내닫는다,
+# 웅크린다. 수호·저항·탐구는 눈·턱·어깨 이야기라 흉상이 나온다.
+#
+#   화폭을 여는 것은 문체 말이 아니라 **역할 말 자체**일지 모른다.
+#
+# 그러면 다섯을 전부 몸이 하는 짓으로 고쳐 쓰면 된다. 그게 이 팔이다.
+ACTION_ROLE = {
+    "guard":  ("수호", "standing firm with both arms spread wide barring the way"),
+    "resist": ("저항", "straining forward shoving against something with both arms"),
+    "devote": ("헌신", "kneeling on both knees head bowed hands clasped together"),
+    "seek":   ("탐구", "crouching low reaching out to touch the ground"),
+    "flee":   ("도피", "running away mid stride looking back over the shoulder"),
+}
+
 STYLES = {"pose": POSE_STYLE, "figure": FIGURE_STYLE,
-          "figurenh": FIGURE_STYLE, "figure2": FIGURE_STYLE}
+          "figurenh": FIGURE_STYLE, "figure2": FIGURE_STYLE,
+          "action": FIGURE_STYLE}
 NEGATIVES = {"pose": None, "figure": FIGURE_NEGATIVE,
-             "figurenh": None, "figure2": FRAME_NEGATIVE}
+             "figurenh": None, "figure2": FRAME_NEGATIVE,
+             "action": FIGURE_NEGATIVE}
 
 
 def prompt_of(r, arm="pose"):
@@ -117,7 +136,7 @@ def negative_of(arm):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--arm", default="pose", choices=["pose", "figure", "figurenh", "figure2"],
+    ap.add_argument("--arm", default="pose", choices=["pose", "figure", "figurenh", "figure2", "action"],
                     help="pose=구도만 · figure=전신+손 · figurenh=전신만 · figure2=화폭을 막은 전신")
     ap.add_argument("--out", default=None)
     ap.add_argument("--model", default=SDXL)
@@ -138,7 +157,7 @@ def main():
     bad = [t for t in tiers if t not in F.TIER_FACE]
     if bad:
         raise SystemExit("모르는 계층: " + ", ".join(bad))
-    rs_ = rows(tiers)
+    rs_ = rows(tiers, a.arm)
     os.makedirs(a.out, exist_ok=True)
 
     # 77토큰 검사 — 기준 팔과 같은 이유로 그림 전에 세운다.
