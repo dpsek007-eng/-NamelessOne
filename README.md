@@ -87,6 +87,7 @@ python3 tools/shade_gen.py 10   # 무명 잔상 생성
 
 ```bash
 python3 tools/serve.py                     # 브라우저로 본다 (헤드리스 서버용)
+python3 tools/shot.py http://127.0.0.1:8000/viewer/#one /tmp/a.png --wait 100   # 화면을 찍는다 (움직이는 탭은 크롬 --screenshot 으로 안 찍힌다)
 blender -b --python chars/src/make_demo.py -- --out chars/out/cast   # 쉰다섯 벌 (CPU, 약 8분)
 python3 tools/silhouette_diff.py           # 실루엣이 정말 갈리는가 (실측)
 python3 tools/face_diff.py --clip          # 얼굴이 역할을 나르는가 (실측)
