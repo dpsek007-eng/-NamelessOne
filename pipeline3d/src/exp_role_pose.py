@@ -91,18 +91,34 @@ def rows(tiers):
     return out
 
 
+# 팔 3 은 화폭과 hands 를 한꺼번에 바꿨다. 통했으니 이제 갈라야 한다.
+# figurenh = 전신 화폭 + hands 를 도로 넣은 것. 팔 3 과 딱 한 칸 다르다.
+# 팔 3 은 말로만 "전신"이라 했지 90장 중 35장만 전신으로 나왔다. 그것도 고르게
+# 안 나왔다 — 헌신과 도피는 18칸 전부 전신인데 수호·저항·탐구는 대부분 흉상으로
+# 돌아갔다. **약을 안 준 팔을 놓고 약이 들었다고 말할 수는 없다.** 그래서
+# 화폭을 NEGATIVE 로 막는다. 이게 팔 5 다.
+FRAME_NEGATIVE = FIGURE_NEGATIVE + (
+    ", bust, head and shoulders portrait, close up, cropped at the chest, "
+    "cropped at the waist, seated, sitting")
+
+STYLES = {"pose": POSE_STYLE, "figure": FIGURE_STYLE,
+          "figurenh": FIGURE_STYLE, "figure2": FIGURE_STYLE}
+NEGATIVES = {"pose": None, "figure": FIGURE_NEGATIVE,
+             "figurenh": None, "figure2": FRAME_NEGATIVE}
+
+
 def prompt_of(r, arm="pose"):
-    return r["en"] + ". " + (POSE_STYLE if arm == "pose" else FIGURE_STYLE)
+    return r["en"] + ". " + STYLES[arm]
 
 
 def negative_of(arm):
-    return F.NEGATIVE if arm == "pose" else FIGURE_NEGATIVE
+    return NEGATIVES[arm] or F.NEGATIVE
 
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--arm", default="pose", choices=["pose", "figure"],
-                    help="pose=구도만 푼다 · figure=몸을 다 보인다")
+    ap.add_argument("--arm", default="pose", choices=["pose", "figure", "figurenh", "figure2"],
+                    help="pose=구도만 · figure=전신+손 · figurenh=전신만 · figure2=화폭을 막은 전신")
     ap.add_argument("--out", default=None)
     ap.add_argument("--model", default=SDXL)
     ap.add_argument("--steps", type=int, default=30)
@@ -130,6 +146,11 @@ def main():
     tk = CLIPTokenizer.from_pretrained(a.model, subfolder="tokenizer")
     over = [f"{r['id']} {len(tk(prompt_of(r, a.arm)).input_ids)}토큰"
             for r in rs_ if len(tk(prompt_of(r, a.arm)).input_ids) > 77]
+    # 막는 말도 CLIP 이 말없이 자른다. figure2 에서 NEGATIVE 를 길게 붙였으니
+    # 여기도 재야 한다. 안 재면 화폭을 막으라고 적어 두고 안 막힌 채로 90장이 나온다.
+    kneg = len(tk(negative_of(a.arm)).input_ids)
+    if kneg > 77:
+        over.append(f"(막는 말) {kneg}토큰 — 넘침 {kneg - 77}")
     if over:
         raise SystemExit("말이 77토큰을 넘는다:\n  " + "\n  ".join(over))
     longest = max(len(tk(prompt_of(r, a.arm)).input_ids) for r in rs_)
