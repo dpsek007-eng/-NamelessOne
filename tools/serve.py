@@ -83,6 +83,40 @@ def faces():
     return out
 
 
+ARMS = [("", "기준", "머리와 어깨 · 지금 쓰는 것"),
+        ("pose", "자세", "화폭을 상반신까지"),
+        ("figure", "전신", "전신 + hands 를 품"),
+        ("figurenh", "전신-손", "전신 · hands 는 도로 막음"),
+        ("figure2", "화폭", "전신 + 화폭을 막는 말로 누름"),
+        ("action", "행동", "역할 말을 몸이 하는 짓으로")]
+
+
+def arms():
+    """역할 실험의 팔들. 뽑아 둔 것만 올린다.
+
+    GPU 를 못 쓰는 날에도 결과를 눈으로 볼 수 있어야 한다. 숫자는 docs 에
+    적혀 있지만, 약이 들어갔는지는 결국 그림을 세어 봐야 안다.
+    """
+    out = []
+    for slug, ko, note in ARMS:
+        d = "pipeline3d/out/faces_" + slug if slug else "pipeline3d/out/faces"
+        if not os.path.isdir(os.path.join(ROOT, d)):
+            continue
+        cells = []
+        for ts, tk in TIERS:
+            for rs, rk in ROLES:
+                fns = [f"{rs}_{ts}_v{v}.png" for v in range(6)]
+                fns = [f for f in fns if os.path.exists(os.path.join(ROOT, d, f))]
+                if fns:
+                    cells.append({"id": f"{rs}_{ts}", "ko": f"{rk}·{tk}",
+                                  "urls": [f"/{d}/{f}" for f in fns]})
+        if cells:
+            out.append({"slug": slug or "base", "ko": ko, "note": note,
+                        "cells": cells,
+                        "n": sum(len(c["urls"]) for c in cells)})
+    return out
+
+
 def build_manifest():
     m = {
         "sprites": [{"name": f[:-4], "url": f"/art/shades/{f}"}
@@ -96,6 +130,7 @@ def build_manifest():
         "props": [{"name": f[:-4], "url": f"/pipeline3d/out/props/{f}"}
                   for f in ls("pipeline3d/out/props", ".glb")],
         "faces": faces(),
+        "arms": arms(),
         "roles": [{"slug": s, "ko": k} for s, k in ROLES],
         "tiers": [{"slug": s, "ko": k} for s, k in TIERS],
     }
@@ -117,6 +152,8 @@ def main():
         json.dump(man, fp, ensure_ascii=False, indent=1)
     for k in ("sprites", "shots", "bodies", "garments", "props", "faces"):
         print(f"  {k:<9} {len(man[k])}")
+    for a in man["arms"]:
+        print(f"  팔 {a['ko']:<8} {a['n']}장")
 
     try:
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
