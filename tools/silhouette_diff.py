@@ -10,7 +10,7 @@ docs/22 는 「체형·자세 5 = 역할별」이라고 적어 두었다. 실제
 알파를 실루엣으로 쓴다 (밝기로 재면 투명이 검정이 되어 전부 같아진다 —
 한 번 그렇게 재서 전부 0.00% 가 나왔다). 두 장의 실루엣이 다른 픽셀의 비율.
 """
-import os, sys, itertools
+import os, sys, itertools, argparse
 import numpy as np
 from PIL import Image
 
@@ -36,12 +36,16 @@ def diff(a, b):
 
 
 def main():
-    if not os.path.isdir(SHOTS):
-        raise SystemExit(f"없다: {SHOTS}")
+    # 실험 팔을 딴 곳에 뽑아 놓고 같은 자로 재려고 연다. 안 주면 지금 것을 잰다.
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--shots", default=SHOTS)
+    shots = ap.parse_args().shots
+    if not os.path.isdir(shots):
+        raise SystemExit(f"없다: {shots}")
     S = {}
     for rs, _ in ROLES:
         for ts, _ in TIERS:
-            p = os.path.join(SHOTS, f"{rs}_{ts}.png")
+            p = os.path.join(shots, f"{rs}_{ts}.png")
             if os.path.exists(p):
                 S[(rs, ts)] = sil(p)
     print(f"실루엣 차이 — {len(S)}장\n")
@@ -77,7 +81,9 @@ def main():
     same = sum(1 for v in tier_all if v < 0.01)
     print(f"3. 판정")
     print(f"   역할 {r:.2f}%  vs  계층 {t:.2f}%  →  계층이 {t/r:.1f}배 더 갈린다")
-    print(f"   → 역할은 눈으로 안 갈린다. 옷이 몸을 덮는다.")
+    # 「옷이 몸을 덮어서」라고 적어 뒀다가 재 보고 지웠다. 옷단을 무릎 위로
+    # 올려 다리를 다 드러내도 역할은 2.13 → 2.15% 로 안 움직인다 (docs/22).
+    print(f"   → 역할은 눈으로 안 갈린다. 옷 때문이 아니라 다섯 몸이 거의 같아서다.")
     if same:
         print(f"   ⚠ 계층 짝 {same}쌍은 픽셀까지 똑같다 (실루엣만으로는 같은 옷이다)")
 
