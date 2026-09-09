@@ -55,6 +55,13 @@ def faces():
         with open(ip, encoding="utf-8") as f:
             for r in json.load(f).get("rows", []):
                 meta.setdefault(r["id"], {}).update(r)
+    # 구도가 장마다 다르다 (실측: 얼굴 너비 0.1~0.8). 어느 장을 대표로 쓸지는
+    # tools/focus_stack.py --pick 이 재서 골라 둔다. 없으면 v0 이 대표가 된다.
+    pick = {}
+    pp = os.path.join(d, "pick.json")
+    if os.path.exists(pp):
+        with open(pp, encoding="utf-8") as f:
+            pick = {k: v["image"] for k, v in json.load(f).items()}
     groups = {}
     for fn in ls("pipeline3d/out/faces", ".png"):
         cid = fn.rsplit("_v", 1)[0]
@@ -62,13 +69,16 @@ def faces():
     out = []
     for cid, fns in sorted(groups.items()):
         m = meta.get(cid, {})
+        best = pick.get(cid)
+        fns = sorted(fns, key=lambda f: (f != best, f))
         out.append({
             "id": cid,
             "ko": m.get("ko", cid),
             "kind": m.get("kind", "named"),
             "rarity": m.get("rarity"),
+            "picked": best,
             "images": [{"url": f"/pipeline3d/out/faces/{f}",
-                        "box": boxes.get(f)} for f in sorted(fns)],
+                        "box": boxes.get(f)} for f in fns],
         })
     return out
 

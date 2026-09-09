@@ -79,7 +79,11 @@ NAMED = {
     "left_behind":       "young traveller with nothing, empty pack straps on the shoulders, blank stare",
     "cart_pusher":       "leaning forward, corded neck, jaw set, sweat darkened brow",
     "yuan":              "scholar with rolled sleeves, sharp examining eyes, thin mouth, a writing board at the hip",
-    "flagbearer":        "standard bearer gripping a tall pole, mismatched sleeves, wind still cloth behind",
+    # 「긴 장대를 쥔」 이라고 적었더니 장대를 담으려고 카메라가 물러나
+    # 8장 전부 반신이 됐다 (얼굴 너비 0.265, 표본 중앙값 0.467). 초점은
+    # 눈~입 자리에 거는 것이라 얼굴이 작으면 배경이 뭉개진다. 장대를 뺐다.
+    # 두 부대의 소매는 어깨 위에서도 보인다.
+    "flagbearer":        "standard bearer, chin lifted, one shoulder in dark cloth and the other pale, weathered young face",
     "name_writer":       "charcoal in one hand, eyes turned to the wall beside him, absorbed",
     "pathpointer":       "one arm raised out of frame and never lowered, strained shoulder, fixed expression",
     "rean":              "upright, hands behind the back, unarmed, calm level unafraid gaze",

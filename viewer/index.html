@@ -111,9 +111,13 @@ label{color:var(--dim);font-size:13px}
 
 <section id="face">
   <h2>초상 — 얼굴은 여기에만 붙는다</h2>
-  <div class="note"><b>SDXL base 1.0</b> 로 뽑았다. 구도를 고정했다 —
-  정면·가슴 위·한쪽 광원. 장마다 구도가 같아야 눈~입 자리를 찾아
-  초점을 걸 수 있다.<br>
+  <div class="note"><b>SDXL base 1.0</b> 로 뽑았다. 정면·가슴 위·한쪽 광원으로
+  말은 고정했는데 <b>구도는 고정되지 않았다</b> — 실측하니 얼굴 너비가 화폭의
+  0.107 에서 0.804 까지 벌어진다 (중앙값 0.467). 초점은 눈~입 자리에 거는 것이라
+  얼굴이 작게 잡힌 장은 이목구비가 아니라 배경이 뭉개진다.
+  그래서 종마다 6~8장을 뽑아 두고 <code>tools/focus_stack.py --pick</code> 이
+  중앙값에 가장 가까운 장을 고른다. 카드의 큰 그림이 <b>고른 장</b>이고,
+  아래 작은 것들 중 ★ 가 그 장이다.<br>
   <b>전승 23명</b>은 손그림 발주서에 붙일 그림이고,
   <b>역할×계층 55종</b>이 무명 잔상의 바탕이다.
   카드를 누르면 크게, 「초점」을 누르면 그 장으로 곡선을 건다.<br>
@@ -365,7 +369,8 @@ function drawFaces(){
         <span><a href="#focus" data-focus="${f.id}" style="color:var(--acc);text-decoration:none">초점</a></span></div>
       <div class="fvars">${f.images.map((im,j)=>
         `<img src="${im.url}" loading="lazy" data-big="${im.url}" data-v="${j}"
-              class="${j===0?'sel':''}" title="v${j}${im.box&&!im.box.found?' · 얼굴 미검출':''}">`).join('')}</div>
+              class="${j===0?'sel':''}" title="${im.url.split('/').pop()}${j===0?' · 고른 장 ★':''}${im.box&&!im.box.found?' · 얼굴 미검출':''}">`).join('')}</div>
+      ${f.picked?`<div class="hd" style="text-align:left">★ ${f.picked.replace(/^.*_v/,'v').replace('.png','')}</div>`:''}
     </div>`).join('');
   gface.querySelectorAll('img[data-big]').forEach(el=>{
     el.onclick = ()=>zoom(el.dataset.big);

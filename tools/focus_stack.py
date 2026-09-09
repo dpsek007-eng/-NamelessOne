@@ -189,10 +189,66 @@ def write_boxes(facedir):
     return rows
 
 
+def pick_frames(facedir):
+    """종마다 어느 장을 대표로 쓸지 고른다.
+
+    구도는 고정되지 않았다 (실측). 같은 말로 뽑아도 어떤 장은 반신이고
+    어떤 장은 얼굴이 화폭을 꽉 채운다. 얼굴 너비가 화폭의 0.1 에서 0.8 까지
+    벌어진다. 초점은 눈~입 자리에 거는 것이라, 얼굴이 작게 잡힌 장은
+    같은 값을 걸어도 이목구비가 아니라 배경이 뭉개진다.
+
+    그래서 종마다 6~8장을 뽑아 두었다. 여기서 고른다. 기준은 **표본의
+    중앙값**이다. 미리 정한 숫자가 아니라 실제로 나온 것들의 한가운데다.
+    """
+    boxes = os.path.join(facedir, "boxes.json")
+    if not os.path.exists(boxes):
+        raise SystemExit("boxes.json 이 없다. 먼저 --boxes 를 돌려라")
+    import json, statistics as st
+    with open(boxes, encoding="utf-8") as fp:
+        rows = json.load(fp)
+    ok = [v for v in rows.values() if v["found"]]
+    if not ok:
+        raise SystemExit("검출된 얼굴이 하나도 없다")
+    tw = st.median(v["w"] for v in ok)
+    ty = st.median(v["y"] + v["h"] / 2 for v in ok)
+
+    def score(v):
+        # 너비를 두 배로 센다. 자리가 좀 틀린 것보다 크기가 틀린 쪽이
+        # 이목구비 타원을 더 크게 어긋나게 한다.
+        cx, cy = v["x"] + v["w"] / 2, v["y"] + v["h"] / 2
+        return 2 * abs(v["w"] - tw) / tw + abs(cx - 0.5) + abs(cy - ty)
+
+    groups = {}
+    for f, v in rows.items():
+        groups.setdefault(f.rsplit("_v", 1)[0], []).append((f, v))
+    out, blind = {}, []
+    for cid, fs in sorted(groups.items()):
+        cand = [(score(v), f, v) for f, v in fs if v["found"]]
+        if not cand:
+            blind.append(cid)
+            continue
+        sc, f, v = min(cand)
+        out[cid] = {"image": f, "score": round(sc, 4), "w": v["w"],
+                    "n": len(fs), "found": len(cand)}
+    with open(os.path.join(facedir, "pick.json"), "w", encoding="utf-8") as fp:
+        json.dump(out, fp, ensure_ascii=False, indent=1)
+    worst = sorted(out.items(), key=lambda kv: -kv[1]["score"])[:8]
+    print(f"기준 얼굴 너비 {tw:.3f} · 중심 y {ty:.3f}  (표본 {len(ok)}장의 중앙값)")
+    print(f"{len(out)}종의 대표를 골랐다 → pick.json")
+    print("가장 안 맞는 여덟 — 눈으로 봐야 한다:")
+    for cid, r in worst:
+        print(f"  {cid:<22} {r['image']:<26} 너비 {r['w']:.3f}  벌어짐 {r['score']:.2f}")
+    if blind:
+        print(f"⚠ {len(blind)}종은 모든 장에서 얼굴을 못 찾았다: {', '.join(blind)}")
+    return out
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("src", nargs="?")
     ap.add_argument("--boxes", action="store_true", help="얼굴 상자만 재서 boxes.json")
+    ap.add_argument("--pick", action="store_true",
+                    help="종마다 구도가 가장 표준에 가까운 장을 골라 pick.json")
     ap.add_argument("--record", nargs="?", const="seren_v0", default=None,
                     help="검사 기록 한 장 (art/focus_record.png)")
     ap.add_argument("--all", action="store_true")
@@ -205,8 +261,12 @@ def main():
     if a.record:
         record(root, a.record)
         return
+    facedir = a.faces if os.path.isabs(a.faces) else os.path.join(root, a.faces)
     if a.boxes:
-        write_boxes(a.faces if os.path.isabs(a.faces) else os.path.join(root, a.faces))
+        write_boxes(facedir)
+        return
+    if a.pick:
+        pick_frames(facedir)
         return
     srcs = [a.src] if a.src else []
     if a.all:
