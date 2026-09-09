@@ -90,7 +90,11 @@ label{color:var(--dim);font-size:13px}
   계층이 <b>4.1배</b> 더 갈린다. 계층 짝 <b class="bad">10쌍</b>은 픽셀까지 똑같다.<br>
   <code>python3 tools/silhouette_diff.py</code> 로 다시 잴 수 있다.<br>
   <code>docs/22</code> 는 「체형·자세 5종 = 역할별」이라고 적어 두었는데,
-  실제로는 <b>옷이 체형을 덮어 버렸다.</b> 아래에서 한 줄씩 눈으로 확인할 수 있다.</div>
+  실제로는 <b>옷이 체형을 덮어 버렸다.</b> 아래에서 한 줄씩 눈으로 확인할 수 있다.<br>
+  <b>얼굴이 대신하지도 못한다.</b> 초상 514장을 CLIP 으로 재 보면 한 장 대 한 장에서
+  역할이 다른 두 장은 같은 역할 두 장보다 <b class="bad">13%</b> 밖에 안 다르다
+  (계층은 <b class="good">73%</b>). — <code>tools/face_diff.py --clip</code> ·
+  <a href="#face" style="color:var(--acc)">초상 격자</a></div>
   <div id="gsil"></div>
 </section>
 
@@ -113,10 +117,10 @@ label{color:var(--dim);font-size:13px}
   <h2>초상 — 얼굴은 여기에만 붙는다</h2>
   <div class="note"><b>SDXL base 1.0</b> 로 뽑았다. 정면·가슴 위·한쪽 광원으로
   말은 고정했는데 <b>구도는 고정되지 않았다</b> — 실측하니 얼굴 너비가 화폭의
-  0.107 에서 0.804 까지 벌어진다 (중앙값 0.467). 초점은 눈~입 자리에 거는 것이라
+  0.119 에서 0.804 까지 벌어진다 (중앙값 0.498). 초점은 눈~입 자리에 거는 것이라
   얼굴이 작게 잡힌 장은 이목구비가 아니라 배경이 뭉개진다.
   그래서 종마다 6~8장을 뽑아 두고 <code>tools/focus_stack.py --pick</code> 이
-  중앙값에 가장 가까운 장을 고른다. 카드의 큰 그림이 <b>고른 장</b>이고,
+  중앙값에 가장 가까운 장을 고른다 (고르고 나면 0.381~0.580 으로 좁아진다). 카드의 큰 그림이 <b>고른 장</b>이고,
   아래 작은 것들 중 ★ 가 그 장이다.<br>
   <b>전승 23명</b>은 손그림 발주서에 붙일 그림이고,
   <b>역할×계층 55종</b>이 무명 잔상의 바탕이다.
@@ -136,9 +140,14 @@ label{color:var(--dim);font-size:13px}
   <div class="note warn" id="gridnote" style="display:none">
   <b>실루엣에서 잃은 역할 구분을 얼굴이 메우는가.</b>
   가로가 계층 11, 세로가 역할 5다. <code>실루엣 55종</code> 탭과 같은 배열이니
-  두 탭을 오가며 보라. 실루엣에서는 역할(세로)이 2.13% 밖에 안 갈렸다.
-  여기 세로줄이 눈에 갈리면 <b>얼굴이 역할의 식별자를 떠맡을 수 있다</b>는 뜻이고,
-  안 갈리면 <code>docs/22</code> 의 세 안 중 하나를 골라야 한다.</div>
+  두 탭을 오가며 보라. 실루엣에서는 역할(세로)이 2.13% 밖에 안 갈렸다.<br>
+  <b>쟀다. 얼굴도 못 떠맡는다.</b> 카드 한 장끼리 견주면 역할이 다른 두 장은
+  같은 역할 두 장보다 <b class="bad">13%</b> 밖에 안 다르다. 계층은 <b class="good">73%</b>
+  다르다 — 아래 격자에서 <b>가로줄(계층)은 갈리고 세로줄(역할)은 안 갈린다.</b>
+  성직 열은 다섯 줄이 전부 민머리, 술사 열은 전부 두건이다.
+  실루엣의 4.07배가 얼굴에서 2.33배로 좁긴 했지만 좁힌 것이지 메운 것이 아니다.
+  <code>docs/22</code> 의 세 안은 그대로 남는다.
+  — <code>python3 tools/face_diff.py --clip</code></div>
   <div class="grid" id="gface" style="grid-template-columns:repeat(auto-fill,minmax(190px,1fr))"></div>
   <div id="gfacegrid"></div>
 </section>
@@ -188,6 +197,7 @@ label{color:var(--dim);font-size:13px}
     <tr><td><b>초상 (얼굴)</b> — 두상 6 · 이목구비 8</td><td><code>docs/22</code> 「초점」</td><td>초점 축 전체가 못 돌아간다</td></tr>
     <tr><td><code>Silhouette.shader</code> · <code>_Focus</code></td><td><code>docs/22</code> 끝</td><td>유니티에서 흐림·이중상 불가</td></tr>
     <tr><td>역할별 체형 구분</td><td><code>docs/22</code> 조합 구조</td><td>측정 2.13% — 사실상 없음</td></tr>
+    <tr><td>역할별 얼굴 구분</td><td><code>docs/22</code> 조합 구조</td><td>한 장끼리 +13% — 안 읽힌다</td></tr>
     <tr><td>머리·두건 6종</td><td><code>docs/22</code> 발주 표</td><td>모두 맨머리</td></tr>
     <tr><td>소품 47종 손 부착</td><td><code>docs/22</code> 손 앵커</td><td>메시는 있으나 안 붙었다</td></tr>
     <tr><td>대기·호흡·눈깜빡임</td><td>—</td><td>전부 T포즈 정지</td></tr>

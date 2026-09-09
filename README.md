@@ -36,7 +36,7 @@
 
 ```
 docs/    설계 문서 21개 — 세계관 · 시스템 · 스토리 100층 · 검증 기록
-tools/   밸런스 시뮬레이터 · 외형 도구 23개 (Python)
+tools/   밸런스 시뮬레이터 · 외형 도구 24개 (Python)
 data/    캐릭터 15명 · 층 30개 (JSON)
 ```
 
@@ -61,6 +61,7 @@ data/    캐릭터 15명 · 층 30개 (JSON)
 좋은 ★6 하나   ★1 0.35%  ★4 23.2%  ★6 100%   ← 도달 확률 x 고유 특성 확률
 ★6 얼굴 이중상   ★1 95% 잔류  ★4 17.2%  ★5 6.6%   ← 초점은 맞는데 한 명이 아니다
 실루엣 구분     역할 2.13%  계층 8.67%           ← ⚠ 역할이 옷에 덮여 안 갈린다
+얼굴 구분       역할 +13%   계층 +73%            ← ⚠ 한 장으로는 역할이 안 읽힌다
 1막 30층 도달   중앙값 18일 (5~24일 · 20/20)  ← 병목은 재화가 아니라 머릿수
 ```
 
@@ -82,8 +83,10 @@ python3 tools/shade_gen.py 10   # 무명 잔상 생성
 ```bash
 python3 tools/serve.py                     # 브라우저로 본다 (헤드리스 서버용)
 python3 tools/silhouette_diff.py           # 실루엣이 정말 갈리는가 (실측)
+python3 tools/face_diff.py --clip          # 얼굴이 역할을 나르는가 (실측)
 python3 tools/focus_stack.py --all         # 초상 → ★1~★6 여섯 단계로 굽는다
-./pipeline3d/run.sh faces                  # 초상 78종 생성 (SDXL, GPU)
+python3 tools/focus_stack.py --boxes --pick # 얼굴 상자 · 종마다 대표 한 장
+./pipeline3d/run.sh faces                  # 초상 78종 514장 생성 (SDXL, GPU)
 ```
 
 ## 상태
