@@ -262,6 +262,9 @@ document.getElementById('stattbl').innerHTML =
   ['3D 의복 (역할×계층)', M.garments.length, 'chars/out/garments/'],
   ['실루엣 대조 샷', M.shots.length, 'chars/out/garments/shots/'],
   ['3D 소품 (생업별)', M.props.length, 'pipeline3d/out/props/'],
+  ['컨셉 초상 (전승 23 + 역할×계층 55)',
+   M.faces.reduce((n,f)=>n+f.images.length,0) + '장 / ' + M.faces.length + '종',
+   'pipeline3d/out/faces/'],
 ].map(r=>`<tr><td>${r[0]}</td><td class="num">${r[1]}</td><td><code>${r[2]}</code></td></tr>`).join('');
 
 /* ---------- three.js 공용 ---------- */
