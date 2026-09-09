@@ -39,3 +39,10 @@ chars/out/garments/*
 pipeline3d/out/
 pipeline3d/cache/
 pipeline3d/vendor/
+
+# 초점 층 — focus_stack.py 가 초상에서 다시 굽는다. 검사 기록 한 장만 남긴다.
+art/focus/
+art/focus_borrowed/
+
+# 뷰어 목록 — serve.py 가 켤 때마다 디스크를 훑어 새로 쓴다.
+viewer/manifest.json

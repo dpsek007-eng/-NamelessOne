@@ -11,6 +11,7 @@
 #
 # 쓰는 법:
 #   ./run.sh images   [추가 인자]     소품 47종 컨셉 이미지
+#   ./run.sh faces    [추가 인자]     초상 78종 (전승 23 + 역할x계층 55)
 #   ./run.sh mesh     [추가 인자]     이미지 → OBJ + texture.png
 #   ./run.sh blender  [추가 인자]     정리 · 실축 · 원점 · GLB/FBX
 #   ./run.sh shell <이미지>           들어가서 만져 볼 때
@@ -23,7 +24,7 @@ mkdir -p "$HERE/out" "$HERE/cache/hf" "$HERE/cache/xdg" "$HERE/cache/u2net"
 DOCKER_ARGS=(
   --rm
   --runtime=nvidia
-  -e NVIDIA_VISIBLE_DEVICES=0
+  -e "NVIDIA_VISIBLE_DEVICES=${IREM_GPU:-0}"   # GPU 를 나눠 쓸 때: IREM_GPU=1 ./run.sh ...
   -e NVIDIA_DRIVER_CAPABILITIES=all
   -u "$(id -u):$(id -g)"
   -e HOME=/tmp
@@ -34,6 +35,7 @@ DOCKER_ARGS=(
   -e "HF_TOKEN=${HF_TOKEN:-}"
   -v "$HERE:/work"
   -v "$(cd "$HERE/.." && pwd)/tools:/repo/tools:ro"
+  -v "$(cd "$HERE/.." && pwd)/data:/repo/data:ro"
   -e IREM_TOOLS=/repo/tools
   -w /work
 )
@@ -43,6 +45,10 @@ case "$cmd" in
   images)
     exec docker run "${DOCKER_ARGS[@]}" irem-imagegen:latest \
          python /work/src/gen_images.py "$@"
+    ;;
+  faces)
+    exec docker run "${DOCKER_ARGS[@]}" irem-imagegen:latest \
+         python /work/src/gen_faces.py "$@"
     ;;
   mesh)
     exec docker run "${DOCKER_ARGS[@]}" irem-triposr:latest \

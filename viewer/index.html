@@ -1,0 +1,425 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>이렘의 탑 — 외형 현황</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700&family=IBM+Plex+Sans+KR:wght@300;400;500&display=swap">
+<style>
+:root{--bg:#14161a;--panel:#1c1f25;--line:#2b3038;--fg:#d7dae0;--dim:#7d848f;--acc:#c9a227}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:400 14px/1.7 "IBM Plex Sans KR",sans-serif}
+h1{font:700 22px "Nanum Myeongjo",serif;margin:0 0 4px}
+h2{font:700 17px "Nanum Myeongjo",serif;margin:28px 0 10px;color:#eceef2}
+header{padding:22px 26px 0;max-width:1500px;margin:0 auto}
+.sub{color:var(--dim);font-size:13px}
+nav{display:flex;gap:2px;margin:18px 0 0;border-bottom:1px solid var(--line)}
+nav button{background:none;border:0;border-bottom:2px solid transparent;color:var(--dim);
+  font:500 14px "IBM Plex Sans KR";padding:9px 16px;cursor:pointer}
+nav button:hover{color:var(--fg)}
+nav button.on{color:var(--acc);border-bottom-color:var(--acc)}
+main{padding:0 26px 60px;max-width:1500px;margin:0 auto}
+section{display:none;padding-top:18px}section.on{display:block}
+.grid{display:grid;gap:10px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:5px;padding:8px;text-align:center}
+.card img{width:100%;display:block;image-rendering:pixelated;background:#0e1013;border-radius:3px}
+.card .n{font-size:11px;color:var(--dim);margin-top:6px;word-break:break-all}
+.note{background:var(--panel);border-left:3px solid var(--acc);padding:12px 16px;margin:14px 0;font-size:13px}
+.note b{color:#eceef2}
+.warn{border-left-color:#c0563f}
+table{border-collapse:collapse;font-size:13px;margin:10px 0}
+th,td{border:1px solid var(--line);padding:5px 11px;text-align:left}
+th{background:var(--panel);color:var(--dim);font-weight:500}
+td.num{text-align:right;font-variant-numeric:tabular-nums}
+.bad{color:#e08b73}.good{color:#8fbf7f}
+#stage{width:100%;height:560px;background:#0e1013;border:1px solid var(--line);border-radius:5px;display:block}
+.bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
+select,input[type=range]{background:var(--panel);color:var(--fg);border:1px solid var(--line);
+  border-radius:4px;padding:6px 9px;font:400 13px "IBM Plex Sans KR"}
+input[type=range]{padding:0;width:280px}
+label{color:var(--dim);font-size:13px}
+.focuswrap{display:flex;gap:24px;flex-wrap:wrap;align-items:flex-start}
+#focusOut{background:#0e1013;border:1px solid var(--line);border-radius:5px}
+.readout{font-variant-numeric:tabular-nums;font-size:13px;min-width:270px}
+.readout div{display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid var(--line)}
+.readout span:first-child{color:var(--dim)}
+.shotrow{display:grid;grid-template-columns:64px repeat(11,1fr);gap:5px;align-items:center;margin-bottom:5px}
+.shotrow .rl{font-size:12px;color:var(--acc)}
+.shotrow img{width:100%;background:#0e1013;border:1px solid var(--line);border-radius:3px;display:block}
+.hd{font-size:10px;color:var(--dim);text-align:center;overflow:hidden}
+.loading{color:var(--dim);padding:20px}
+</style>
+
+<header>
+  <h1>이렘의 탑 — 외형 현황</h1>
+  <div class="sub">지금 디스크에 실제로 나와 있는 것만 보여준다. 문서에만 있고 아직 안 만든 것은 ⚠ 로 적었다.</div>
+  <nav>
+    <button data-t="s2d" class="on">2D 스프라이트</button>
+    <button data-t="sil">실루엣 55종</button>
+    <button data-t="d3">3D 뷰어</button>
+    <button data-t="focus">초점 시연</button>
+    <button data-t="stat">현황·빠진 것</button>
+  </nav>
+</header>
+
+<main>
+<section id="s2d" class="on">
+  <h2>2D 스프라이트 · 48×64</h2>
+  <div class="note"><b>얼굴이 없다.</b> 이건 결함이 아니라 설계다 —
+  <code>docs/02</code>: <i>"도트에서 캐릭터를 구분하는 건 얼굴이 아니라 실루엣과 소지품"</i>.
+  얼굴은 식별자가 아니라 보상이므로 초상에만 붙는다.<br>
+  <b>소품은 아직 납작한 도형이다.</b> <code>docs/22</code>가 「부족하다」고 적어 둔 그대로다.</div>
+  <div class="grid" id="g2d" style="grid-template-columns:repeat(auto-fill,minmax(150px,1fr))"></div>
+</section>
+
+<section id="sil">
+  <h2>3D 실루엣 · 역할 5 × 계층 11</h2>
+  <div class="note warn"><b>측정 결과: 역할이 실루엣으로 구분되지 않는다.</b><br>
+  같은 계층에서 역할만 바꿨을 때 실루엣 픽셀 차이는 평균 <b class="bad">2.13%</b>
+  (최대 4.18%), 같은 역할에서 계층만 바꾸면 <b class="good">8.67%</b> (최대 18.62%) 다.
+  계층이 <b>4.1배</b> 더 갈린다. 계층 짝 <b class="bad">10쌍</b>은 픽셀까지 똑같다.<br>
+  <code>python3 tools/silhouette_diff.py</code> 로 다시 잴 수 있다.<br>
+  <code>docs/22</code> 는 「체형·자세 5종 = 역할별」이라고 적어 두었는데,
+  실제로는 <b>옷이 체형을 덮어 버렸다.</b> 아래에서 한 줄씩 눈으로 확인할 수 있다.</div>
+  <div id="gsil"></div>
+</section>
+
+<section id="d3">
+  <h2>3D 뷰어 — 돌려 볼 수 있다</h2>
+  <div class="bar">
+    <label>분류</label><select id="kind"></select>
+    <label>대상</label><select id="item"></select>
+    <label><input type="checkbox" id="wire"> 와이어프레임</label>
+    <label><input type="checkbox" id="silh"> 실루엣</label>
+    <span class="sub" id="meshinfo"></span>
+  </div>
+  <canvas id="stage"></canvas>
+  <div class="note">드래그 = 회전 · 휠 = 확대 · 우클릭 드래그 = 이동.<br>
+  <b>몸 5종에는 얼굴 지오메트리가 들어 있다</b> (MakeHuman 기반, 13,380 verts · 53 bones).
+  지금까지 전부 실루엣으로만 찍어서 안 보였을 뿐이다. 머리를 확대해 보라.</div>
+</section>
+
+<section id="focus">
+  <h2>초점 시연 — 정한 곡선을 실제 그림에 건다</h2>
+  <div class="bar">
+    <label>원본</label>
+    <select id="fsrc">
+      <option value="face">초상 (SDXL)</option>
+      <option value="body">3D 몸</option>
+    </select>
+    <select id="fitem"></select>
+    <label>각성 <b id="fstep">0</b> / 25</label>
+    <input type="range" id="fslider" min="0" max="25" value="0">
+    <button id="fplay" style="background:var(--panel);color:var(--fg);border:1px solid var(--line);border-radius:4px;padding:6px 12px;cursor:pointer">▶ ★1→★6 재생</button>
+  </div>
+  <div class="focuswrap">
+    <canvas id="focusOut" width="440" height="440"></canvas>
+    <div>
+      <div class="readout" id="fread"></div>
+      <div class="note" style="max-width:460px">
+        <b>흐림</b>은 탑이 <i>덜</i> 기억한다는 뜻이라 각성하면 반드시 걷힌다.<br>
+        <b>이목구비</b>는 눈~입 자리만 (1−값)만큼 뭉갠 것이다. 윤곽·머리·옷은
+        ★1에서도 전부 보인다 — 얼굴이 <b>없는</b> 게 아니라 <b>안 맞는</b> 것이다.<br>
+        <b>이중상</b>은 탑이 <i>여럿을 하나로</i> 기억한다는 뜻이라, ★6에서
+        「빌린」이 나오면 0.15 가 끝까지 남는다.<br><br>
+        <span class="bad">⚠ 여기 이목구비는 뽑은 초상 한 장을 국소적으로
+        뭉개서 흉내 낸 것이다.</span> 문서가 말한 <b>부품 조립</b>
+        (두상 6 × 이목구비 8) 은 아직 없다. 얼굴 상자는
+        <code>tools/focus_stack.py --boxes</code> 가 미리 재 둔 값을 쓰고,
+        못 찾은 장은 화폭 기준 표준 자리로 떨어진다.
+      </div>
+      <label style="display:block;margin-top:8px">
+        <input type="checkbox" id="fborrow"> ★6에서 「빌린」으로 찍기 (이중상 0.15 잔류)
+      </label>
+    </div>
+  </div>
+</section>
+
+<section id="stat">
+  <h2>나와 있는 것</h2>
+  <table id="stattbl"></table>
+  <h2>아직 없는 것</h2>
+  <table>
+    <tr><th>빠진 것</th><th>어디에 적혀 있나</th><th>영향</th></tr>
+    <tr><td><b>초상 (얼굴)</b> — 두상 6 · 이목구비 8</td><td><code>docs/22</code> 「초점」</td><td>초점 축 전체가 못 돌아간다</td></tr>
+    <tr><td><code>Silhouette.shader</code> · <code>_Focus</code></td><td><code>docs/22</code> 끝</td><td>유니티에서 흐림·이중상 불가</td></tr>
+    <tr><td>역할별 체형 구분</td><td><code>docs/22</code> 조합 구조</td><td>측정 2.13% — 사실상 없음</td></tr>
+    <tr><td>머리·두건 6종</td><td><code>docs/22</code> 발주 표</td><td>모두 맨머리</td></tr>
+    <tr><td>소품 47종 손 부착</td><td><code>docs/22</code> 손 앵커</td><td>메시는 있으나 안 붙었다</td></tr>
+    <tr><td>대기·호흡·눈깜빡임</td><td>—</td><td>전부 T포즈 정지</td></tr>
+  </table>
+</section>
+</main>
+
+<script type="importmap">
+{"imports":{
+ "three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+ "three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}
+</script>
+<script type="module">
+import * as THREE from 'three';
+import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
+import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
+
+const M = await (await fetch('manifest.json')).json();
+
+/* ---------- 탭 ---------- */
+/* 주소의 #조각으로도 연다. 헤드리스에서 특정 탭만 찍어 볼 때 필요하고,
+   링크로 「초점 시연 보라」고 건네줄 때도 필요하다. */
+function showTab(t){
+  const b = document.querySelector(`nav button[data-t="${t}"]`);
+  if(!b) return;
+  document.querySelectorAll('nav button').forEach(x=>x.classList.remove('on'));
+  document.querySelectorAll('section').forEach(x=>x.classList.remove('on'));
+  b.classList.add('on'); document.getElementById(t).classList.add('on');
+  if(t==='d3') resize(stage,rend,cam);
+}
+document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{
+  history.replaceState(null,'','#'+b.dataset.t); showTab(b.dataset.t);
+});
+addEventListener('hashchange', ()=>showTab(location.hash.slice(1)));
+
+/* ---------- 2D ---------- */
+document.getElementById('g2d').innerHTML = M.sprites.map(s=>
+  `<div class="card"><img src="${s.url}" loading="lazy"><div class="n">${s.name}</div></div>`).join('');
+
+/* ---------- 실루엣 격자 ---------- */
+{
+  const byRole = {};
+  M.shots.forEach(s=>(byRole[s.role] ||= []).push(s));
+  let h = `<div class="shotrow"><div></div>` +
+    M.tiers.map(t=>`<div class="hd">${t.ko}</div>`).join('') + `</div>`;
+  for(const r of M.roles){
+    const row = byRole[r.slug]||[];
+    h += `<div class="shotrow"><div class="rl">${r.ko}</div>` +
+      M.tiers.map(t=>{const s=row.find(x=>x.tier===t.slug);
+        return s?`<img src="${s.url}" loading="lazy" title="${r.ko} · ${t.ko}">`:`<div></div>`;}).join('') +
+      `</div>`;
+  }
+  document.getElementById('gsil').innerHTML = h;
+}
+
+/* ---------- 현황 표 ---------- */
+document.getElementById('stattbl').innerHTML =
+  `<tr><th>산출물</th><th>수</th><th>경로</th></tr>` + [
+  ['2D 스프라이트', M.sprites.length, 'art/shades/'],
+  ['3D 몸 (역할별·리그 포함)', M.bodies.length, 'chars/out/bodies/'],
+  ['3D 의복 (역할×계층)', M.garments.length, 'chars/out/garments/'],
+  ['실루엣 대조 샷', M.shots.length, 'chars/out/garments/shots/'],
+  ['3D 소품 (생업별)', M.props.length, 'pipeline3d/out/props/'],
+].map(r=>`<tr><td>${r[0]}</td><td class="num">${r[1]}</td><td><code>${r[2]}</code></td></tr>`).join('');
+
+/* ---------- three.js 공용 ---------- */
+const loader = new GLTFLoader();
+const cache = new Map();
+async function load(url){
+  if(!cache.has(url)) cache.set(url, loader.loadAsync(url).then(g=>g.scene));
+  return (await cache.get(url)).clone(true);
+}
+function frame(obj, cam, ctrl, headOnly){
+  const box = new THREE.Box3().setFromObject(obj);
+  const size = box.getSize(new THREE.Vector3()), c = box.getCenter(new THREE.Vector3());
+  if(headOnly){ c.y = box.max.y - size.y*0.075; }
+  const span = headOnly ? size.y*0.20 : Math.max(size.x,size.y,size.z);
+  cam.position.set(c.x, c.y, c.z + span*2.1);
+  cam.near = span/100; cam.far = span*100; cam.updateProjectionMatrix();
+  ctrl.target.copy(c); ctrl.update();
+}
+function makeScene(canvas){
+  const rend = new THREE.WebGLRenderer({canvas, antialias:true, alpha:true, preserveDrawingBuffer:true});
+  rend.setPixelRatio(Math.min(devicePixelRatio,2));
+  const sc = new THREE.Scene();
+  const cam = new THREE.PerspectiveCamera(35,1,.01,100);
+  sc.add(new THREE.HemisphereLight(0xbfc8d6,0x1a1c20,2.0));
+  const k = new THREE.DirectionalLight(0xfff2d8,2.2); k.position.set(2,3,4); sc.add(k);
+  const f = new THREE.DirectionalLight(0x8fa6c8,0.8); f.position.set(-3,1,-2); sc.add(f);
+  const ctrl = new OrbitControls(cam, canvas); ctrl.enableDamping = true;
+  return {rend, sc, cam, ctrl};
+}
+function resize(canvas, rend, cam){
+  const w = canvas.clientWidth, h = canvas.clientHeight;
+  if(!w||!h) return;
+  rend.setSize(w,h,false); cam.aspect = w/h; cam.updateProjectionMatrix();
+}
+
+/* ---------- 3D 뷰어 ---------- */
+const stage = document.getElementById('stage');
+const {rend, sc, cam, ctrl} = makeScene(stage);
+let cur = null;
+const KINDS = {'몸 (얼굴 있음)':'bodies','의복':'garments','소품':'props'};
+const kindSel = document.getElementById('kind'), itemSel = document.getElementById('item');
+kindSel.innerHTML = Object.keys(KINDS).map(k=>`<option>${k}</option>`).join('');
+function fillItems(){
+  const list = M[KINDS[kindSel.value]];
+  itemSel.innerHTML = list.map((o,i)=>`<option value="${i}">${o.ko?o.ko+' · ':''}${o.slug||o.name}</option>`).join('');
+  show();
+}
+async function show(){
+  const list = M[KINDS[kindSel.value]], o = list[itemSel.value|0];
+  if(!o) return;
+  document.getElementById('meshinfo').textContent = '불러오는 중…';
+  if(cur) sc.remove(cur);
+  cur = await load(o.url); sc.add(cur);
+  let tris=0; cur.traverse(n=>{ if(n.isMesh && n.geometry){
+    const g=n.geometry; tris += (g.index?g.index.count:g.attributes.position.count)/3; }});
+  document.getElementById('meshinfo').textContent = `${Math.round(tris).toLocaleString()} 삼각형`;
+  applyMat(); frame(cur, cam, ctrl, false); resize(stage,rend,cam);
+}
+function applyMat(){
+  if(!cur) return;
+  const w = document.getElementById('wire').checked, s = document.getElementById('silh').checked;
+  cur.traverse(n=>{ if(!n.isMesh) return;
+    n.material = s ? new THREE.MeshBasicMaterial({color:0x0b0c0e, wireframe:w})
+                   : new THREE.MeshStandardMaterial({color:0xb9bec7, roughness:.75, metalness:.02, wireframe:w});
+  });
+}
+kindSel.onchange = fillItems; itemSel.onchange = show;
+document.getElementById('wire').onchange = applyMat;
+document.getElementById('silh').onchange = applyMat;
+fillItems();
+addEventListener('resize', ()=>resize(stage,rend,cam));
+(function loop(){ ctrl.update(); resize(stage,rend,cam); rend.render(sc,cam); requestAnimationFrame(loop); })();
+
+/* ---------- 초점 시연 ---------- */
+/* 값은 tools/focus_curve.py 가 정한 것을 그대로 옮긴 것이다. 두 군데에
+   같은 수가 적혀 있으니, 한쪽을 고치면 다른 쪽도 고쳐야 한다. */
+const BLUR_MAX=6, FEATURE_FLOOR=.25, GHOST_MAX=.40, GHOST_OFF=3, GHOST_RESID=.15, STEPS=25;
+const OFFN = 440;
+/* 캔버스 하나는 컨텍스트 하나만 가진다. three.js 가 webgl 을 잡은 캔버스에
+   getContext('2d') 를 부르면 null 이 온다. 그래서 셋으로 나눈다.
+     glc  three.js 가 그리는 곳 (3D 몸 모드일 때만 쓴다)
+     off  원본 한 장 — 초상이면 PNG, 몸이면 glc 를 옮겨 그린 것
+     tmp  이목구비 뭉갬 판 */
+const glc = document.createElement('canvas'); glc.width = glc.height = OFFN;
+const off = document.createElement('canvas'); off.width = off.height = OFFN;
+const tmp = document.createElement('canvas'); tmp.width = tmp.height = OFFN;
+const F = makeScene(glc);
+let fcur=null, fimg=null, fbox=null, fmode='face';
+
+const fsrc = document.getElementById('fsrc'), fitem = document.getElementById('fitem');
+const FACES = M.faces || [];
+if(!FACES.length){ fsrc.value='body'; fsrc.querySelector('option[value=face]').disabled = true; }
+
+function fillFocusItems(){
+  fmode = fsrc.value;
+  if(fmode==='face'){
+    fitem.innerHTML = FACES.map((f,i)=>f.images.map((im,j)=>
+      `<option value="${i}.${j}">${f.ko} · v${j}</option>`).join('')).join('');
+  } else {
+    fitem.innerHTML = M.bodies.map((b,i)=>`<option value="${i}">${b.ko} · ${b.slug}</option>`).join('');
+  }
+}
+async function floadItem(){
+  if(fmode==='face'){
+    const [i,j] = fitem.value.split('.').map(Number);
+    const rec = FACES[i].images[j];
+    fbox = rec.box;
+    fimg = await new Promise((ok,no)=>{ const im=new Image(); im.onload=()=>ok(im); im.onerror=no; im.src=rec.url; });
+  } else {
+    const b = M.bodies[fitem.value|0];
+    if(fcur) F.sc.remove(fcur);
+    fcur = await load(b.url);
+    fcur.traverse(n=>{ if(n.isMesh) n.material = new THREE.MeshStandardMaterial({color:0xc3c8d0, roughness:.7}); });
+    F.sc.add(fcur); frame(fcur, F.cam, F.ctrl, true);
+    F.rend.setSize(OFFN,OFFN,false); F.cam.aspect=1; F.cam.updateProjectionMatrix();
+  }
+}
+fsrc.onchange = async ()=>{ fillFocusItems(); await floadItem(); };
+fitem.onchange = floadItem;
+fillFocusItems(); await floadItem();
+
+const out = document.getElementById('focusOut'), octx = out.getContext('2d');
+const tctx = tmp.getContext('2d');
+const slider = document.getElementById('fslider');
+function star(step){ return 1 + step/5; }
+
+/* 얼굴 상자. 없으면 가슴 위 정면 초상의 표준 자리 — focus_stack.py 와 같은 수. */
+function boxPx(){
+  const b = fbox || {x:0.29, y:0.16, w:0.42, h:0.42, found:false};
+  return {x:b.x*OFFN, y:b.y*OFFN, w:b.w*OFFN, h:b.h*OFFN, found:!!b.found};
+}
+
+/* 원본 한 장을 off 에 그린다. */
+function paintSource(){
+  const c = off.getContext('2d');
+  if(fmode==='face'){
+    c.clearRect(0,0,OFFN,OFFN);
+    if(fimg) c.drawImage(fimg, 0,0, OFFN,OFFN);
+  } else {
+    F.ctrl.update(); F.rend.render(F.sc, F.cam);
+    c.clearRect(0,0,OFFN,OFFN);
+    c.drawImage(glc, 0,0, OFFN,OFFN);
+  }
+}
+
+/* 이목구비 — 눈~입 자리만 (1-feat) 만큼 뭉갠다. 바깥은 안 건드린다. */
+function paintFeatures(feat, px){
+  const amt = 1 - feat;
+  if(amt <= 0.005) return;
+  const B = boxPx();
+  const cx = B.x + B.w/2, cy = B.y + B.h*0.61;
+  const rx = B.w*0.46,    ry = B.h*0.33;
+  tctx.setTransform(1,0,0,1,0,0);
+  tctx.clearRect(0,0,OFFN,OFFN);
+  tctx.filter = `blur(${(OFFN*0.045).toFixed(1)}px)`;
+  tctx.drawImage(off, 0,0);
+  tctx.filter = 'none';
+  /* 타원 바깥을 지운다. 가장자리는 부드럽게. */
+  tctx.globalCompositeOperation = 'destination-in';
+  const g = tctx.createRadialGradient(cx,cy,0, cx,cy,Math.max(rx,ry));
+  g.addColorStop(0,'rgba(0,0,0,1)'); g.addColorStop(0.72,'rgba(0,0,0,1)'); g.addColorStop(1,'rgba(0,0,0,0)');
+  tctx.save(); tctx.translate(cx,cy); tctx.scale(rx/Math.max(rx,ry), ry/Math.max(rx,ry)); tctx.translate(-cx,-cy);
+  tctx.fillStyle = g; tctx.fillRect(0,0,OFFN,OFFN); tctx.restore();
+  tctx.globalCompositeOperation = 'source-over';
+  const c = off.getContext('2d');
+  c.save(); c.globalAlpha = amt; c.drawImage(tmp, 0,0); c.restore();
+}
+
+function draw(){
+  const step = +slider.value, f = step/STEPS;
+  const borrowed = document.getElementById('fborrow').checked;
+  const blur = BLUR_MAX*(1-f);
+  const feat = FEATURE_FLOOR + (1-FEATURE_FLOOR)*Math.sqrt(f);
+  let ghost = GHOST_MAX*(1-f), goff = GHOST_OFF*(1-f);
+  if(f >= 1 && borrowed){ ghost = GHOST_RESID; goff = 1; }
+  const px = OFFN/512;                      // 문서 값은 512 기준이다
+
+  paintSource();
+  paintFeatures(feat, px);
+
+  octx.setTransform(1,0,0,1,0,0);
+  octx.clearRect(0,0,OFFN,OFFN);
+  octx.fillStyle = '#0e1013'; octx.fillRect(0,0,OFFN,OFFN);
+  octx.filter = `blur(${(blur*px).toFixed(2)}px)`;
+  /* 본판 먼저, 어긋난 사본을 그 위에. tools/focus_stack.py 의 가중평균과
+     같은 그림이 되도록 사본마다 ghost/2 를 쓴다. 밑에 깔면 불투명한 초상
+     에서는 본판이 덮어 아무것도 안 보인다. */
+  octx.globalAlpha = 1; octx.drawImage(off, 0, 0);
+  if(ghost > 0.001){
+    octx.globalAlpha = ghost/2;
+    octx.drawImage(off, -goff*px*2, -goff*px);
+    octx.drawImage(off,  goff*px*2,  goff*px*0.6);
+    octx.globalAlpha = 1;
+  }
+  octx.filter = 'none';
+
+  document.getElementById('fstep').textContent = step;
+  const B = boxPx();
+  document.getElementById('fread').innerHTML = [
+    ['성급', '★' + star(step).toFixed(1).replace('.0','')],
+    ['초점', f.toFixed(2)],
+    ['흐림', (blur).toFixed(2)+'px'],
+    ['이목구비', (feat*100).toFixed(1)+'%'],
+    ['이중상', ghost.toFixed(3)],
+    ['어긋남', goff.toFixed(2)+'px'],
+    ['얼굴 상자', fmode==='face' ? (B.found?'검출':'표준자리') : '—'],
+  ].map(r=>`<div><span>${r[0]}</span><span>${r[1]}</span></div>`).join('');
+}
+slider.oninput = draw; document.getElementById('fborrow').onchange = draw;
+document.getElementById('fplay').onclick = ()=>{
+  let v = 0; slider.value = 0; draw();
+  const t = setInterval(()=>{ v++; slider.value = v; draw(); if(v>=STEPS) clearInterval(t); }, 110);
+};
+(function floop(){ draw(); requestAnimationFrame(floop); })();
+
+if(location.hash.length>1) showTab(location.hash.slice(1));
+</script>
