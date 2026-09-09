@@ -88,19 +88,42 @@ def load_clip(facedir):
     return {str(f): v for f, v in zip(z["files"], z["vecs"])}
 
 
+def opt(name, default=None):
+    """--이름 값 형태로 하나 꺼낸다. 없으면 default."""
+    if name in sys.argv:
+        return sys.argv[sys.argv.index(name) + 1]
+    return default
+
+
 def main():
-    bp = os.path.join(FACES, "boxes.json")
-    if not os.path.exists(bp):
-        raise SystemExit("boxes.json 이 없다. 먼저 tools/focus_stack.py --boxes")
-    with open(bp, encoding="utf-8") as f:
-        boxes = json.load(f)
+    global TIERS
+    # 다른 팔(arm)을 같은 자로 재려고 폴더와 계층 부분집합을 열어 둔다.
+    # 부분집합을 안 열면 실험 팔(계층 3종)과 기준 팔(11종)을 견줄 때
+    # 칸 수가 달라서 값이 안 맞는다.
+    facedir = opt("--dir", FACES)
+    if not os.path.isabs(facedir):
+        facedir = os.path.join(ROOT, facedir)
+    keep = opt("--tiers")
+    if keep:
+        want = [t.strip() for t in keep.split(",")]
+        TIERS = [(s, k) for s, k in TIERS if s in want]
+        if len(TIERS) != len(want):
+            raise SystemExit(f"모르는 계층이 섞였다: {keep}")
     whole = "--whole" in sys.argv
     use_clip = "--clip" in sys.argv
+    boxes = {}
+    if not use_clip:
+        # 픽셀로 잴 때만 상자가 필요하다. CLIP 은 얼굴 검출과 무관하다.
+        bp = os.path.join(facedir, "boxes.json")
+        if not os.path.exists(bp):
+            raise SystemExit("boxes.json 이 없다. 먼저 tools/focus_stack.py --boxes")
+        with open(bp, encoding="utf-8") as f:
+            boxes = json.load(f)
     if use_clip:
-        cp = os.path.join(FACES, "clip.npz")
+        cp = os.path.join(facedir, "clip.npz")
         if not os.path.exists(cp):
-            raise SystemExit("clip.npz 가 없다. 먼저 도커에서 embed_faces.py")
-        VEC = load_clip(FACES)
+            raise SystemExit(f"clip.npz 가 없다. 먼저 도커에서 embed_faces.py --faces {facedir}")
+        VEC = load_clip(facedir)
         globals()["diff"] = cos
 
     cells, half, thin = {}, {}, []
@@ -112,7 +135,7 @@ def main():
                 got = [VEC[fn] for fn in sorted(VEC)
                        if fn.startswith(f"{rs}_{ts}_v")]
             else:
-                got = [crop(os.path.join(FACES, fn), b, whole)
+                got = [crop(os.path.join(facedir, fn), b, whole)
                        for fn, b in sorted(boxes.items())
                        if fn.startswith(f"{rs}_{ts}_v") and b["found"]]
             if len(got) < 2:
@@ -201,7 +224,7 @@ def main():
         print(f"   ⚠ 검출이 모자란 칸: {', '.join(thin)}")
 
     if "--sheet" in sys.argv and not use_clip:
-        sheet = Image.new("L", (11 * N, 5 * N))
+        sheet = Image.new("L", (len(TIERS) * N, len(ROLES) * N))
         for i, (rs, _) in enumerate(ROLES):
             for j, (ts, _) in enumerate(TIERS):
                 if (rs, ts) not in cells:
