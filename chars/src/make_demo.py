@@ -28,7 +28,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import make_bodies as MB
 import make_garments as MG
 import garments as G
-from bodies import SLUG as BODY_SLUG
+from bodies import SLUG as BODY_SLUG, BODIES
 
 
 # ---------------------------------------------------------------- 회전 도우미
@@ -287,14 +287,18 @@ def export_anim(objs, path_noext):
     )
 
 
-def main(argv):
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--role", default="수호")
-    ap.add_argument("--cls", default="병졸")
-    ap.add_argument("--out", default="chars/out/demo")
-    ap.add_argument("--frames", default=None,
-                    help="확인용 PNG 를 낼 곳. 주면 동작마다 몇 장 뽑는다")
-    args = ap.parse_args(argv)
+def one(role, cls, out, frames=None):
+    """한 사람 — 몸·옷·리그·동작 네 벌을 GLB 한 장으로.
+
+    쉰다섯을 한 번에 돌 때도 이 함수를 그냥 되부른다. 매 바퀴 MB.wipe() 가
+    장면을 비우지만 액션은 사용자가 0 이 되어도 블렌더가 한 바퀴 더 들고
+    있으므로, 여기서 직접 지운다. 안 지우면 쉰다섯 바퀴에 액션이 220개
+    쌓이고, 이름이 「숨.001」처럼 밀려 트랙 이름이 어긋난다.
+    """
+    for a in list(bpy.data.actions):
+        bpy.data.actions.remove(a)
+
+    args = argparse.Namespace(role=role, cls=cls, out=out, frames=frames)
     os.makedirs(args.out, exist_ok=True)
 
     sp = G.spec(args.cls)
@@ -356,15 +360,61 @@ def main(argv):
                   garment_tris=MG.solidify_check(gar)[2],
                   height_m=round(L["height"], 4),
                   clips=[dict(name=n, frames=f) for n, f in made])
-    with open(os.path.join(args.out, "report.json"), "w", encoding="utf-8") as fp:
-        json.dump(report, fp, ensure_ascii=False, indent=2)
     print(f"[make_demo] {name}  뼈 {report['bones']}  "
-          f"얼굴뼈 {len(report['face_bones'])}  동작 {len(made)}벌", flush=True)
-    for n, f in made:
-        print(f"    {n:6s} {f:3d}프레임", flush=True)
+          f"얼굴뼈 {len(report['face_bones'])}  동작 {len(made)}벌  "
+          f"몸 {report['body_tris']:,} 옷 {report['garment_tris']:,}", flush=True)
 
     if args.frames:
         shoot_frames(arm, bm, gar, L, args.frames, name)
+    return report
+
+
+def main(argv):
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--role", default=None, help="하나만 뽑을 때")
+    ap.add_argument("--cls", default=None)
+    ap.add_argument("--roles", default=None, help="쉼표로. 안 주면 다섯 전부")
+    ap.add_argument("--classes", default=None, help="쉼표로. 안 주면 열하나 전부")
+    ap.add_argument("--out", default="chars/out/demo")
+    ap.add_argument("--frames", default=None,
+                    help="확인용 PNG 를 낼 곳. 주면 동작마다 몇 장 뽑는다")
+    ap.add_argument("--skip-done", action="store_true",
+                    help="이미 GLB 가 있으면 건너뛴다. 밤새 돌다 끊겼을 때 이어 돌리려고")
+    args = ap.parse_args(argv)
+
+    roles = ([args.role] if args.role else
+             (args.roles.split(",") if args.roles else list(BODIES)))
+    classes = ([args.cls] if args.cls else
+               (args.classes.split(",") if args.classes else list(G.ROBE)))
+    os.makedirs(args.out, exist_ok=True)
+
+    rows = []
+    ip = os.path.join(args.out, "index.json")
+    if os.path.exists(ip):
+        with open(ip, encoding="utf-8") as f:
+            rows = json.load(f).get("rows", [])
+    have = {r["slug"]: r for r in rows}
+
+    n = len(roles) * len(classes)
+    print(f"[make_demo] {len(roles)}역할 x {len(classes)}계층 = {n}벌 → {args.out}",
+          flush=True)
+    for role in roles:
+        for cls in classes:
+            slug = f"{BODY_SLUG[role]}_{G.SLUG[cls]}"
+            if args.skip_done and os.path.exists(os.path.join(args.out, slug + ".glb")):
+                print(f"  건너뜀 {slug}", flush=True)
+                continue
+            have[slug] = one(role, cls, args.out, args.frames)
+            rows = [have[s] for s in sorted(have)]
+            with open(ip, "w", encoding="utf-8") as f:
+                json.dump(dict(rows=rows), f, ensure_ascii=False, indent=1)
+
+    # 한 사람 시연은 수호·병졸을 쓴다. 뷰어가 report.json 을 본다.
+    show = have.get("guard_soldier") or (rows[0] if rows else None)
+    if show:
+        with open(os.path.join(args.out, "report.json"), "w", encoding="utf-8") as f:
+            json.dump(show, f, ensure_ascii=False, indent=2)
+    print(f"[make_demo] 표에 {len(rows)}벌", flush=True)
 
 
 def shoot_frames(arm, bm, gar, L, out, name):

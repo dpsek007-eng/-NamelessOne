@@ -130,6 +130,7 @@ label{color:var(--dim);font-size:13px}
   <h2>한 사람 — 얼굴 · 관절 · 동작</h2>
   <div id="onenote"></div>
   <div class="bar">
+    <label>사람</label><select id="onewho"></select>
     <label>동작</label><select id="oneclip"></select>
     <button id="oneplay" class="btn">멈춤</button>
     <label>속도</label><input type="range" id="onespeed" min="5" max="200" value="100" style="width:140px">
@@ -287,6 +288,7 @@ document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{
   history.replaceState(null,'','#'+b.dataset.t); showTab(b.dataset.t);
 });
 addEventListener('hashchange', ()=>showTab(location.hash.slice(1)));
+if(location.hash.length > 1) showTab(location.hash.slice(1));  // 처음 열 때도 본다
 
 /* ---------- 2D ---------- */
 document.getElementById('g2d').innerHTML = M.sprites.map(s=>
@@ -398,16 +400,51 @@ addEventListener('resize', ()=>resize(stage,rend,cam));
    관절점, 그리고 재생되는 동작. 리그에 **얼굴 뼈가 하나도 없어서**
    표정은 못 움직인다. 그건 숨기지 않고 아래에 적어 둔다. */
 {
-const D = M.demo;
+/* 쉰다섯 벌을 다 뽑아 두었으면 그중에서 고른다. 없으면 한 사람만. */
+const CAST = (M.cast && M.cast.length) ? M.cast : (M.demo ? [M.demo] : []);
 const note = document.getElementById('onenote');
-if(!D){
+const who = document.getElementById('onewho');
+if(!CAST.length){
+  who.style.display = 'none';
   note.innerHTML = `<div class="note warn"><b>아직 안 만들었다.</b>
-    <code>chars/out/demo/</code> 가 비어 있다. 만드는 법:<br>
-    <code>blender --background --python chars/src/make_demo.py -- --role 수호 --cls 병졸 --out chars/out/demo</code></div>`;
+    <code>chars/out/cast/</code> 가 비어 있다. 만드는 법:<br>
+    <code>blender --background --python chars/src/make_demo.py -- --out chars/out/cast</code></div>`;
 } else {
+  who.innerHTML = CAST.map((c,i)=>`<option value="${i}">${c.role}·${c.cls}</option>`).join('');
+  const cv0 = document.getElementById('onestage');
+  const {rend:orend, sc:osc, cam:ocam, ctrl:octrl} = makeScene(cv0);
+  window.__oneResize = ()=>resize(cv0,orend,ocam);
+  resize(cv0, orend, ocam);
+  addEventListener('resize', ()=>resize(cv0,orend,ocam));
+
+  /* 갈아끼울 때 앞사람을 확실히 버린다. 안 버리면 쉰다섯을 다 넘겨보는
+     동안 장면에 사람이 쌓이고 브라우저가 죽는다. */
+  let cur = null;
+  function drop(){
+    if(!cur) return;
+    cur.loop = false;
+    for(const o of cur.objs){
+      osc.remove(o);
+      o.traverse && o.traverse(n=>{
+        if(n.geometry) n.geometry.dispose();
+        if(n.material) (Array.isArray(n.material)?n.material:[n.material]).forEach(m=>m.dispose());
+      });
+      if(o.geometry) o.geometry.dispose();
+      if(o.material) o.material.dispose();
+    }
+    cur = null;
+  }
+
+  who.onchange = ()=>{ drop(); load(CAST[who.value|0]); };
+  // 처음에는 문서가 가리키는 한 사람(수호·병졸)을 연다. 없으면 첫 사람.
+  const i0 = Math.max(0, CAST.findIndex(c=>c.slug==='guard_soldier'));
+  who.value = i0;
+  await load(CAST[i0]);
+
+  async function load(D){
   const nf = D.face_bones.length;
   note.innerHTML = `<div class="note"><b>${D.role}·${D.cls}</b> 한 사람.
-    몸·옷·리그·동작 ${D.clips.length}벌이 GLB 한 장(<code>${D.slug}.glb</code>)에 들어 있다.
+    몸·옷·리그·동작 ${D.clips.length}벌이 GLB 한 장(<code>${D.slug}.glb</code>)에 들어 있다. 쉰다섯 벌 전부 있다 — 「사람」에서 고른다.
     드래그 = 회전 · 휠 = 확대.<br>
     <b>얼굴 지오메트리는 있다.</b> 「얼굴로」를 누르면 눈·코·입이 보인다.
     <b class="bad">그런데 얼굴 뼈는 ${nf}개다</b> — 뼈 ${D.bones}개 중에 턱·눈·눈썹·입술이 하나도 없다.
@@ -415,10 +452,7 @@ if(!D){
     목과 머리를 돌리는 것(<b>돌아본다</b>)까지다. 표정이 필요하면 초상(2D)이 맡거나
     리그에 얼굴 뼈를 새로 심어야 한다 — 지금은 없다.</div>`;
 
-  const cv = document.getElementById('onestage');
-  const {rend:orend, sc:osc, cam:ocam, ctrl:octrl} = makeScene(cv);
-  window.__oneResize = ()=>resize(cv,orend,ocam);
-
+  const cv = cv0;
   const LABEL = {pelvis:'골반', spine_01:'허리', spine_03:'가슴', neck_01:'목', head:'머리',
     clavicle_l:'쇄골', clavicle_r:'쇄골', upperarm_l:'위팔', upperarm_r:'위팔',
     lowerarm_l:'아래팔', lowerarm_r:'아래팔', hand_l:'손', hand_r:'손',
@@ -504,11 +538,13 @@ if(!D){
   root.updateMatrixWorld(true);
   frame(root, ocam, octrl, false);
   resize(cv, orend, ocam);
-  addEventListener('resize', ()=>resize(cv,orend,ocam));
 
+  const me = {loop:true, objs:[root, helper, dots]};
+  cur = me;
   const clock = new THREE.Clock();
   const v = new THREE.Vector3();
   (function oneLoop(){
+    if(!me.loop) return;
     requestAnimationFrame(oneLoop);
     const dt = clock.getDelta();
     if(running) mixer.update(dt);
@@ -530,6 +566,7 @@ if(!D){
     }
     orend.render(osc, ocam);
   })();
+  }
 }
 }
 

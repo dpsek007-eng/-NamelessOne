@@ -146,6 +146,36 @@ def demo():
     return {**rep, "url": f"/chars/out/demo/{glb}", "portrait": port}
 
 
+def cast():
+    """쉰다섯 벌 — 5역할 x 11계층 전부. 각 GLB 에 동작 네 벌이 들어 있다.
+
+    한 사람(demo)과 같은 물건이지만 수가 다르다. 만드는 법:
+
+        blender --background --python chars/src/make_demo.py -- \
+                --out chars/out/cast
+    """
+    d = os.path.join(ROOT, "chars/out/cast")
+    ip = os.path.join(d, "index.json")
+    if not os.path.exists(ip):
+        return []
+    with open(ip, encoding="utf-8") as f:
+        rows = json.load(f).get("rows", [])
+    pick = {}
+    pp = os.path.join(ROOT, "pipeline3d/out/faces/pick.json")
+    if os.path.exists(pp):
+        with open(pp, encoding="utf-8") as f:
+            pick = {k: "/pipeline3d/out/faces/" + v["image"]
+                    for k, v in json.load(f).items()}
+    out = []
+    for r in rows:
+        glb = r["slug"] + ".glb"
+        if not os.path.exists(os.path.join(d, glb)):
+            continue
+        out.append({**r, "url": f"/chars/out/cast/{glb}",
+                    "portrait": pick.get(r["slug"])})
+    return out
+
+
 def build_manifest():
     m = {
         "sprites": [{"name": f[:-4], "url": f"/art/shades/{f}"}
@@ -161,6 +191,7 @@ def build_manifest():
         "faces": faces(),
         "arms": arms(),
         "demo": demo(),
+        "cast": cast(),
         "roles": [{"slug": s, "ko": k} for s, k in ROLES],
         "tiers": [{"slug": s, "ko": k} for s, k in TIERS],
     }
@@ -187,6 +218,9 @@ def main():
     dm = man["demo"]
     print(f"  한 사람    {dm['slug']} · 동작 {len(dm['clips'])}벌" if dm
           else "  한 사람    아직 없음 (chars/src/make_demo.py)")
+    ca = man["cast"]
+    print(f"  쉰다섯     {len(ca)}벌 · 동작 {sum(len(c['clips']) for c in ca)}개"
+          if ca else "  쉰다섯     아직 없음 (make_demo.py --out chars/out/cast)")
 
     try:
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)

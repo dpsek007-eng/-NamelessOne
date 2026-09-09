@@ -125,13 +125,15 @@ def main(argv):
     ap = argparse.ArgumentParser()
     ap.add_argument("--props", default="pipeline3d/out/props")
     ap.add_argument("--out", default="chars/out/propshot")
+    ap.add_argument("--res", default="256x384", help="넓힌 자로 다시 잴 때만 바꾼다")
     args = ap.parse_args(argv)
+    res = tuple(int(x) for x in args.res.lower().split("x"))
 
     bare_dir = os.path.join(args.out, "bare")
     hold_dir = os.path.join(args.out, "hold")
     os.makedirs(bare_dir, exist_ok=True)
     os.makedirs(hold_dir, exist_ok=True)
-    MG.setup_shot()
+    MG.setup_shot(res)
 
     tiers = grip_props(args.props)
     order = [c for c in TR.STRATA if c in tiers]

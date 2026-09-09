@@ -406,12 +406,17 @@ def main(argv):
     ap.add_argument("--shots", default=None, help="실루엣 PNG 를 낼 곳")
     ap.add_argument("--roles", default=None)
     ap.add_argument("--classes", default=None)
+    # 화폭 크기. 기본은 지금까지 쓴 자다. 넓힌 자로 다시 잴 때만 바꾼다 —
+    # ortho_scale 은 긴 변에 걸리므로 384x384 로 하면 사람 크기는 그대로이고
+    # 양옆에 종이만 붙는다. docs/실험/…소지품…결과.md 참고.
+    ap.add_argument("--res", default="256x384")
     args = ap.parse_args(argv)
+    res = tuple(int(x) for x in args.res.lower().split("x"))
 
     os.makedirs(args.out, exist_ok=True)
     if args.shots:
         os.makedirs(args.shots, exist_ok=True)
-        setup_shot()
+        setup_shot(res)
 
     roles = list(BODIES)
     if args.roles:
