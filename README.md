@@ -66,6 +66,7 @@ data/    캐릭터 15명 · 층 30개 (JSON)
 구도를 풀어 봄   역할 1.13→1.16배                     ← ⚠ 미리 적은 문턱 1.25배 미달
 전신을 시켜 봄   전신은 90장 중 35장뿐                 ← ⚠ 약이 안 들어가 판정 못 읽음
 행동으로 적어 봄  전신 59/90 (관문 70)                  ← ⚠ 다섯 판 450장, 초상 실험은 접었다
+소지품을 쥐여 봄  중앙값 1.247% (문턱 1.776%)           ← ⚠ 두 번 재고 두 번 미달. 소지품도 아니다
 1막 30층 도달   중앙값 18일 (5~24일 · 20/20)  ← 병목은 재화가 아니라 머릿수
 ```
 
@@ -86,6 +87,7 @@ python3 tools/shade_gen.py 10   # 무명 잔상 생성
 
 ```bash
 python3 tools/serve.py                     # 브라우저로 본다 (헤드리스 서버용)
+blender -b --python chars/src/make_demo.py -- --out chars/out/cast   # 쉰다섯 벌 (CPU, 약 8분)
 python3 tools/silhouette_diff.py           # 실루엣이 정말 갈리는가 (실측)
 python3 tools/face_diff.py --clip          # 얼굴이 역할을 나르는가 (실측)
 python3 tools/focus_stack.py --all         # 초상 → ★1~★6 여섯 단계로 굽는다
