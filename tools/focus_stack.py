@@ -19,7 +19,7 @@ focus_curve.py 가 정한 값(흐림·이목구비·이중상·어긋남)을 실
 못 찾으면 화폭 기준 표준 위치로 떨어진다 (그 경우 로그에 적는다 —
 자리가 틀린 채로 뭉개면 이목구비가 아니라 뺨이 사라진다).
 """
-import argparse, os, sys, glob
+import argparse, json, os, sys, glob
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from focus_curve import (blur, feature, ghost, ghost_off, focus, CAP,
@@ -135,14 +135,24 @@ def build(path, outdir, borrowed=False):
 KO_FONT = "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc"
 
 
-def record(root, cid="seren_v0", w=300):
+def record(root, cid="seren", w=300):
     """검사 기록 한 장 — 위 고유 / 아래 빌린, ★1~★6.
 
     구운 그림은 무겁고 이진이라 저장소에 안 넣는다 (.gitignore).
     대신 이 한 장을 남긴다. chars/out/garments/sheet.png 와 같은 뜻이다.
+
+    장 번호를 안 붙이면 --pick 이 골라 둔 대표 장을 쓴다. 예전에는 v0 이
+    기본이었는데, v0 은 그냥 첫 장이라 반신인 종이 섞인다.
     """
     from PIL import ImageFont
-    src = os.path.join(root, "pipeline3d/out/faces", cid + ".png")
+    facedir = os.path.join(root, "pipeline3d/out/faces")
+    if "_v" not in cid:
+        pj = os.path.join(facedir, "pick.json")
+        if not os.path.exists(pj):
+            raise SystemExit(f"{pj} 가 없다. 먼저 --pick 을 돌려라.")
+        with open(pj, encoding="utf-8") as fp:
+            cid = json.load(fp)[cid]["image"][:-4]
+    src = os.path.join(facedir, cid + ".png")
     a = os.path.join(root, "art/focus"); b = os.path.join(root, "art/focus_borrowed")
     build(src, a, borrowed=False)
     build(src, b, borrowed=True)
@@ -182,7 +192,6 @@ def write_boxes(facedir):
             "w": round(w / W, 4), "h": round(h / H, 4), "found": found}
         if not found:
             miss += 1
-    import json
     with open(os.path.join(facedir, "boxes.json"), "w", encoding="utf-8") as fp:
         json.dump(rows, fp, ensure_ascii=False, indent=1)
     print(f"얼굴 상자 {len(rows)}장 → boxes.json  (검출 실패 {miss}장)")
@@ -203,7 +212,7 @@ def pick_frames(facedir):
     boxes = os.path.join(facedir, "boxes.json")
     if not os.path.exists(boxes):
         raise SystemExit("boxes.json 이 없다. 먼저 --boxes 를 돌려라")
-    import json, statistics as st
+    import statistics as st
     with open(boxes, encoding="utf-8") as fp:
         rows = json.load(fp)
     ok = [v for v in rows.values() if v["found"]]
@@ -249,8 +258,9 @@ def main():
     ap.add_argument("--boxes", action="store_true", help="얼굴 상자만 재서 boxes.json")
     ap.add_argument("--pick", action="store_true",
                     help="종마다 구도가 가장 표준에 가까운 장을 골라 pick.json")
-    ap.add_argument("--record", nargs="?", const="seren_v0", default=None,
-                    help="검사 기록 한 장 (art/focus_record.png)")
+    ap.add_argument("--record", nargs="?", const="seren", default=None,
+                    help="검사 기록 한 장 (art/focus_record.png). "
+                         "장 번호를 빼면 --pick 이 고른 장을 쓴다")
     ap.add_argument("--all", action="store_true")
     ap.add_argument("--faces", default="pipeline3d/out/faces")
     ap.add_argument("--out", default="art/focus")
@@ -270,9 +280,17 @@ def main():
         return
     srcs = [a.src] if a.src else []
     if a.all:
-        srcs = sorted(glob.glob(os.path.join(root, a.faces, "*_v0.png")))
+        # 종마다 대표 한 장. --pick 이 골라 둔 것이 있으면 그걸 쓴다.
+        # 없으면 v0 인데, v0 은 그냥 첫 장이라 반신일 수도 있다.
+        pj = os.path.join(facedir, "pick.json")
+        if os.path.exists(pj):
+            with open(pj, encoding="utf-8") as fp:
+                srcs = [os.path.join(facedir, r["image"])
+                        for _, r in sorted(json.load(fp).items())]
+        else:
+            srcs = sorted(glob.glob(os.path.join(facedir, "*_v0.png")))
     if not srcs:
-        raise SystemExit("초상을 대라. (예: tools/focus_stack.py pipeline3d/out/faces/seren_v0.png)")
+        raise SystemExit("초상을 대라. (예: tools/focus_stack.py pipeline3d/out/faces/seren_v5.png)")
 
     outdir = a.out if os.path.isabs(a.out) else os.path.join(root, a.out)
     miss = 0
