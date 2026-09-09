@@ -125,10 +125,18 @@ label{color:var(--dim);font-size:13px}
       <option value="all">전부</option>
       <option value="named">전승 23명</option>
       <option value="part">역할×계층 55종</option>
+      <option value="grid">역할×계층 격자</option>
     </select>
     <span class="loading" id="fcount"></span>
   </div>
+  <div class="note warn" id="gridnote" style="display:none">
+  <b>실루엣에서 잃은 역할 구분을 얼굴이 메우는가.</b>
+  가로가 계층 11, 세로가 역할 5다. <code>실루엣 55종</code> 탭과 같은 배열이니
+  두 탭을 오가며 보라. 실루엣에서는 역할(세로)이 2.13% 밖에 안 갈렸다.
+  여기 세로줄이 눈에 갈리면 <b>얼굴이 역할의 식별자를 떠맡을 수 있다</b>는 뜻이고,
+  안 갈리면 <code>docs/22</code> 의 세 안 중 하나를 골라야 한다.</div>
   <div class="grid" id="gface" style="grid-template-columns:repeat(auto-fill,minmax(190px,1fr))"></div>
+  <div id="gfacegrid"></div>
 </section>
 
 <section id="focus">
@@ -322,8 +330,31 @@ addEventListener('keydown', e=>{ if(e.key==='Escape') lb.classList.remove('on');
 function zoom(url){ lbimg.src = url; lb.classList.add('on'); }
 
 const gface = document.getElementById('gface'), fkind = document.getElementById('fkind');
+const gfg = document.getElementById('gfacegrid'), gnote = document.getElementById('gridnote');
+function drawFaceGrid(){
+  const by = {};
+  (M.faces||[]).forEach(f=>{ by[f.id] = f; });
+  const head = `<div class="shotrow"><div></div>` +
+    M.tiers.map(t=>`<div class="hd">${t.ko}</div>`).join('') + `</div>`;
+  const body = M.roles.map(r=>`<div class="shotrow"><div class="rl">${r.ko}</div>` +
+    M.tiers.map(t=>{
+      const f = by[`${r.slug}_${t.slug}`];
+      return f ? `<img src="${f.images[0].url}" loading="lazy" data-big="${f.images[0].url}"
+                       title="${f.ko}" style="cursor:pointer">`
+               : `<div class="hd" style="padding:14px 0">—</div>`;
+    }).join('') + `</div>`).join('');
+  gfg.innerHTML = head + body;
+  const n = M.roles.length * M.tiers.length;
+  const got = gfg.querySelectorAll('img').length;
+  document.getElementById('fcount').textContent = `${got} / ${n} 칸`;
+  gfg.querySelectorAll('img[data-big]').forEach(el=>{ el.onclick = ()=>zoom(el.dataset.big); });
+}
 function drawFaces(){
   const k = fkind.value;
+  gnote.style.display = k==='grid' ? '' : 'none';
+  gface.style.display = k==='grid' ? 'none' : '';
+  gfg.style.display   = k==='grid' ? '' : 'none';
+  if(k==='grid'){ drawFaceGrid(); return; }
   const rows = (M.faces||[]).filter(f=>k==='all'||f.kind===k);
   document.getElementById('fcount').textContent =
     `${rows.length}종 · ${rows.reduce((a,f)=>a+f.images.length,0)}장`;
