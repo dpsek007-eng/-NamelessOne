@@ -47,6 +47,16 @@ label{color:var(--dim);font-size:13px}
 .shotrow img{width:100%;background:#0e1013;border:1px solid var(--line);border-radius:3px;display:block}
 .hd{font-size:10px;color:var(--dim);text-align:center;overflow:hidden}
 .loading{color:var(--dim);padding:20px}
+.fcard{background:var(--panel);border:1px solid var(--line);border-radius:5px;padding:7px}
+.fcard img{width:100%;display:block;border-radius:3px;background:#0e1013;cursor:pointer}
+.fcard .n{font-size:11px;color:var(--dim);margin-top:5px;display:flex;justify-content:space-between;gap:6px}
+.fcard .n b{color:#eceef2;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fvars{display:grid;grid-template-columns:repeat(auto-fill,minmax(60px,1fr));gap:4px;margin-top:5px}
+.fvars img{border:1px solid transparent}
+.fvars img.sel{border-color:var(--acc)}
+#lightbox{position:fixed;inset:0;background:#000c;display:none;align-items:center;justify-content:center;z-index:9}
+#lightbox.on{display:flex}
+#lightbox img{max-width:88vw;max-height:88vh;border-radius:6px}
 </style>
 
 <header>
@@ -56,6 +66,7 @@ label{color:var(--dim);font-size:13px}
     <button data-t="s2d" class="on">2D 스프라이트</button>
     <button data-t="sil">실루엣 55종</button>
     <button data-t="d3">3D 뷰어</button>
+    <button data-t="face">초상 78종</button>
     <button data-t="focus">초점 시연</button>
     <button data-t="stat">현황·빠진 것</button>
   </nav>
@@ -96,6 +107,28 @@ label{color:var(--dim);font-size:13px}
   <div class="note">드래그 = 회전 · 휠 = 확대 · 우클릭 드래그 = 이동.<br>
   <b>몸 5종에는 얼굴 지오메트리가 들어 있다</b> (MakeHuman 기반, 13,380 verts · 53 bones).
   지금까지 전부 실루엣으로만 찍어서 안 보였을 뿐이다. 머리를 확대해 보라.</div>
+</section>
+
+<section id="face">
+  <h2>초상 — 얼굴은 여기에만 붙는다</h2>
+  <div class="note"><b>SDXL base 1.0</b> 로 뽑았다. 구도를 고정했다 —
+  정면·가슴 위·한쪽 광원. 장마다 구도가 같아야 눈~입 자리를 찾아
+  초점을 걸 수 있다.<br>
+  <b>전승 23명</b>은 손그림 발주서에 붙일 그림이고,
+  <b>역할×계층 55종</b>이 무명 잔상의 바탕이다.
+  카드를 누르면 크게, 「초점」을 누르면 그 장으로 곡선을 건다.<br>
+  <span class="bad">⚠ 이건 컨셉이다.</span> 최종 초상은 부품 조립
+  (두상 6 × 이목구비 8) 으로 가야 한다 — <code>docs/22</code>.</div>
+  <div class="bar">
+    <label>보기</label>
+    <select id="fkind">
+      <option value="all">전부</option>
+      <option value="named">전승 23명</option>
+      <option value="part">역할×계층 55종</option>
+    </select>
+    <span class="loading" id="fcount"></span>
+  </div>
+  <div class="grid" id="gface" style="grid-template-columns:repeat(auto-fill,minmax(190px,1fr))"></div>
 </section>
 
 <section id="focus">
@@ -149,6 +182,7 @@ label{color:var(--dim);font-size:13px}
   </table>
 </section>
 </main>
+<div id="lightbox"><img id="lbimg" alt=""></div>
 
 <script type="importmap">
 {"imports":{
@@ -278,6 +312,45 @@ document.getElementById('silh').onchange = applyMat;
 fillItems();
 addEventListener('resize', ()=>resize(stage,rend,cam));
 (function loop(){ ctrl.update(); resize(stage,rend,cam); rend.render(sc,cam); requestAnimationFrame(loop); })();
+
+/* ---------- 초상 ---------- */
+/* 카드는 v0 를 보여주고, 밑줄에 변형 전부를 작게 깐다. 어느 장을 쓸지
+   아침에 골라야 하므로 고르는 일이 빨라야 한다. */
+const lb = document.getElementById('lightbox'), lbimg = document.getElementById('lbimg');
+lb.onclick = ()=>lb.classList.remove('on');
+addEventListener('keydown', e=>{ if(e.key==='Escape') lb.classList.remove('on'); });
+function zoom(url){ lbimg.src = url; lb.classList.add('on'); }
+
+const gface = document.getElementById('gface'), fkind = document.getElementById('fkind');
+function drawFaces(){
+  const k = fkind.value;
+  const rows = (M.faces||[]).filter(f=>k==='all'||f.kind===k);
+  document.getElementById('fcount').textContent =
+    `${rows.length}종 · ${rows.reduce((a,f)=>a+f.images.length,0)}장`;
+  gface.innerHTML = rows.map((f,i)=>`
+    <div class="fcard" data-i="${i}">
+      <img src="${f.images[0].url}" loading="lazy" data-big="${f.images[0].url}">
+      <div class="n"><b title="${f.id}">${f.ko}</b>
+        <span><a href="#focus" data-focus="${f.id}" style="color:var(--acc);text-decoration:none">초점</a></span></div>
+      <div class="fvars">${f.images.map((im,j)=>
+        `<img src="${im.url}" loading="lazy" data-big="${im.url}" data-v="${j}"
+              class="${j===0?'sel':''}" title="v${j}${im.box&&!im.box.found?' · 얼굴 미검출':''}">`).join('')}</div>
+    </div>`).join('');
+  gface.querySelectorAll('img[data-big]').forEach(el=>{
+    el.onclick = ()=>zoom(el.dataset.big);
+  });
+  gface.querySelectorAll('a[data-focus]').forEach(el=>{
+    el.onclick = (e)=>{
+      e.preventDefault();
+      const id = el.dataset.focus;
+      const i = FACES.findIndex(f=>f.id===id);
+      if(i < 0) return;
+      fsrc.value = 'face'; fillFocusItems(); fitem.value = i + '.0';
+      floadItem().then(()=>{ history.replaceState(null,'','#focus'); showTab('focus'); });
+    };
+  });
+}
+fkind.onchange = drawFaces;
 
 /* ---------- 초점 시연 ---------- */
 /* 값은 tools/focus_curve.py 가 정한 것을 그대로 옮긴 것이다. 두 군데에
@@ -420,6 +493,8 @@ document.getElementById('fplay').onclick = ()=>{
   const t = setInterval(()=>{ v++; slider.value = v; draw(); if(v>=STEPS) clearInterval(t); }, 110);
 };
 (function floop(){ draw(); requestAnimationFrame(floop); })();
+
+drawFaces();
 
 if(location.hash.length>1) showTab(location.hash.slice(1));
 </script>
