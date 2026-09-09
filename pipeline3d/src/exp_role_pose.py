@@ -53,6 +53,31 @@ POSE_ROLE = {
     "flee":   ("도피", "body turned aside mid stride, head snapped back over the shoulder"),
 }
 
+# --- 팔 3 「몸을 보인다」 ------------------------------------------------
+# 팔 2 는 문턱을 못 넘었다 (한 장 대 한 장 1.16배, 문턱 1.25). 실루엣도
+# 얼굴도 같은 자리에서 막혔다 — 실루엣은 옷이 몸을 덮고, 초상은 화폭이 몸을
+# 자른다. **몸이 한 번도 안 보인다.** 그러면 남은 물음은 하나다.
+#
+#   몸이 다 보이면 역할이 읽히는가?
+#
+# 읽히면 역할은 몸에 있는 것이고 (→ docs/22 의 「옷을 짧게」가 맞는 방향),
+# 안 읽히면 역할 말 자체가 약한 것이다 (→ 「역할을 실루엣에서 뺀다」).
+FIGURE_STYLE = (
+    "full figure standing, whole body visible from head to feet, "
+    "painterly oil painting, muted desaturated colours, "
+    "single soft light from one side, plain dark background, "
+    "medieval, weathered skin, solemn, mouth closed"
+)
+# 팔 이 NEGATIVE 에서 "hands" 를 뺀다. 팔이 안 나오면 자세를 볼 수가 없다.
+# 팔 2 에서는 일부러 안 건드렸다 — 거기서는 그것이 교란이었고, 여기서는
+# 그것을 빼는 것이 실험 자체다.
+FIGURE_NEGATIVE = ", ".join(
+    t for t in (x.strip() for x in
+                "photograph, photorealistic, 3d render, cgi, anime, smiling, teeth, "
+                "modern clothing, glasses, jewelry, text, watermark, signature, frame, "
+                "two people, crowd, hands, cropped head, blurry, low quality, deformed".split(","))
+    if t != "hands")
+
 TIERS = ["peasant", "clerk", "merchant"]   # 기본은 셋. --tiers all 이면 11종 전부
 
 
@@ -66,13 +91,19 @@ def rows(tiers):
     return out
 
 
-def prompt_of(r):
-    return r["en"] + ". " + POSE_STYLE
+def prompt_of(r, arm="pose"):
+    return r["en"] + ". " + (POSE_STYLE if arm == "pose" else FIGURE_STYLE)
+
+
+def negative_of(arm):
+    return F.NEGATIVE if arm == "pose" else FIGURE_NEGATIVE
 
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--out", default="/work/out/faces_pose")
+    ap.add_argument("--arm", default="pose", choices=["pose", "figure"],
+                    help="pose=구도만 푼다 · figure=몸을 다 보인다")
+    ap.add_argument("--out", default=None)
     ap.add_argument("--model", default=SDXL)
     ap.add_argument("--steps", type=int, default=30)
     ap.add_argument("--guidance", type=float, default=6.0)
@@ -83,6 +114,8 @@ def main():
                     help="계층 목록. all 이면 11종 전부")
     ap.add_argument("--check-only", action="store_true")
     a = ap.parse_args()
+    if a.out is None:
+        a.out = "/work/out/faces_" + a.arm
 
     tiers = list(F.TIER_FACE) if a.tiers == "all" else \
         [t.strip() for t in a.tiers.split(",")]
@@ -95,22 +128,22 @@ def main():
     # 77토큰 검사 — 기준 팔과 같은 이유로 그림 전에 세운다.
     from transformers import CLIPTokenizer
     tk = CLIPTokenizer.from_pretrained(a.model, subfolder="tokenizer")
-    over = [f"{r['id']} {len(tk(prompt_of(r)).input_ids)}토큰"
-            for r in rs_ if len(tk(prompt_of(r)).input_ids) > 77]
+    over = [f"{r['id']} {len(tk(prompt_of(r, a.arm)).input_ids)}토큰"
+            for r in rs_ if len(tk(prompt_of(r, a.arm)).input_ids) > 77]
     if over:
         raise SystemExit("말이 77토큰을 넘는다:\n  " + "\n  ".join(over))
-    longest = max(len(tk(prompt_of(r)).input_ids) for r in rs_)
-    print(f"[exp_pose] 말 길이 검사 통과 — {len(rs_)}종, 최장 {longest}/77토큰", flush=True)
+    longest = max(len(tk(prompt_of(r, a.arm)).input_ids) for r in rs_)
+    print(f"[exp_{a.arm}] 말 길이 검사 통과 — {len(rs_)}종, 최장 {longest}/77토큰", flush=True)
     if a.check_only:
         for r in rs_:
-            print(f"  {r['id']:<18} {prompt_of(r)}")
+            print(f"  {r['id']:<18} {prompt_of(r, a.arm)}")
         return
 
     import torch
     from diffusers import StableDiffusionXLPipeline
 
     total = len(rs_) * a.variants
-    print(f"[exp_pose] {len(rs_)}종 × {a.variants}장 = {total}장 → {a.out}", flush=True)
+    print(f"[exp_{a.arm}] {len(rs_)}종 × {a.variants}장 = {total}장 → {a.out}", flush=True)
     pipe = StableDiffusionXLPipeline.from_pretrained(
         a.model, torch_dtype=torch.float16, variant="fp16", use_safetensors=True)
     pipe.to("cuda")
@@ -127,7 +160,7 @@ def main():
             if os.path.exists(path):
                 continue
             g = torch.Generator("cuda").manual_seed(seed_of(r["id"], v))
-            img = pipe(prompt=prompt_of(r), negative_prompt=F.NEGATIVE,
+            img = pipe(prompt=prompt_of(r, a.arm), negative_prompt=negative_of(a.arm),
                        height=a.size, width=a.size,
                        num_inference_steps=a.steps, guidance_scale=a.guidance,
                        generator=g).images[0]
@@ -136,11 +169,13 @@ def main():
             print(f"  {r['id']}_v{v}.png  ({made}/{total})", flush=True)
 
     with open(os.path.join(a.out, "index.json"), "w", encoding="utf-8") as f:
-        json.dump({"style": POSE_STYLE, "negative": F.NEGATIVE,
-                   "base_style": F.STYLE, "tiers": tiers,
-                   "rows": [{**r, "prompt": prompt_of(r)} for r in rs_]},
+        json.dump({"arm": a.arm,
+                   "style": prompt_of({"en": ""}, a.arm).lstrip(". "),
+                   "negative": negative_of(a.arm),
+                   "base_style": F.STYLE, "base_negative": F.NEGATIVE, "tiers": tiers,
+                   "rows": [{**r, "prompt": prompt_of(r, a.arm)} for r in rs_]},
                   f, ensure_ascii=False, indent=2)
-    print(f"[exp_pose] 끝 — 이번에 {made}장", flush=True)
+    print(f"[exp_{a.arm}] 끝 — 이번에 {made}장", flush=True)
 
 
 if __name__ == "__main__":
