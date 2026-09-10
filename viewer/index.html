@@ -612,6 +612,10 @@ function drawFaces(){
       <img src="${f.images[0].url}" loading="lazy" data-big="${f.images[0].url}">
       <div class="n"><b title="${f.id}">${f.ko}</b>
         <span><a href="#focus" data-focus="${f.id}" style="color:var(--acc);text-decoration:none">초점</a></span></div>
+      ${f.unique?`<div style="margin-top:6px;padding:6px 8px;background:rgba(255,255,255,0.03);border-left:2px solid var(--acc);font-size:12px;line-height:1.5">
+        <div style="color:var(--acc);font-weight:500;margin-bottom:3px">${f.unique.name}</div>
+        <div style="color:var(--dim)">${f.unique.line}</div>
+      </div>`:''}
       <div class="fvars">${f.images.map((im,j)=>
         `<img src="${im.url}" loading="lazy" data-big="${im.url}" data-v="${j}"
               class="${j===0?'sel':''}" title="${im.url.split('/').pop()}${j===0?' · 고른 장 ★':''}${im.box&&!im.box.found?' · 얼굴 미검출':''}">`).join('')}</div>
