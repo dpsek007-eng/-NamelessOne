@@ -66,6 +66,20 @@ HEM = {"long": 58, "hood": 56, "cape": 51, "coat": 47, "armor": 42,
 ROBE = {"왕실": "long", "귀족": "cape", "술사": "hood", "성직": "hood",
         "관리": "coat", "상인": "coat", "장인": "apron", "농어민": "tunic",
         "병졸": "armor", "하인": "tunic", "유랑": "rag"}
+# 계층별 머리 형 — docs/22 「머리·두건 6종」. 의복과 별개다.
+# 술사는 두건, 성직은 민머리, 농어민은 머릿수건 — 계층이 머리로 읽힌다.
+#   bare    맨머리   — hstyle 로 4갈래. 성직은 bald 를 켜서 무발로 읽는다
+#   hood    두건     — 술사
+#   helmet  투구     — 병졸
+#   hat     모자     — 관리 · 상인
+#   kerchief 머릿수건 — 농어민 · 하인
+#   circlet  관       — 왕실
+HEAD = {
+    "왕실": "circlet", "귀족": "bare", "술사": "hood", "성직": "bare",
+    "관리": "hat", "상인": "hat", "장인": "bare", "농어민": "kerchief",
+    "병졸": "helmet", "하인": "kerchief", "유랑": "bare",
+}
+BALD = {"성직"}
 
 # 캐릭터별 자세 — data/characters.json 의 silhouette 을 그대로 옮긴 것
 POSE = {

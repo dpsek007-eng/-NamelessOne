@@ -8,7 +8,7 @@ from PIL import Image, ImageDraw
 import base64, io, math, json
 import art
 from art import (hx, mix, dark, lite, A, INK, CLS_PAL, SKIN, HAIR, R, seed_of,
-                 ROBE, HEM, POSE, ROLE_ARMS, TRADE_PROP)
+                 ROBE, HEM, POSE, ROLE_ARMS, TRADE_PROP, HEAD, BALD)
 
 
 def _norm(xy):
@@ -56,6 +56,7 @@ def look_of(cid, cls, trade, role, key_color, rarity=3):
         tilt=p.get("tilt", 0), faceless=p.get("faceless", False), sleeve=p.get("sleeve", False),
         arms=p.get("arms") or ROLE_ARMS.get(role, "down"), prop=prop, role=role, rarity=rarity,
         robe=robe, base=base, trim=trim, acc=hx(key_color),
+        head=HEAD.get(cls, "bare"), bald=cls in BALD,
         skin=hx(rr.pick(SKIN)), hair=hx(rr.pick(HAIR)), hstyle=rr.n() % 4,
         hcy=B["hcy"], hr=B["hr"], shy=B["shy"], shw=B["shw"], wy=B["wy"], ft=B["ft"],
         hem=min(HEM[robe], B["ft"] - 1, 50 if build == "child" else 99),
@@ -167,6 +168,7 @@ def draw(L, P):
     d.ellipse([hcx-hr, hcy-hr-1, hcx+hr, hcy+hr+1], fill=A(skin), outline=A(INK))
     d.rectangle([hcx-2, hcy+hr-1, hcx+2, shy+1], fill=A(dark(skin, .18)))
     st = L["hstyle"]
+    head = L.get("head", "bare")
     if L.get("wraith"):
         for k in range(L.get("spikes", 0)):
             x0 = hcx - hr + 2 + k*(2*hr-4)/max(1, L["spikes"]-1 or 1)
@@ -179,12 +181,48 @@ def draw(L, P):
             for _ in range(6):
                 x, y = rr2.r(int(cx-8), int(cx+8)), rr2.r(int(shy+4), int(hem-2))
                 d.line([(x, y), (x + rr2.r(-2, 2), y + rr2.r(2, 4))], fill=A(hx("#C4531F")))
-    elif robe == "hood":
+    elif head == "hood":                       # 두건 — 술사
         d.polygon([(hcx-hr-2, hcy+hr), (hcx-hr-1, hcy-hr-1), (hcx, hcy-hr-3),
                    (hcx+hr+1, hcy-hr-1), (hcx+hr+2, hcy+hr)], fill=A(base), outline=A(INK))
         d.polygon([(hcx-hr+1, hcy+hr-1), (hcx-hr+1, hcy-2), (hcx+hr-1, hcy-2),
                    (hcx+hr-1, hcy+hr-1)], fill=A(dark(base, .55)))
         d.ellipse([hcx-hr+1, hcy-1, hcx+hr-1, hcy+hr], fill=A(skin))
+    elif head == "helmet":                     # 투구 — 병졸
+        steel = lite(trim, .06)
+        d.polygon([(hcx-hr-1, hcy-2), (hcx-hr-1, hcy-hr-1), (hcx, hcy-hr-3),
+                   (hcx+hr+1, hcy-hr-1), (hcx+hr+1, hcy-2)],
+                  fill=A(steel), outline=A(INK))
+        d.rectangle([hcx-hr-2, hcy-4, hcx+hr+2, hcy-2], fill=A(dark(steel, .2)), outline=A(INK))
+        d.polygon([(hcx, hcy-2), (hcx+1, hcy+3), (hcx-1, hcy+3)],
+                  fill=A(dark(steel, .08)), outline=A(INK))
+        d.line([(hcx-hr, hcy-hr+2), (hcx-hr+2, hcy-hr+4)], fill=A(lite(steel, .45)), width=2)
+    elif head == "hat":                        # 모자 — 관리 · 상인
+        hcol = lite(trim, .12)
+        d.polygon([(hcx-hr-2, hcy-2), (hcx-hr-2, hcy-hr), (hcx, hcy-hr-3),
+                   (hcx+hr+2, hcy-hr), (hcx+hr+2, hcy-2), (hcx-hr-2, hcy-2)],
+                  fill=A(hcol), outline=A(INK))
+        d.rectangle([hcx-hr-3, hcy-4, hcx+hr+3, hcy-2], fill=A(dark(hcol, .2)), outline=A(INK))
+        d.line([(hcx-hr-2, hcy-3), (hcx+hr+2, hcy-3)], fill=A(trim), width=2)
+    elif head == "kerchief":                   # 머릿수건 — 농어민 · 하인
+        kc = lite(trim, .18)
+        d.polygon([(hcx-hr-2, hcy-2), (hcx-hr-1, hcy-hr-1), (hcx, hcy-hr-3),
+                   (hcx+hr+1, hcy-hr-1), (hcx+hr+2, hcy-2), (hcx-hr-2, hcy-2)],
+                  fill=A(kc), outline=A(dark(kc, .3)))
+        d.line([(hcx-hr, hcy-1), (hcx+hr, hcy-1)], fill=A(dark(kc, .15)))
+        d.polygon([(hcx-hr-2, hcy-2), (hcx-hr+1, hcy-2), (hcx-hr, hcy+3)],
+                  fill=A(kc), outline=A(dark(kc, .25)))
+        d.polygon([(hcx+hr+2, hcy-2), (hcx+hr-1, hcy-2), (hcx+hr, hcy+3)],
+                  fill=A(kc), outline=A(dark(kc, .25)))
+    elif head == "circlet":                    # 관 — 왕실
+        gold = hx("#C9A227")
+        d.polygon([(hcx-hr-1, hcy+1), (hcx-hr-1, hcy-hr), (hcx, hcy-hr-2),
+                   (hcx+hr+1, hcy-hr), (hcx+hr+1, hcy+1), (hcx+hr-2, hcy-1), (hcx-hr+2, hcy-1)],
+                  fill=A(hair), outline=A(dark(hair, .4)))
+        d.rectangle([hcx-hr-1, hcy-3, hcx+hr+1, hcy-1], fill=A(gold), outline=A(dark(gold, .3)))
+        d.polygon([(hcx-2, hcy-5), (hcx, hcy-7), (hcx+2, hcy-5)],
+                  fill=A(gold), outline=A(dark(gold, .3)))
+    elif L.get("bald"):                        # 성직 — 민머리, 아무것도 얹지 않는다
+        pass
     elif st == 0:
         d.polygon([(hcx-hr, hcy-1), (hcx-hr+1, hcy-hr-1), (hcx+hr-1, hcy-hr-1),
                    (hcx+hr, hcy-1), (hcx+hr-2, hcy-3), (hcx-hr+2, hcy-3)],
