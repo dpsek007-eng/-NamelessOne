@@ -10,8 +10,10 @@
 - **원본 서버** 경로: `/media/hdd8/justin/my_project/TOP`
 - **이사 번들** 경로: `/media/hdd8/justin/my_project/이사/`
   - 번들에 커밋 전부(`bc838aa` 포함)가 들어 있다
-- ** 깃허브**(`dpsek007-eng/-NamelessOne`): 39개 커밋이 미푸시 상태.
-  - `Navifra-Justin` 권한 문제로 push 불가.
+- ** 깃허브**(`dpsek007-eng/-NamelessOne`): 원격 `main` = `2f4c59b`, 로컬이 **6개 앞** (2026-09-14 `git ls-remote` + dry-run 실측).
+  - `Navifra-Justin` 권한 문제로 push 불가 — dry-run 에러 그대로: `Permission to dpsek007-eng/-NamelessOne.git denied to Navifra-Justin`
+  - 미푸시 6개: `1eef4d9`(계속하기 파일) · `6af537e`(병합) · `e330338`(초상 젊어지기) · `a2daaed`(머리·두건) · `8a07bee`(소지품) · `e00fb08`(판정 기록)
+  - ※ 종전 「39개 미푸시」는 폐기 — 원격이 이미 `2f4c59b`까지 있었으므로 오래된 수치였다
   - 해결 방법: (1) `dpsek007-eng`가 `Navifra-Justin`을 collaborator로 초대, 또는
     (2) 서버 공개키(`ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEjfbZbP/pwTWcy9RAWTKN1Da1rO4QlRRktzDdWqw3eH justin@navifra.com`)를 write 권한 deploy key로 등록
 
@@ -73,7 +75,14 @@ tar xf /tmp/05-캐릭터.tar
 
 ## 5. 커밋 히스토리
 
+최근 13개 (전체는 `git log`). 작업 순서가 최신이 아래가 아니라 **위**다.
+
 ```
+e00fb08 계속하기 파일에 남은 항목의 판정을 남긴다 — 결함이 아니라 설계 결정
+8a07bee 소지품 손 부착 경고를 사실에 맞춘다 — 2D 게임은 이미 해결됨
+a2daaed 머리·두건 6종을 붙인다 — 계층이 머리로 읽히게 한다
+e330338 초상을 젊고 이쁘게 다시 쓴다 — faces.py 전면 재작성 + 514장 재생성
+6af537e 병합: 원격의 고유 특성·초상 연령 조정을 받아들인다
 2f4c59b Adjust portrait style + age
 8019ba8 초상 카드에 고유 특성을 표시한다
 b4dd771 고유 특성 필드를 추가하고 전승·기록급 11명분을 쓴다
@@ -82,7 +91,6 @@ bc838aa README 에 화면 찍는 줄을 넣는다
 e7de4ff 움직이는 화면은 가상시간으로 못 찍는다 — CDP 로 직접 찍는 자를 만든다
 760303a 현황표 두 줄을 사실에 맞춘다 — 한 사람이 아니라 쉰다섯
 674cc47 소지품은 실루엣이 아니다 — 문서 세 곳을 고치고, 옮길 짐을 싼다
-1759efe 쉰다섯을 다 세우고, 넓힌 자로 소지품을 다시 측정한다
 ```
 
 ---
@@ -185,7 +193,7 @@ Git user: Navifra-Justin
 ## 12. 다음에 이어서 할 것
 
 1. ~~캐릭터 외형 젊어지기~~ — **완료** (커밋 `e330338`) — 재작성 · 514장 재생성 · 격자 검증 · 커밋 전부 끝
-2. **GitHub push 문제 해결** (권한 또는 deploy key) — ⛔ 사용자 행동 필요: `dpsek007-eng`가 collaborator 초대를 보내거나, 공개키(`CLAUDE-HANDOFF.md` 1절)를 write 권한 deploy key로 등록해야 한다. 39개의 미푸시 커밋이 누적되어 있다
+2. **GitHub push 문제 해결** (권한 또는 deploy key) — ⛔ 사용자 행동 필요: `dpsek007-eng`가 collaborator 초대를 보내거나, 공개키(`CLAUDE-HANDOFF.md` 1절)를 write 권한 deploy key로 등록해야 한다. 미푸시 6개 (원격 `main`=`2f4c59b`, 로컬 6 앞)
 3. ~~소지품 47개 손 뼈 부착~~ — **게임 경로 해결** — 2D 스프라이트(draw_prop)에서 47종 전부 손에 그림. 3D 캐스트 GLB에는 미부착 상태이나 실루엣 실험 결과 소품 불가 분리 확인됨
 4. ~~머리·두건 6종 생성~~ — **완료** (`tools/rig.py` + `tools/art.py`, HEAD/BALD 상수, 6타입 분기)
 5. **두상 포트레이트 파트 완성** (6×8=48개) — ⛔ 차단: 이목구비 8개 축을 먼저 정해야 한다. 정하면 파트 생성 → 유니티 시트 → `_Focus` 순으로 풀린다
