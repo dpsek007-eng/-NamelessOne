@@ -46,7 +46,8 @@ def faces():
         with open(cp, encoding="utf-8") as f:
             for c in json.load(f)["characters"]:
                 meta[c["id"]] = {"ko": c["name"], "kind": "named",
-                                 "rarity": c.get("rarity")}
+                                 "rarity": c.get("rarity"),
+                                 "unique": c.get("unique")}
     for rs, rk in ROLES:
         for ts, tk in TIERS:
             meta[f"{rs}_{ts}"] = {"ko": f"{rk}·{tk}", "kind": "part"}
@@ -76,6 +77,7 @@ def faces():
             "ko": m.get("ko", cid),
             "kind": m.get("kind", "named"),
             "rarity": m.get("rarity"),
+            "unique": m.get("unique"),
             "picked": best,
             "images": [{"url": f"/pipeline3d/out/faces/{f}",
                         "box": boxes.get(f)} for f in fns],

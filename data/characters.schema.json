@@ -1,0 +1,123 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "이렘의 탑 — 캐릭터",
+  "description": "전승/기록/편린/무명 캐릭터 단위. unique 는 ★6 이상에서 열리는 손으로 쓴 고유 특성이다.",
+  "type": "object",
+  "required": [
+    "characters"
+  ],
+  "properties": {
+    "characters": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "title",
+          "rarity",
+          "role",
+          "floor",
+          "era",
+          "tagline",
+          "life",
+          "death",
+          "memories",
+          "stats",
+          "growth",
+          "skills",
+          "voice",
+          "visual",
+          "garden"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "rarity": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 10
+          },
+          "role": {
+            "type": "string"
+          },
+          "floor": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "era": {
+            "type": "string"
+          },
+          "tagline": {
+            "type": "string"
+          },
+          "life": {
+            "type": "string"
+          },
+          "death": {
+            "type": "string"
+          },
+          "memories": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "stats": {
+            "type": "object"
+          },
+          "growth": {
+            "type": "object"
+          },
+          "skills": {
+            "type": "array"
+          },
+          "voice": {
+            "type": "object"
+          },
+          "visual": {
+            "type": "object"
+          },
+          "garden": {
+            "type": "object"
+          },
+          "talents": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "unique": {
+            "type": "object",
+            "description": "★6 이상에서 열리는 고유 특성. 문장의 주어는 항상 그 사람이어야 한다(02-캐릭터-시스템.md 4-3).",
+            "required": [
+              "name",
+              "rule",
+              "line"
+            ],
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "rule": {
+                "type": "string"
+              },
+              "line": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

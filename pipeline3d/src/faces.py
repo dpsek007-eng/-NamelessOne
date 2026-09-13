@@ -21,17 +21,29 @@
 # 얼굴은 초상에만 붙는다 (docs/22). 그래서 구도가 고정이다 —
 # 정면·가슴 위·한쪽 광원. 이 고정이 나중에 초점 레이어를 만들 때 값을 한다.
 # 이목구비 위치가 장마다 같아야 흐릴 자리를 찾을 수 있기 때문이다.
+#
+# 스타일은 옛 유화가 아니라 **요즘 게임 초상**을 쓴다. 두 가지를 뺐다.
+#   · "painterly oil painting, medieval, weathered skin" — 그림이 19세기
+#     박물관 초상으로 새니까. 그리고 "weathered skin" 이 얼굴을 전부
+#     60대 이상으로 늙혔다.
+#   · "muted desaturated colours" — 무채색 톤이 그림만 옛날 것으로 만든다.
+# 나이를 명시하지 않으면 SDXL 은 기본으로 20~40대 성인을 그린다. 그래서
+# 나이 말을 넣는 대신 노인 표식(NEGATIVE 의 elderly 등)을 금지하는 쪽으로
+# 정하고, 캐릭터마다 말에 적힌 「늙음」을 걷어냈다. 이 규칙은 예외가 둘 —
+# '셈하던 아이'와 '균열을 들여다본 아이'는 설정이 아이여서 child 를 남긴다.
 STYLE = (
     "head and shoulders portrait of one person facing viewer, "
-    "painterly oil painting, muted desaturated colours, "
+    "modern fantasy game character art, digital painting, "
     "single soft light from one side, plain dark background, "
-    "medieval, weathered skin, solemn, mouth closed"
+    "even smooth skin, calm solemn expression, mouth closed"
 )
 
 NEGATIVE = (
     "photograph, photorealistic, 3d render, cgi, anime, smiling, teeth, "
+    "oil painting, classical portrait, renaissance, old master painting, canvas texture, "
     "modern clothing, glasses, jewelry, text, watermark, signature, frame, "
-    "two people, crowd, hands, cropped head, blurry, low quality, deformed"
+    "two people, crowd, hands, cropped head, blurry, low quality, deformed, "
+    "elderly, old person, aged, wrinkled, weathered skin, grey hair, white hair"
 )
 
 # --- 역할 5종 — 얼굴에 남은 자세 ------------------------------------------
@@ -40,7 +52,7 @@ NEGATIVE = (
 ROLE_FACE = {
     "guard":  ("수호", "square jaw, steady level gaze straight ahead, broad neck"),
     "resist": ("저항", "clenched jaw, brow drawn low, eyes fixed hard on viewer"),
-    "devote": ("헌신", "tired soft eyes lowered slightly, lined face, head tilted down"),
+    "devote": ("헌신", "tired soft eyes lowered slightly, head tilted down"),
     "seek":   ("탐구", "narrow attentive eyes looking slightly off to one side, thin face"),
     "flee":   ("도피", "wide wary eyes glancing sideways, tense thin neck, half turned"),
 }
@@ -54,8 +66,8 @@ TIER_FACE = {
     "clerk":    ("관리", "neat tied hair, ink smudge on cheek, plain dark collar"),
     "merchant": ("상인", "well fed face, fur trimmed collar, shrewd eyes"),
     "artisan":  ("장인", "burn scars on cheek, soot in the creases, cloth headband"),
-    "peasant":  ("농어민", "sun darkened weathered skin, coarse undyed cloth"),
-    "soldier":  ("병졸", "cropped hair, old scar across the brow, dented gorget"),
+    "peasant":  ("농어민", "sun darkened skin, coarse undyed cloth"),
+    "soldier":  ("병졸", "cropped hair, scar across the brow, dented gorget"),
     "servant":  ("하인", "hair covered by a plain kerchief, downcast careful face"),
     "vagrant":  ("유랑", "matted hair, hollow cheeks, ragged wrapped shoulders"),
 }
@@ -64,12 +76,12 @@ TIER_FACE = {
 # data/characters.json 의 visual.silhouette 과 life/death 를 얼굴로 옮긴 것.
 # 기계 번역이 아니라 손으로 옮겼다. 얼굴은 몸보다 틀리면 더 눈에 띈다.
 NAMED = {
-    "seren":             "old woman, bell ringer, deep lines, cloth wound around her throat, exhausted patient eyes",
-    "kabril":            "broad shouldered gatekeeper, heavy brow, iron grey beard, unmoving stare",
-    "idel":              "gaunt young archivist, sharp restless eyes, ink stained fingers at his collar",
+    "seren":             "woman, bell ringer, cloth wound around her throat, exhausted patient eyes",
+    "kabril":            "broad shouldered gatekeeper, heavy brow, beard, unmoving stare",
+    "idel":              "gaunt archivist, sharp restless eyes, ink stained fingers at his collar",
     "miro":              "lean youth, hair falling over one eye, glancing away, ready to run",
-    "north_gatekeeper":  "middle aged watchman, worn collar of a city guard coat, tired steady face",
-    "baker_18f":         "baker, flour dusted brow, old burn scars up the neck, kind heavy face",
+    "north_gatekeeper":  "watchman, worn collar of a city guard coat, tired steady face",
+    "baker_18f":         "baker, flour dusted brow, burn scars up the neck, kind heavy face",
     "someones_mother":   "woman, hollow eyed, hair loose and unkempt, arms empty, grief worn face",
     "unnamed_000":       "a face with no distinguishing marks, plain, staring straight ahead, forgettable",
     "ash_sweeper":       "ash streaked face, cloth tied over the mouth pulled down, reddened eyes",
@@ -83,11 +95,11 @@ NAMED = {
     # 8장 전부 반신이 됐다 (얼굴 너비 0.265, 표본 중앙값 0.467). 초점은
     # 눈~입 자리에 거는 것이라 얼굴이 작으면 배경이 뭉개진다. 장대를 뺐다.
     # 두 부대의 소매는 어깨 위에서도 보인다.
-    "flagbearer":        "standard bearer, chin lifted, one shoulder in dark cloth and the other pale, weathered young face",
+    "flagbearer":        "standard bearer, chin lifted, one shoulder in dark cloth and the other pale, young face",
     "name_writer":       "charcoal in one hand, eyes turned to the wall beside him, absorbed",
     "pathpointer":       "one arm raised out of frame and never lowered, strained shoulder, fixed expression",
     "rean":              "upright, hands behind the back, unarmed, calm level unafraid gaze",
-    "ledger_keeper":     "stooped clerk, spectacle marks on the nose, ledger under the arm, wary",
+    "ledger_keeper":     "clerk, spectacle marks on the nose, ledger under the arm, wary",
     "crack_child":       "small child leaning forward, hands behind the back, wide frightened eyes",
     "festival_maker":    "arms open, decorative cords on the sleeves, forced bright face over grief",
     "alley_filler":      "one shoulder dropped, callused hands at the collar, blunt patient face",
