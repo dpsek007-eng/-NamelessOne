@@ -12,7 +12,7 @@
   - 번들에 커밋 전부(`bc838aa` 포함)가 들어 있다
 - ** 깃허브**(`dpsek007-eng/-NamelessOne`): 원격 `main` = `2f4c59b`, 로컬이 그 뒤 `N`개 앞 (2026-09-14 실측. N = `git rev-list --count 2f4c59b..HEAD` — 밑줄을 덧붙일 때마다 이 문서 맨 위 수치는 늘어난다)
   - `Navifra-Justin` 권한 문제로 push 불가 — dry-run 에러 그대로: `Permission to dpsek007-eng/-NamelessOne.git denied to Navifra-Justin`
-  - 미푸시 (9개): `1eef4d9`(계속하기 파일) · `6af537e`(병합) · `e330338`(초상 젊어지기) · `a2daaed`(머리·두건) · `8a07bee`(소지품) · `e00fb08`(판정 기록) · `986c68c`(수치 실측) · `8baf797`(해시 정리) · `9e5ff72`(계수 정리)
+  - 미푸시 (10개): `8ba4867`(포트레이트 셰이더·드라이버·시트) · `1eef4d9`(계속하기 파일) · `6af537e`(병합) · `e330338`(초상 젊어지기) · `a2daaed`(머리·두건) · `8a07bee`(소지품) · `e00fb08`(판정 기록) · `986c68c`(수치 실측) · `8baf797`(해시 정리) · `9e5ff72`(계수 정리)
   - ※ 종전 「39개 미푸시」는 폐기 — 원격이 이미 `2f4c59b`까지 있었으므로 오래된 수치였다
   - 해결 방법: (1) `dpsek007-eng`가 `Navifra-Justin`을 collaborator로 초대, 또는
     (2) 서버 공개키(`ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEjfbZbP/pwTWcy9RAWTKN1Da1rO4QlRRktzDdWqw3eH justin@navifra.com`)를 write 권한 deploy key로 등록
@@ -78,6 +78,7 @@ tar xf /tmp/05-캐릭터.tar
 최근 15개 (전체는 `git log`). 작업 순서가 최신이 아래가 아니라 **위**다.
 
 ```
+8ba4867 초상 포트레이트 — 셰이더, 드라이버, 6×8 시트, 조립 도구 개선
 8baf797 계속하기 파일의 커밋 해시와 커밋 계수를 맞춘다
 986c68c 계속하기 파일의 두 수치를 실측으로 고친다
 e00fb08 계속하기 파일에 남은 항목의 판정을 남긴다 — 결함이 아니라 설계 결정
@@ -126,6 +127,7 @@ e7de4ff 움직이는 화면은 가상시간으로 못 찍는다 — CDP 로 직�
 | `tools/fusion_sim.py` | 합성 시뮬레이션 |
 | `tools/focus_curve.py` | 초점 곡선 |
 | `tools/focus_stack.py` | 초점 스택 |
+| `tools/portrait_assemble.py` | 두상×이목구비 조립 (`--grid` 격자, `--sheet` 유니티 시트, `--heads/--faces` 단일) |
 
 ---
 
@@ -148,8 +150,8 @@ python3 tools/shot.py http://127.0.0.1:8000/viewer/#one /tmp/a.png --wait 90 --w
 ### 열린 경고 (⚠)
 - ~~47개 소지품이 손 뼈에 미부착~~ → **게임 경로에서는 해결됨** — `rig.py:164` draw_prop()가 48×64 스프라이트의 손 위치에 소품을 그린다. TRADE_PROP 47종 전부 매핑, POSE로 캐릭터별 예외 有. `/tmp/prop_grid2.png` 로 시각 검증 완료. ※ 3D 캐스트 GLB(`chars/out/cast/`)에는 부착 안 되어 있음 — 뷰어는 개발용 실루엣 평가 도구이고, 소품이 실루엣으로 역할을 안 가른다는 실험 결과에 부합
 - ~~머리·두건 6종 누락~~ → **해결** (커밋 `a2daaed`) — 판정 기준 선기록(`docs/22-아트.md` 「머리·두건 6종」+ 「계층은 읽힌다」: 성직 민머리, 술사 두건, 농어민 머릿수건) → `art.py`에 HEAD/BALD 상수 추가 → `rig.py` look_of/draw 머리 분기 6개 타입 구현 → 유니티 시트 73장 재생성 → `/tmp/head_grid.png` 격자 시각 검증 → 6종 모두 판정 통과
-- 두상 6×이목구비 8 포트레이트 파트 누락 → **차단: 이목구비 8개 축이 정의된 곳이 없다.** 6×8=48개를 만들려면 그 8개가 무엇인지(초점이 풀리며 드러나는 얼굴 축) 먼저 정해야 한다. 파트 조립 전에 축 명명이 선행되어야 한다. ⚠ 어느 문서에도 「이목구비 8종」의 목록이 없다
-- Unity `Silhouette.shader` / `_Focus` 미구현 → **차단: shader는 이미 있다** (`unity/Assets/Art/Chars/Silhouette.shader` — colour/light/fade 완성, IremChar.cs MaterialPropertyBlock 경로 완결). 누락은 `_Focus` 파라미터 하나뿐이고, 그것은 두상 포트레이트 파트에 매달려 있다
+- ~~두상 6×이목구비 8 포트레이트 파트 누락~~ → **해결** (커밋 `8ba4867`) — 이목구비 8개 축 정의(doc 22) → `tools/portrait_assemble.py` 48조합 조립 → `unity/Assets/Resources/Irem/Portraits/parts.png` 4096×3072 시트 + `parts.face_boxes.json`
+- ~~Unity `_Focus` 미구현~~ → **해결** (커밋 `8ba4867`) — `Portrait.shader` (Irem/Portrait) 3층 합성(이목구비 뭉 Gaines·흐림·이중상), `FocusDriver.cs` (MPB·uGUI 지원)
 - 깊은 부름 efficiency 1.12배 (목표 미달) → **설계 결정** — `docs/18-소환.md:148` ⚠: 손댈 곳 둘 (① 먼 울림=울림 5개 환산 내리기 ② 고등급 본디 분포 더 기울이기), "지금은 어느 쪽도 하지 않았다. 고르는 것은 설계 결정이라 도구가 정할 일이 아니다." 실측값은 시뮬레이션으로 재확인됨
 - 본디 10 비단조성성 문제 → **설계 결정, 미뤄져 있음** — ★3(0.5%) > ★5(0.3%), `docs/18-소환.md:160` "상한을 ★10 으로 열 때 같이 손본다". 지금 상한 ★6에서는 쓰는 값(본디≥6)이 단조롭다
 - ★7 천장 경계 흐림 문제 → **설계 결정, 미뤄져 있음** — 상한이 ★6을 넘으면 ★7이 소환 표로 돌아오고 "180회 ★6 확정"이 「꼭대기 확정」→「최악이어도」로 의미가 바뀐다(`docs/18:181`). "★7 을 되돌릴지는 그때 정한다"(`docs/18:100`). 지금은 행 자체가 없다
@@ -198,8 +200,8 @@ Git user: Navifra-Justin
 2. **GitHub push 문제 해결** (권한 또는 deploy key) — ⛔ 사용자 행동 필요: `dpsek007-eng`가 collaborator 초대를 보내거나, 공개키(`CLAUDE-HANDOFF.md` 1절)를 write 권한 deploy key로 등록해야 한다. 미푸시 N개 (원격 `main`=`2f4c59b`, N = `git rev-list --count 2f4c59b..HEAD`)
 3. ~~소지품 47개 손 뼈 부착~~ — **게임 경로 해결** — 2D 스프라이트(draw_prop)에서 47종 전부 손에 그림. 3D 캐스트 GLB에는 미부착 상태이나 실루엣 실험 결과 소품 불가 분리 확인됨
 4. ~~머리·두건 6종 생성~~ — **완료** (`tools/rig.py` + `tools/art.py`, HEAD/BALD 상수, 6타입 분기)
-5. **두상 포트레이트 파트 완성** (6×8=48개) — ⛔ 차단: 이목구비 8개 축을 먼저 정해야 한다. 정하면 파트 생성 → 유니티 시트 → `_Focus` 순으로 풀린다
-6. **Unity Silhouette.shader `_Focus`** — ⛔ 차단: shader 본체는 완성. `_Focus`는 5번의 파트가 준비된 뒤
+5. ~~두상 포트레이트 파트 완성~~ — **완료** (커밋 `8ba4867`) — 이목구비 8축 정의 → 48조합 조립 → 시트+Manifest → Portrait.shader+FocusDriver
+6. ~~Unity `_Focus`~~ — **완료** (커밋 `8ba4867`) — `Portrait.shader` (Irem/Portrait) + `FocusDriver.cs`
 7. **★7/★8 천장 문제** — 판정 완료: **결함 아님, 열린 설계 결정** — 두 건 다 「상한을 ★8 이상으로 여는 그때」에 다시 정하기로 문서에 명시됨. 지금 ★6 상한 상태는 도구·문서 전부 일관(2026-09-14 회귀 점검 통과)
 8. **docs/13 3부, docs/18 겹치기 미정 해소** — ⛔ 설계 결정. 3부는 문서가 명시적으로 "미리 확정하지 않는다"
 
