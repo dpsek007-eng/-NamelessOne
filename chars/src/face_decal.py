@@ -98,6 +98,14 @@ def make_decal(face_img, ch, out_path, head_w=197, head_h=249):
     # 얼굴 부분만 머리 앞에 뜨게 하기 위함이다.
     canvas = Image.new("RGBA", (canvas_w, canvas_h), (0, 0, 0, 0))
 
+    # 초상에 구워진 그림자(모자·관자놀이)가 3D 조명 아래서는 멍처럼
+    # 보인다 — 감마 0.75 로 어두운 부분만 들어올린다 (밝은 곳은 거의
+    # 그대로다).
+    lut = [round(255 * (i / 255) ** 0.75) for i in range(256)]
+    if face_img.mode != "RGB":
+        face_img = face_img.convert("RGB")
+    face_img = face_img.point(lut * 3)
+
     # 얼굴을 머리 비율에 맞게 리사이즈
     # 얼굴은 머리 너비의 약 75% 를 차지한다
     target_fw = int(canvas_w * 0.75)
@@ -112,14 +120,16 @@ def make_decal(face_img, ch, out_path, head_w=197, head_h=249):
     from PIL import ImageDraw, ImageFilter
     mask = Image.new("L", (target_fw, target_fh), 0)
     d = ImageDraw.Draw(mask)
-    pad = int(target_fw * 0.10)   # 좌우 옆머리카락이 회색 띠로 남지 않게
+    # 0.10 은 관자놀이의 모자 그림자가 눈 옆 검은 삼각형으로 남았다
+    pad = int(target_fw * 0.13)   # 좌우 옆머리카락·관자놀이 음영을 자른다
     bot = int(target_fh * 0.04)   # 아래는 턱·입술을 살린다
     # 윗변은 눈썹 바로 위 — 0.32 는 눈썹을 지나 블러가 눈까지 지웠고,
     # 0.20 은 모자챙 그림자(0.18~0.25)가 이마에 검은 띠로 남았다 (실측:
     # 크롭에서 눈선이 36%, 눈썹이 ~26% 지점이다).
     top = int(target_fh * 0.24)
     d.ellipse((pad, top, target_fw - pad, target_fh - bot), fill=255)
-    mask = mask.filter(ImageFilter.GaussianBlur(int(target_fw * 0.04)))
+    # 블러 4% 는 눈썹·눈까지 번져 유령처럼 흐려졌다 — 2.5% 로 좁힌다.
+    mask = mask.filter(ImageFilter.GaussianBlur(int(target_fw * 0.025)))
     face_resized.putalpha(mask)
 
     # 배치: 크롭의 눈선(위에서 36%)이 머리의 눈높이에 오게 붙인다.
@@ -254,11 +264,19 @@ def build_faced_glb(char_id, role, cls, decal_path, out_dir, head_w_m=0.197, hea
         bpy.ops.mesh.vertices_smooth(factor=factor, repeat=repeat)
         bpy.ops.object.mode_set(mode="OBJECT")
 
-    # 1차: 얼굴 핵심(앞 45%)을 강하게 — 눈구멍·입술·콧날을 녹인다
-    core = [i for i, y in head_info if y < fy0 + 0.45 * (fy1 - fy0)]
+    # 맨 앞 12%(코 끝·콧날)는 따로 약하게만 녹인다 —
+    # 다 녹이면 옆모습이 판판해 코 음영이 얼룩처럼 보이고(40회),
+    # 그대로 두면 가파른 콧등 옆면에 텍스처가 밀려 계단 자국이 남는다(0회).
+    rng = fy1 - fy0
+    nose_keep = fy0 + 0.12 * rng
+    # 1차: 얼굴 핵심(앞 45%)을 강하게 — 눈구멍·입술을 녹인다
+    core = [i for i, y in head_info if nose_keep <= y < fy0 + 0.45 * rng]
     _smooth_sel(core, 0.5, 40)
+    # 1.5차: 코만 약하게 — 낮은 둔덕으로 만든다
+    nose = [i for i, y in head_info if y < nose_keep]
+    _smooth_sel(nose, 0.5, 8)
     # 2차: 좀 더 넓게(앞 60%) 약하게 — 뭉갠 경계를 부드럽게 잇는다
-    wide = [i for i, y in head_info if y < fy0 + 0.60 * (fy1 - fy0)]
+    wide = [i for i, y in head_info if y < fy0 + 0.60 * rng]
     _smooth_sel(wide, 0.5, 4)
     print(f"[face_decal] 얼굴 앞면 뭉갬 — 핵심 {len(core)} / 경계 {len(wide)} 정점",
           flush=True)
@@ -387,6 +405,10 @@ def build_faced_glb(char_id, role, cls, decal_path, out_dir, head_w_m=0.197, hea
     bpy.ops.object.modifier_apply(modifier=dp.name)
 
     bpy.data.objects.remove(proxy, do_unlink=True)
+
+    # 격자는 기본이 플랫 셰이딩 — 코 굴곡에서 면마다 음영이 갈라져
+    # 블록 자국이 보인다. 반드시 스무스로 바꾼다.
+    bpy.ops.object.shade_smooth()
 
     # 데칼 머티리얼
     decal_mat = bpy.data.materials.new("face_decal")
