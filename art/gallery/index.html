@@ -1,0 +1,339 @@
+<title>이렘의 명부</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Noto+Sans+KR:wght@400;500;700&display=swap">
+<style>
+  :root{
+    --ink:#0e1117;         /* 먹빛 남색 바탕 */
+    --panel:#161b24;       /* 카드면 */
+    --panel-2:#1c2230;     /* 카드면 강조 */
+    --line:#262e3d;        /* 경계 */
+    --parchment:#d8d2c4;   /* 양피지 글자 */
+    --dim:#8b93a3;         /* 흐린 회청 */
+    --faint:#5d6878;       /* 더 흐린 */
+    --brass:#c9a35c;       /* 놋쇠 — 종의 색, 유일한 강조 */
+    --brass-dim:#8a7345;
+    --serif:'Gowun Batang', 'Batang', serif;
+    --sans:'Noto Sans KR', 'Apple SD Gothic Neo', sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:var(--ink); color:var(--parchment);
+    font-family:var(--sans); font-size:15px; line-height:1.65;
+    padding-inline:max(16px, 4vw); padding-block:0 80px;
+  }
+  ::selection{background:var(--brass-dim); color:#0e1117}
+
+  /* ── 머리 ─────────────────────────────── */
+  header{
+    max-width:1080px; margin:0 auto; padding-block:56px 40px;
+    border-bottom:1px solid var(--line);
+  }
+  .eyebrow{
+    font-size:12px; letter-spacing:.35em; color:var(--brass);
+    text-transform:uppercase; margin:0 0 14px;
+  }
+  h1{
+    font-family:var(--serif); font-weight:700; font-size:clamp(30px, 5vw, 46px);
+    margin:0 0 12px; letter-spacing:.04em; text-wrap:balance;
+  }
+  .thesis{
+    max-width:34em; color:var(--dim); margin:0;
+  }
+  .thesis b{color:var(--parchment); font-weight:500}
+
+  /* ── 대표 초상 + 초점 조절 ────────────── */
+  .stage{
+    max-width:1080px; margin:0 auto; padding-block:44px;
+    display:flex; gap:40px; flex-wrap:wrap; align-items:center;
+    border-bottom:1px solid var(--line);
+  }
+  .stage-portrait{
+    flex:0 1 384px; min-width:260px; max-width:100%;
+  }
+  .stage-portrait canvas{
+    width:100%; height:auto; display:block; border-radius:4px;
+    box-shadow:0 24px 60px rgba(0,0,0,.5);
+  }
+  .stage-info{flex:1 1 320px; min-width:280px}
+  .stage-name{
+    font-family:var(--serif); font-size:30px; font-weight:700; margin:0;
+  }
+  .stage-title{color:var(--dim); margin:2px 0 10px}
+  .stage-tag{
+    font-family:var(--serif); color:var(--parchment); font-size:17px;
+    border-left:2px solid var(--brass); padding-left:14px; margin:16px 0 24px;
+  }
+  .stage-meta{display:flex; gap:18px; flex-wrap:wrap; color:var(--faint); font-size:13px}
+  .stage-meta b{color:var(--dim); font-weight:500}
+
+  .focus-ctl{margin-top:28px}
+  .focus-readout{
+    display:flex; justify-content:space-between; align-items:baseline;
+    font-size:13px; color:var(--dim); margin-bottom:8px;
+  }
+  .focus-readout .val{
+    font-variant-numeric:tabular-nums; color:var(--brass); font-weight:700;
+    font-size:16px; letter-spacing:.05em;
+  }
+  input[type=range]{
+    width:100%; appearance:none; height:3px; border-radius:2px;
+    background:linear-gradient(to right, var(--brass) var(--pct,80%), var(--line) var(--pct,80%));
+    outline:none; margin:6px 0 14px;
+  }
+  input[type=range]::-webkit-slider-thumb{
+    appearance:none; width:18px; height:18px; border-radius:50%;
+    background:var(--brass); border:3px solid var(--ink); cursor:pointer;
+  }
+  input[type=range]:focus-visible::-webkit-slider-thumb{outline:2px solid var(--parchment)}
+  .star-row{display:flex; gap:8px; flex-wrap:wrap}
+  .star-row button{
+    font-family:var(--sans); font-size:13px; padding:7px 13px; cursor:pointer;
+    background:var(--panel); color:var(--dim); border:1px solid var(--line);
+    border-radius:3px; letter-spacing:.05em;
+  }
+  .star-row button:hover{border-color:var(--brass-dim); color:var(--parchment)}
+  .star-row button.on{background:var(--panel-2); color:var(--brass); border-color:var(--brass)}
+  .star-row button:focus-visible{outline:2px solid var(--brass)}
+  .focus-note{font-size:12px; color:var(--faint); margin-top:12px}
+
+  /* ── 명부 ─────────────────────────────── */
+  section{max-width:1080px; margin:0 auto}
+  h2{
+    font-family:var(--serif); font-size:22px; font-weight:700;
+    margin:52px 0 6px; letter-spacing:.06em;
+  }
+  .section-sub{color:var(--faint); font-size:13px; margin:0 0 26px}
+  .roster{
+    display:grid; grid-template-columns:repeat(auto-fill, minmax(196px, 1fr));
+    gap:20px;
+  }
+  .card{
+    background:var(--panel); border:1px solid var(--line); border-radius:5px;
+    overflow:hidden; cursor:pointer; padding:0; text-align:left;
+    color:inherit; font:inherit; display:flex; flex-direction:column;
+    transition:border-color .15s, transform .15s;
+  }
+  .card:hover{border-color:var(--brass-dim); transform:translateY(-2px)}
+  .card:focus-visible{outline:2px solid var(--brass); outline-offset:2px}
+  .card canvas{width:100%; height:auto; display:block; background:#0a0d12}
+  .card-body{padding:12px 14px 14px; display:flex; flex-direction:column; gap:3px; flex:1}
+  .card-stars{font-size:12px; letter-spacing:.18em; color:var(--brass)}
+  .card-stars .off{color:#333a48}
+  .card-name{font-family:var(--serif); font-size:17px; font-weight:700; line-height:1.35}
+  .card-title{font-size:12px; color:var(--dim); line-height:1.4}
+  .card-foot{
+    margin-top:auto; padding-top:9px; display:flex; gap:6px; align-items:center;
+    font-size:11px; color:var(--faint);
+  }
+  .chip{
+    padding:1px 7px; border-radius:2px; border:1px solid var(--line);
+    color:var(--dim); letter-spacing:.08em;
+  }
+  .chip.r-헌신{color:#c9a35c; border-color:#4d4128}
+  .chip.r-탐구{color:#7fb8a8; border-color:#2c4a42}
+  .chip.r-수호{color:#8aa5c8; border-color:#31415a}
+  .chip.r-저항{color:#c88a7a; border-color:#54352e}
+  .chip.r-도피{color:#a894c0; border-color:#3f3552}
+  .chip.r-미상{color:var(--faint); border-color:var(--line)}
+
+  /* ── 부품 ─────────────────────────────── */
+  .parts-wrap{border:1px solid var(--line); border-radius:5px; overflow:hidden; background:var(--panel)}
+  .parts-wrap img{max-width:100%; display:block}
+  .parts-cap{padding:12px 16px; font-size:12px; color:var(--faint); border-top:1px solid var(--line)}
+
+  footer{
+    max-width:1080px; margin:64px auto 0; padding-top:24px;
+    border-top:1px solid var(--line); font-size:12px; color:var(--faint);
+  }
+</style>
+
+<header>
+  <p class="eyebrow">Tower of Irem — Register of Shades</p>
+  <h1>이렘의 명부</h1>
+  <p class="thesis">이름 없이 죽은 자들의 잔상 스물셋. 잔상은 태생의 성급만큼만 초점이 맞고,
+  <b>성급은 각성으로만 오른다</b> — 각성할수록 얼굴이 또렷해진다.
+  ★1은 흐린 윤곽뿐이고, ★6에서 손그림 초상이 온전히 드러난다.</p>
+</header>
+
+<div class="stage">
+  <div class="stage-portrait"><canvas id="stageCv" width="384" height="384"></canvas></div>
+  <div class="stage-info">
+    <h2 class="stage-name" id="stName" style="margin-top:0"></h2>
+    <p class="stage-title" id="stTitle"></p>
+    <p class="stage-tag" id="stTag"></p>
+    <div class="stage-meta" id="stMeta"></div>
+    <div class="focus-ctl">
+      <div class="focus-readout">
+        <span>각성 단계 <span id="stepLabel"></span></span>
+        <span class="val" id="focusVal"></span>
+      </div>
+      <input type="range" id="focusRange" min="0" max="25" step="1" value="20"
+             aria-label="각성 단계">
+      <div class="star-row" id="starRow" role="group" aria-label="성급 바로가기"></div>
+      <p class="focus-note">초점 = 각성단계 ÷ 25 · 흐림 6px→0 · 이목구비 25%→100% · 이중상 40%→0
+      (tools/focus_curve.py 와 같은 수)</p>
+    </div>
+  </div>
+</div>
+
+<section>
+  <h2>수록된 잔상 스물셋</h2>
+  <p class="section-sub">태생 성급의 초점 그대로 — 카드를 누르면 위에서 각성시켜 볼 수 있다</p>
+  <div class="roster" id="roster"></div>
+</section>
+
+<section>
+  <h2>부품 조립 — 두상 6 × 이목구비 8</h2>
+  <p class="section-sub">무명 잔상의 얼굴은 이 48조합에서 나온다</p>
+  <div class="parts-wrap">
+    <img src="parts_small.jpg" alt="두상 6종과 이목구비 8종을 조합한 48장의 초상 격자" loading="lazy">
+    <p class="parts-cap">행 = 두상(bare · circlet · hat · helmet · hood · kerchief) ·
+    열 = 이목구비(clear · deep · devote · flee · guard · resist · seek · still) ·
+    유니티 시트 4096×3072, 셰이더 Irem/Portrait 의 _Focus 로 같은 초점 규칙이 걸린다</p>
+  </div>
+</section>
+
+<footer>이렘의 탑 · 잔상 초상 명부 · 초점 상수는 focus_curve.py — 셰이더·도구·뷰어 세 곳과 동일</footer>
+
+<script>
+const DB = {"cell": 384, "cols": 5, "chars": [{"id": "seren", "name": "세렌", "title": "마지막 종지기", "rarity": 5, "role": "헌신", "floor": 41, "era": "균열기", "tagline": "종이 울리는 동안은 아직 늦지 않았다.", "col": 0, "row": 0, "fbox": [0.3008, 0.2236, 0.4219, 0.4219], "unique": "여섯 시의 종"}, {"id": "rean", "name": "레안", "title": "문을 닫으라 한 사람", "rarity": 5, "role": "저항", "floor": 39, "era": "붕괴기", "tagline": "절반은 들어왔다. 그거면 됐다고 생각했다.", "col": 1, "row": 0, "fbox": [0.293, 0.248, 0.4365, 0.4365], "unique": "수용 한계"}, {"id": "yuan", "name": "유안", "title": "성문 안쪽의 의사", "rarity": 5, "role": "탐구", "floor": 29, "era": "붕괴기", "tagline": "문 안쪽에서도 사람이 죽고 있습니다. 왜입니까.", "col": 2, "row": 0, "fbox": [0.1621, 0.1621, 0.4375, 0.4375], "unique": "증상 기록"}, {"id": "kabril", "name": "카브릴", "title": "성문을 닫은 자", "rarity": 5, "role": "수호", "floor": 24, "era": "붕괴기", "tagline": "명령은 옳았다. 나는 그것을 따랐다.", "col": 3, "row": 0, "fbox": [0.375, 0.1943, 0.4346, 0.4346], "unique": "빗장"}, {"id": "alley_filler", "name": "골목을 메우던 사람", "title": "58층 · 이름이 남지 않음", "rarity": 4, "role": "저항", "floor": 58, "era": "균열기", "tagline": "돌로 막으면 됩니다. 안 됩니까?", "col": 4, "row": 0, "fbox": [0.3271, 0.2227, 0.4258, 0.4258], "unique": "메운 골목"}, {"id": "idel", "name": "이델", "title": "균열을 처음 적은 사람", "rarity": 4, "role": "탐구", "floor": 47, "era": "균열기", "tagline": "아무도 안 믿어도 기록은 남습니다.", "col": 0, "row": 1, "fbox": [0.2861, 0.1865, 0.4121, 0.4121], "unique": "여덟 번째 보고서"}, {"id": "name_writer", "name": "이름을 적던 병사", "title": "33층 · 이름이 남지 않음", "rarity": 4, "role": "탐구", "floor": 33, "era": "붕괴기", "tagline": "적어 두면 누가 없어졌는지 압니다.", "col": 1, "row": 1, "fbox": [0.2852, 0.2061, 0.4346, 0.4346], "unique": "벽의 이름"}, {"id": "miro", "name": "미로", "title": "도망친 전령", "rarity": 4, "role": "도피", "floor": 31, "era": "붕괴기", "tagline": "빨랐어. 누구보다 빨랐어. 그게 문제였지.", "col": 2, "row": 1, "fbox": [0.2744, 0.2266, 0.4141, 0.4141], "unique": "숨 네 번"}, {"id": "dorn", "name": "도른", "title": "붕괴기의 대장장이", "rarity": 4, "role": "저항", "floor": 21, "era": "붕괴기", "tagline": "농기구는 이제 안 만듭니다.", "col": 3, "row": 1, "fbox": [0.2754, 0.208, 0.4395, 0.4395], "unique": "자기 몫"}, {"id": "last_watercarrier", "name": "마지막 물장수", "title": "16층 · 이름이 남지 않음", "rarity": 4, "role": "헌신", "floor": 16, "era": "종말기", "tagline": "마르면 더 깊이 파면 됩니다.", "col": 4, "row": 1, "fbox": [0.2852, 0.2441, 0.4238, 0.4238], "unique": "마르지 않는 통"}, {"id": "festival_maker", "name": "축제를 준비하던 사람", "title": "53층 · 이름이 남지 않음", "rarity": 3, "role": "헌신", "floor": 53, "era": "균열기", "tagline": "다들 웃어야 하지 않겠습니까.", "col": 0, "row": 2, "fbox": [0.2959, 0.21, 0.4111, 0.4111], "unique": null}, {"id": "pathpointer", "name": "길을 가리키던 사람", "title": "36층 · 이름이 남지 않음", "rarity": 3, "role": "헌신", "floor": 36, "era": "붕괴기", "tagline": "저는 그냥 가리켰을 뿐입니다.", "col": 1, "row": 2, "fbox": [0.2598, 0.2051, 0.4414, 0.4414], "unique": null}, {"id": "flagbearer", "name": "깃발을 든 사람", "title": "32층 · 이름이 남지 않음", "rarity": 3, "role": "수호", "floor": 32, "era": "붕괴기", "tagline": "어느 쪽이든 들어야 했습니다.", "col": 2, "row": 2, "fbox": [0.1992, 0.1846, 0.4727, 0.4727], "unique": "두 번째 깃발"}, {"id": "north_gatekeeper", "name": "북문의 수문장", "title": "이름이 남지 않음", "rarity": 3, "role": "수호", "floor": 24, "era": "붕괴기", "tagline": "대장은 문을 닫으라고 했다. 나는 문 앞에 있었다.", "col": 3, "row": 2, "fbox": [0.3105, 0.1953, 0.3867, 0.3867], "unique": null}, {"id": "cart_pusher", "name": "수레를 밀던 사람", "title": "23층 · 이름이 남지 않음", "rarity": 3, "role": "저항", "floor": 23, "era": "붕괴기", "tagline": "비켜서 가면 되잖습니까. 왜 다들.", "col": 4, "row": 2, "fbox": [0.2812, 0.3174, 0.4307, 0.4307], "unique": null}, {"id": "baker_18f", "name": "빵을 굽던 사람", "title": "13층 · 이름이 남지 않음", "rarity": 3, "role": "헌신", "floor": 13, "era": "종말기", "tagline": "다들 배가 고팠으니까요.", "col": 0, "row": 3, "fbox": [0.2949, 0.2256, 0.4307, 0.4307], "unique": null}, {"id": "counting_child", "name": "셈하던 아이", "title": "11층 · 이름이 남지 않음", "rarity": 3, "role": "탐구", "floor": 11, "era": "종말기", "tagline": "세면 안 잊어버려요.", "col": 1, "row": 3, "fbox": [0.2988, 0.2266, 0.4307, 0.4307], "unique": null}, {"id": "ash_sweeper", "name": "재를 쓸던 사람", "title": "5층 · 이름이 남지 않음", "rarity": 3, "role": "수호", "floor": 5, "era": "종말기", "tagline": "길이 보여야 사람이 오지요.", "col": 2, "row": 3, "fbox": [0.2871, 0.2295, 0.4209, 0.4209], "unique": null}, {"id": "crack_child", "name": "균열을 들여다본 아이", "title": "51층 · 이름이 남지 않음", "rarity": 2, "role": "도피", "floor": 51, "era": "균열기", "tagline": "안에 뭐가 있는지 보고 싶었어요.", "col": 3, "row": 3, "fbox": [0.2939, 0.2275, 0.4121, 0.4121], "unique": null}, {"id": "ledger_keeper", "name": "장부를 맞추던 사람", "title": "46층 · 이름이 남지 않음", "rarity": 2, "role": "탐구", "floor": 46, "era": "균열기", "tagline": "숫자는 맞아야지요.", "col": 4, "row": 3, "fbox": [0.3066, 0.167, 0.4141, 0.4141], "unique": null}, {"id": "left_behind", "name": "짐을 두고 온 사람", "title": "22층 · 이름이 남지 않음", "rarity": 2, "role": "도피", "floor": 22, "era": "붕괴기", "tagline": "무거운 것부터 버렸어요. 순서대로.", "col": 0, "row": 4, "fbox": [0.291, 0.1318, 0.4238, 0.4238], "unique": null}, {"id": "someones_mother", "name": "누군가의 어머니", "title": "편린", "rarity": 2, "role": "헌신", "floor": 18, "era": "종말기", "tagline": "…이름을 부르는 소리만 남았다.", "col": 1, "row": 4, "fbox": [0.417, 0.2217, 0.4404, 0.4404], "unique": null}, {"id": "unnamed_000", "name": "이름 없는 자", "title": "명부 000", "rarity": 1, "role": "미상", "floor": null, "era": "불명", "tagline": "어느 층에서도 발견되고, 어떤 기록에도 없다.", "col": 2, "row": 4, "fbox": [0.2842, 0.2363, 0.4277, 0.4277], "unique": null}]};
+
+// ── 초점 상수 — tools/focus_curve.py 와 같은 수 ──────────────
+const BLUR_MAX = 6.0, FEATURE_FLOOR = 0.25, GHOST_MAX = 0.40,
+      GHOST_OFF = 3.0, REF = 512.0, SMEAR = 0.045, STEPS = 25;
+
+const atlas = new Image();
+atlas.src = 'roster.jpg';
+
+// 초점 렌더 — 층 1(이목구비 뭉갬) → 2(흐림) → 3(이중상), 셰이더와 같은 순서
+function renderFocus(cv, ch, f){
+  const ctx = cv.getContext('2d');
+  const N = cv.width, C = DB.cell;
+  const sx = ch.col * C, sy = ch.row * C;
+  const scale = N / REF;
+  const blur = BLUR_MAX * (1 - f) * scale;
+  const feature = FEATURE_FLOOR + (1 - FEATURE_FLOOR) * Math.sqrt(f);
+  const ghost = GHOST_MAX * (1 - f);
+  const goff = GHOST_OFF * (1 - f) * scale;
+  const rc = Math.sqrt((SMEAR * N) ** 2 + blur * blur);
+
+  // 층 2 — 전체 흐림
+  const S = document.createElement('canvas'); S.width = S.height = N;
+  const sc = S.getContext('2d');
+  sc.filter = blur > 0.05 ? `blur(${blur}px)` : 'none';
+  sc.drawImage(atlas, sx, sy, C, C, 0, 0, N, N);
+  sc.filter = 'none';
+
+  // 층 1 — 이목구비 자리만 더 뭉갠 판을 (1-feature) 만큼 덮는다
+  if (feature < 0.999){
+    const M = document.createElement('canvas'); M.width = M.height = N;
+    const mc = M.getContext('2d');
+    mc.filter = `blur(${rc}px)`;
+    mc.drawImage(atlas, sx, sy, C, C, 0, 0, N, N);
+    mc.filter = 'none';
+    mc.globalCompositeOperation = 'destination-in';
+    const [bx, by, bw, bh] = ch.fbox;
+    const cx = (bx + bw / 2) * N, cy = (by + bh * 0.61) * N;
+    const rx = bw * 0.46 * N, ry = bh * 0.33 * N;
+    mc.save(); mc.translate(cx, cy); mc.scale(rx, ry);
+    const g = mc.createRadialGradient(0, 0, 0, 0, 0, 1);
+    g.addColorStop(0.72, 'rgba(0,0,0,1)');
+    g.addColorStop(1, 'rgba(0,0,0,0)');
+    mc.fillStyle = g; mc.fillRect(-1.1, -1.1, 2.2, 2.2); mc.restore();
+    sc.globalAlpha = 1 - feature;
+    sc.drawImage(M, 0, 0);
+    sc.globalAlpha = 1;
+  }
+
+  // 층 3 — 어긋난 사본 둘 (viewer 방식: 본판 위에 ghost/2 씩)
+  ctx.clearRect(0, 0, N, N);
+  ctx.drawImage(S, 0, 0);
+  if (ghost > 0.001){
+    ctx.globalAlpha = ghost / 2;
+    ctx.drawImage(S, -2 * goff, -1 * goff);
+    ctx.drawImage(S,  2 * goff, 0.6 * goff);
+    ctx.globalAlpha = 1;
+  }
+}
+
+const stars = n => '★'.repeat(n) + `<span class="off">${'★'.repeat(6 - n)}</span>`;
+const focusOf = step => Math.min(1, Math.max(0, step / STEPS));
+
+// ── 대표 무대 ────────────────────────────────────────────────
+const stageCv = document.getElementById('stageCv');
+const range = document.getElementById('focusRange');
+const starRow = document.getElementById('starRow');
+let current = DB.chars[0];
+
+for (let s = 1; s <= 6; s++){
+  const b = document.createElement('button');
+  b.textContent = '★' + s;
+  b.dataset.star = s;
+  b.addEventListener('click', () => { range.value = (s - 1) * 5; syncStage(); });
+  starRow.appendChild(b);
+}
+
+function syncStage(){
+  const step = +range.value;
+  const f = focusOf(step);
+  const star = Math.min(6, Math.floor(step / 5) + 1);
+  const aw = step - (star - 1) * 5;
+  document.getElementById('stepLabel').textContent =
+    `— ★${star}${aw ? ' +' + aw : ''}`;
+  document.getElementById('focusVal').textContent = '초점 ' + f.toFixed(2);
+  range.style.setProperty('--pct', (step / 25 * 100) + '%');
+  starRow.querySelectorAll('button').forEach(b =>
+    b.classList.toggle('on', +b.dataset.star === star && aw === 0));
+  renderFocus(stageCv, current, f);
+}
+
+function setStage(ch, toBirth){
+  current = ch;
+  document.getElementById('stName').textContent = ch.name;
+  document.getElementById('stTitle').textContent = ch.title;
+  document.getElementById('stTag').textContent = '“' + ch.tagline + '”';
+  const meta = [
+    `<span>역할 <b>${ch.role}</b></span>`,
+    ch.floor ? `<span>도달 <b>${ch.floor}층</b></span>` : '',
+    `<span>시대 <b>${ch.era}</b></span>`,
+    ch.unique ? `<span>고유 <b>${ch.unique}</b></span>` : '',
+  ].filter(Boolean).join('');
+  document.getElementById('stMeta').innerHTML = meta;
+  if (toBirth) range.value = (ch.rarity - 1) * 5;
+  syncStage();
+}
+
+range.addEventListener('input', syncStage);
+
+// ── 명부 카드 ────────────────────────────────────────────────
+const roster = document.getElementById('roster');
+const cardCvs = [];
+for (const ch of DB.chars){
+  const card = document.createElement('button');
+  card.className = 'card';
+  card.setAttribute('aria-label', `${ch.name} — 위 무대에서 각성시켜 보기`);
+  const cv = document.createElement('canvas');
+  cv.width = cv.height = 232;
+  card.appendChild(cv);
+  const body = document.createElement('div');
+  body.className = 'card-body';
+  body.innerHTML =
+    `<span class="card-stars">${stars(ch.rarity)}</span>` +
+    `<span class="card-name">${ch.name}</span>` +
+    `<span class="card-title">${ch.title}</span>` +
+    `<span class="card-foot"><span class="chip r-${ch.role}">${ch.role}</span>` +
+    (ch.floor ? `<span>${ch.floor}층</span>` : '') + `</span>`;
+  card.appendChild(body);
+  card.addEventListener('click', () => {
+    setStage(ch, true);
+    document.querySelector('.stage').scrollIntoView({behavior:'smooth', block:'center'});
+  });
+  roster.appendChild(card);
+  cardCvs.push([cv, ch]);
+}
+
+atlas.addEventListener('load', () => {
+  setStage(DB.chars[0], true);   // 세렌 ★5 → 초점 0.80
+  for (const [cv, ch] of cardCvs)
+    renderFocus(cv, ch, focusOf((ch.rarity - 1) * 5));
+});
+</script>
