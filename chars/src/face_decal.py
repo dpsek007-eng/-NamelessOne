@@ -91,22 +91,36 @@ def make_decal(face_img, ch, out_path, head_w=197, head_h=249):
 
     canvas_w = head_w
     canvas_h = head_h
-    canvas = Image.new("RGBA", (canvas_w, canvas_h), (*SKIN, 255))
+    # 배경은 투명 — 얼굴 타원만 남긴다. 카드처럼 붙는 게 아니라
+    # 얼굴 부분만 머리 앞에 뜨게 하기 위함이다.
+    canvas = Image.new("RGBA", (canvas_w, canvas_h), (0, 0, 0, 0))
 
     # 얼굴을 머리 비율에 맞게 리사이즈
-    # 얼굴은 머리 너비의 약 65% 를 차지한다
-    target_fw = int(canvas_w * 0.65)
-    face_resized = face_img.resize((target_fw, target_fw), Image.LANCZOS)
+    # 얼굴은 머리 너비의 약 75% 를 차지한다
+    target_fw = int(canvas_w * 0.75)
+    face_resized = face_img.resize((target_fw, target_fw), Image.LANCZOS).convert("RGBA")
 
-    # 배치: 눈선이 머리 위에서 42% → 얼굴 중심을 42% 지점에
-    eye_y_ratio = 0.42
+    # 타원 알파 마스크 — 가장자리를 부드럽게 깎는다.
+    # 초상 위쪽엔 모자·머리카락이 걸리므로 타원 윗변을 12% 내려서 자른다.
+    from PIL import ImageDraw, ImageFilter
+    mask = Image.new("L", (target_fw, target_fw), 0)
+    d = ImageDraw.Draw(mask)
+    pad = int(target_fw * 0.04)
+    top = int(target_fw * 0.20)
+    d.ellipse((pad, top, target_fw - pad, target_fw - pad), fill=255)
+    mask = mask.filter(ImageFilter.GaussianBlur(int(target_fw * 0.06)))
+    face_resized.putalpha(mask)
+
+    # 배치: 얼굴(눈썹~턱) 중심을 머리 위에서 52% 지점에 —
+    # MPFB 머리는 눈이 대략 중간 높이라 42% 는 너무 높았다 (실측).
+    eye_y_ratio = 0.52
     paste_cx = canvas_w // 2
     paste_cy = int(canvas_h * eye_y_ratio)
 
     px = paste_cx - face_resized.width // 2
     py = paste_cy - face_resized.height // 2
 
-    canvas.paste(face_resized, (px, py))
+    canvas.paste(face_resized, (px, py), face_resized)
 
     os.makedirs(os.path.dirname(out_path), exist_ok=True)
     canvas.save(out_path)
@@ -166,54 +180,48 @@ def build_faced_glb(char_id, role, cls, decal_path, out_dir, head_w_m=0.197, hea
         bpy.ops.object.modifier_apply(modifier=m.name)
     bm.name = bm.data.name = f"body_{BODY_SLUG[role]}"
 
-    # --- 스킨 머티리얼에 데칼 텍스처 입히기 ---
+    # --- 스킨 머티리얼 — make_demo 와 같은 flat color ---
+    # 데칼 텍스처를 몸 UV 에 그대로 입히면 몸 전체가 오염된다.
+    # 몸은 민색으로 두고, 얼굴은 별도 평면으로 붙인다.
     skin = bpy.data.materials.new("skin")
-    skin.use_nodes = True
-    tree = skin.node_tree
-    nodes = tree.nodes
-    links = tree.links
-
-    # 기본 노드 정리
-    for n in nodes:
-        nodes.remove(n)
-
-    output = nodes.new("ShaderNodeOutputMaterial")
-    output.location = (400, 0)
-
-    bsdf = nodes.new("ShaderNodeBsdfPrincipled")
-    bsdf.location = (200, 0)
-    links.new(bsdf.outputs["BSDF"], output.inputs["Surface"])
-
-    # 데칼 텍스처 로드
-    tex_img = nodes.new("ShaderNodeTexImage")
-    tex_img.location = (-200, 0)
-    tex_img.image = bpy.data.images.load(decal_path)
-    tex_img.image.alpha_mode = "STRAIGHT"
-
-    links.new(tex_img.outputs["Color"], bsdf.inputs["Base Color"])
-    links.new(tex_img.outputs["Alpha"], bsdf.inputs["Alpha"])
-
-    # 알파 블렌딩 활성화
-    skin.blend_method = "CLIP" if hasattr(skin, 'blend_method') else None
-    # EEVEE alpha — glTF export 에서 자동 변환됨
-
+    skin.diffuse_color = (0.68, 0.55, 0.47, 1.0)
+    # Blender 5.x 는 새 머티리얼에 노드가 켜져 있다 — Principled 의
+    # Base Color 도 같이 맞춰야 glTF 로 살색이 나간다.
+    if skin.node_tree:
+        pn = skin.node_tree.nodes.get("Principled BSDF")
+        if pn:
+            pn.inputs["Base Color"].default_value = (0.68, 0.55, 0.47, 1.0)
     bm.data.materials.clear()
     bm.data.materials.append(skin)
+    MG.bind(bm, arm)
 
-    # --- 얼굴 데칼 평면 만들기 ---
-    # 3D 머리 좌표: cx=0, cz=head中心z, cy=머리 앞쪽
-    head_cz = L["head"].z
-    head_cy = L["head"].y  # 약 -0.054
+    # --- 머리 실물 재기 — head 그룹 정점의 bbox ---
+    # MPFB 는 -Y 가 앞이다. 평면은 얼굴 앞(y 최소)보다 살짝 더 앞에 세운다.
+    grp = bm.vertex_groups.get("head")
+    if grp is None:
+        raise SystemExit("head 버텍스그룹이 없다")
+    gi = grp.index
+    co = [v.co for v in bm.data.vertices
+          for g in v.groups if g.group == gi and g.weight > 0.5]
+    hx0 = min(c.x for c in co); hx1 = max(c.x for c in co)
+    hy0 = min(c.y for c in co)
+    hz0 = min(c.z for c in co); hz1 = max(c.z for c in co)
+    head_cx = (hx0 + hx1) / 2
+    head_cz = (hz0 + hz1) / 2
+    head_w_m = hx1 - hx0
+    head_h_m = hz1 - hz0
 
-    # 데칼 평면: 머리 너비 x 높이 (약간 크게)
+    # 데칼 평면: 머리 너비 x 높이 (약간 크게), 얼굴 앞 1cm
     plane_w = head_w_m * 1.05
     plane_h = head_h_m * 1.05
 
-    bpy.ops.mesh.primitive_plane_add(size=1, location=(0, head_cy - 0.015, head_cz))
+    bpy.ops.mesh.primitive_plane_add(
+        size=1, location=(head_cx, hy0 - 0.01, head_cz),
+        rotation=(math.pi / 2, 0, 0))   # XY 평면 → 세워서 -Y(앞)를 본다
     face_ob = bpy.context.view_layer.objects.active
     face_ob.name = f"face_{char_id}"
-    face_ob.scale = (plane_w / 2, plane_h / 2, 1.0)
-    bpy.ops.object.transform_apply(scale=True)
+    face_ob.scale = (plane_w, plane_h, 1.0)
+    bpy.ops.object.transform_apply(scale=True, rotation=True)
 
     # 데칼 머티리얼
     decal_mat = bpy.data.materials.new("face_decal")
@@ -235,11 +243,13 @@ def build_faced_glb(char_id, role, cls, decal_path, out_dir, head_w_m=0.197, hea
     d_tex = dn.new("ShaderNodeTexImage")
     d_tex.location = (-200, 0)
     d_tex.image = bpy.data.images.load(decal_path)
+    d_tex.image.alpha_mode = "STRAIGHT"
 
     dl.new(d_tex.outputs["Color"], d_bsdf.inputs["Base Color"])
     dl.new(d_tex.outputs["Alpha"], d_bsdf.inputs["Alpha"])
 
-    decal_mat.blend_method = "CLIP" if hasattr(decal_mat, 'blend_method') else None
+    if hasattr(decal_mat, "blend_method"):
+        decal_mat.blend_method = "BLEND"   # 타원 가장자리가 부드럽게 섞인다
     face_ob.data.materials.append(decal_mat)
 
     # 데칼을 머리 뼈에 부모绑定

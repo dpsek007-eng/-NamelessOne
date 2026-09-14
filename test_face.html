@@ -8,39 +8,53 @@
     #stage { width: 100%; height: 100vh; display: block; }
     #info { position: absolute; top: 20px; left: 20px; background: rgba(0,0,0,0.7);
             padding: 20px; border-radius: 8px; max-width: 400px; }
+    #clips button { margin: 2px; padding: 4px 10px; cursor: pointer; }
   </style>
+  <script type="importmap">
+  {"imports":{
+   "three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+   "three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}
+  </script>
 </head>
 <body>
 <canvas id="stage"></canvas>
 <div id="info">
   <h3>얼굴 데칼 테스트 — north_gatekeeper</h3>
   <p id="status">로드 중...</p>
-  <p id="detail"></p>
+  <p id="detail" style="white-space:pre-line"></p>
+  <div id="clips"></div>
 </div>
 
 <script type="module">
-import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
-import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/loaders/GLTFLoader.js';
-import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/controls/OrbitControls.js';
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+const statusEl = document.getElementById('status');
+window.addEventListener('error', e => { statusEl.textContent = '에러: ' + e.message; });
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x1a1a1a);
 
 const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 100);
-camera.position.set(0.5, 1.2, 1.5);
+camera.position.set(0.5, 1.6, 1.6);
 
 const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('stage'), antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setPixelRatio(window.devicePixelRatio);
 
 const controls = new OrbitControls(camera, renderer.domElement);
-controls.autoRotate = true;
-controls.autoRotateSpeed = 4;
+controls.target.set(0, 1.4, 0);   // 머리 높이를 본다
+// ?still 을 붙이면 회전을 멈추고 정면을 본다 (헤드리스 검증용)
+const params = new URLSearchParams(location.search);
+controls.autoRotate = !params.has('still');
+controls.autoRotateSpeed = 2;
+if (params.has('still')) camera.position.set(0, 1.55, 1.2);
 
-const light = new THREE.DirectionalLight(0xffffff, 0.8);
-light.position.set(5, 10, 5);
+const light = new THREE.DirectionalLight(0xffffff, 2.2);
+light.position.set(2, 4, 3);
 scene.add(light);
-scene.add(new THREE.AmbientLight(0xffffff, 0.4));
+scene.add(new THREE.AmbientLight(0xffffff, 1.2));
 
 let mixer = null;
 const clock = new THREE.Clock();
@@ -48,40 +62,46 @@ const clock = new THREE.Clock();
 async function loadModel() {
   try {
     const loader = new GLTFLoader();
-    const gltf = await loader.load('/chars/out/demo/guard_soldier.glb');
-    const model = gltf.scene;
+    const gltf = await loader.loadAsync('/chars/out/demo/guard_soldier.glb');
+    scene.add(gltf.scene);
 
-    scene.add(model);
-
-    // 애니메이션 재생
+    // 애니메이션 버튼
     if (gltf.animations.length > 0) {
-      mixer = new THREE.AnimationMixer(model);
-      const action = mixer.clipAction(gltf.animations[0]); // 첫 애니메이션 (숨)
-      action.play();
-      document.getElementById('detail').textContent =
-        `애니메이션: ${gltf.animations[0].name} (${gltf.animations.length}개 클립)`;
+      mixer = new THREE.AnimationMixer(gltf.scene);
+      let current = mixer.clipAction(gltf.animations[0]);
+      current.play();
+      const box = document.getElementById('clips');
+      for (const clip of gltf.animations) {
+        const b = document.createElement('button');
+        b.textContent = clip.name;
+        b.onclick = () => {
+          current.stop();
+          current = mixer.clipAction(clip);
+          current.reset().play();
+        };
+        box.appendChild(b);
+      }
     }
 
-    // 메시 정보
     let meshCount = 0, vertCount = 0;
-    model.traverse(n => {
-      if (n.isMesh) {
+    gltf.scene.traverse(n => {
+      if (n.isMesh || n.isSkinnedMesh) {
         meshCount++;
         vertCount += n.geometry.attributes.position.count;
       }
     });
 
-    document.getElementById('status').textContent = `로드됨 ✓`;
-    document.getElementById('detail').textContent +=
-      `\n메시: ${meshCount}개, 정점: ${vertCount.toLocaleString()}개`;
+    statusEl.textContent = '로드됨 ✓';
+    document.getElementById('detail').textContent =
+      `클립 ${gltf.animations.length}개 · 메시 ${meshCount}개 · 정점 ${vertCount.toLocaleString()}개`;
   } catch (e) {
-    document.getElementById('status').textContent = `에러: ${e.message}`;
+    statusEl.textContent = '에러: ' + (e.message || e);
+    console.error(e);
   }
 }
 
 function animate() {
   requestAnimationFrame(animate);
-
   if (mixer) mixer.update(clock.getDelta());
   controls.update();
   renderer.render(scene, camera);
