@@ -125,6 +125,49 @@ NAMED = {
 ERA_WEAR = {"균열기": "faint dust", "붕괴기": "grime at the collar", "종말기": "ash at the sleeve"}
 
 
+# --- 두상 6 — 초상 부품 (docs/22 「이목구비 8 종」) -------------------------
+# 무명 초상의 겉층이다. tools/rig.py 의 HEAD 그룹과 같은 매핑이다 — 계층이
+# 머리형을 정한다. 초점과 무관하게 처음부터 보인다. 부품 조립 때 이목구비
+# 원형이 눈~입 자리에 겹쳐지므로, 여기 얼굴 특징은 가려져도 무방하다.
+HEADS = {
+    "bare":     "bare head, plain neat dark hair",
+    "hood":     "deep hood shadowing the brow",
+    "helmet":   "plain soldier helmet, mail gorget at the chin",
+    "hat":      "neat dark hat, collar turned up",
+    "kerchief": "clean kerchief tied over the hair",
+    "circlet":  "fine circlet, high collar",
+}
+
+# --- 이목구비 8 — 초상 부품 (docs/22 「이목구비 8 종」) ----------------------
+# 눈매·입매로 정의한 여덟 얼굴 원형. 전부 「보상은 바람직해야 한다」의 깨끗한
+# 젊은 얼굴 안에 있고, 얼굴은 역할을 나르지 않는다(실측). 다섯 종의 겉말이
+# 역할 눈빛과 겹치는 것은 결합이 아니라 종의 이름이다.
+FACES_8 = {
+    "guard":  "calm level gaze straight ahead, steady brow, composed, clean strong jaw",
+    "resist": "defiant clear gaze straight on, head lifted, lips pressed firm",
+    "devote": "soft clear eyes lowered, kind composed face, head tilted down",
+    "seek":   "bright attentive eyes looking to one side, thoughtful, fine features",
+    "flee":   "wide clear eyes glancing aside, poised, light agile build",
+    "deep":   "deep quiet eyes, sorrow held still, solemn calm mouth",
+    "clear":  "bright clear eyes, faint gentle curve at the lips, open serene brow",
+    "still":  "still composed face, expressionless mouth, quiet distant gaze",
+}
+
+
+def head_rows():
+    """두상 6 — 계층이 아니라 머리형이 곧 정체다."""
+    return [{"id": f"head_{k}", "kind": "head", "ko": k,
+             "role": "", "tier": "", "en": v, "wear": "", "key_color": ""}
+            for k, v in HEADS.items()]
+
+
+def face_rows():
+    """이목구비 8 — 눈매·입매 원형."""
+    return [{"id": f"face_{k}", "kind": "face", "ko": k,
+             "role": "", "tier": "", "en": v, "wear": "", "key_color": ""}
+            for k, v in FACES_8.items()]
+
+
 def named_rows(chars):
     """data/characters.json 의 characters 리스트를 받아 초상 행으로."""
     rows = []

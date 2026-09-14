@@ -45,13 +45,14 @@ def main():
     ap.add_argument("--part-variants", type=int, default=6)
     ap.add_argument("--seed", type=int, default=20260909)
     ap.add_argument("--only", default=None, help="쉼표로 구분한 id (예: seren,guard_royal)")
-    ap.add_argument("--kind", default=None, choices=["named", "part"])
+    ap.add_argument("--kind", default=None, choices=["named", "part", "head", "face"])
     ap.add_argument("--check-only", action="store_true", help="말 길이만 재고 끝낸다")
     args = ap.parse_args()
 
     named, parts = load_rows(args.chars)
-    everything = named + parts
-    nvar = {"named": args.named_variants, "part": args.part_variants}
+    everything = named + parts + F.head_rows() + F.face_rows()
+    nvar = {"named": args.named_variants, "part": args.part_variants,
+            "head": args.named_variants, "face": args.named_variants}
 
     rows = everything
     if args.kind:
