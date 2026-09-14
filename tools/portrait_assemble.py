@@ -19,9 +19,10 @@ docs/22-아트.md 「이목구비 8 종」이 정한 판정 기준을 만든다:
 쓰는 법:
   python3 tools/portrait_assemble.py --grid                        48칸 격자
   python3 tools/portrait_assemble.py --grid --focus                초점 줄 포함
+  python3 tools/portrait_assemble.py --sheet                       유니티 시트 (Resources/Irem/Portraits)
   python3 tools/portrait_assemble.py --heads head_hood --faces face_clear --out /tmp/a.png
 """
-import argparse, os, sys
+import argparse, json, os, sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import focus_stack
@@ -166,6 +167,41 @@ def grid(facedir, focus=False, out="/tmp/parts_grid.png"):
     return out
 
 
+def sheet(facedir, out, cell=512):
+    """유니티 시트 — 48 조합을 정해진 격자로 한 장에.
+
+    grid() 는 초점 검증 줄(⑤)이 아래에 붙는다. 시트는 검증이 끝난 것이므로
+    조합만 남긴다. 얼굴 상자는 두상(base) 상자가 그대로 옮겨 붙는다 —
+    이목구비를 두상 얼굴 상자에 맞춰 끼우는 알고리즘이라 (assemble), 초점의
+    「이목구비 자리」를 여기서 다시 잴 필요가 없다. boxes.json 의 두상 값을
+    그대로 쓴다. 이 상자가 셰이더의 _FaceRect 이다.
+    """
+    picked = pick(facedir)
+    heads = sorted(g for g in picked if g.startswith("head_"))
+    faces = sorted(g for g in picked if g.startswith("face_"))
+    with open(os.path.join(facedir, "boxes.json"), encoding="utf-8") as fp:
+        boxes = json.load(fp)
+
+    os.makedirs(os.path.dirname(os.path.abspath(out)), exist_ok=True)
+    atlas = Image.new("RGB", (cell * len(faces), cell * len(heads)), (18, 18, 22))
+    combos = {}
+    for hi, hd in enumerate(heads):
+        hb = boxes[picked[hd]["image"]]
+        for fi, fc in enumerate(faces):
+            hp, fp = pair_paths(facedir, picked, hd, fc)
+            im = assemble(hp, fp).resize((cell, cell), Image.LANCZOS)
+            atlas.paste(im, (fi * cell, hi * cell))
+            combos[f"{hd[5:]}×{fc[5:]}"] = {
+                "x": hb["x"], "y": hb["y"], "w": hb["w"], "h": hb["h"]}
+    atlas.save(out)
+    mp = os.path.splitext(out)[0] + ".face_boxes.json"
+    with open(mp, "w", encoding="utf-8") as fp:
+        json.dump({"cols": len(faces), "rows": len(heads), "cell": cell,
+                   "combos": combos}, fp, ensure_ascii=False, indent=1)
+    print(f"유니티 시트 → {out}  ({len(heads)}두상 × {len(faces)}이목구비, 칸 {cell}px)")
+    print(f"이목구비 자리(UV 0~1) → {mp}  ({len(combos)}조합)")
+
+
 def single(facedir, head_id, face_id, out):
     picked = pick(facedir)
     hp, fp = pair_paths(facedir, picked, head_id, face_id)
@@ -176,22 +212,29 @@ def single(facedir, head_id, face_id, out):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--grid", action="store_true", help="두상 6 x 이목구비 8 격자")
+    ap.add_argument("--sheet", action="store_true",
+                    help="유니티 시트 — 검증 줄 없이 조합만 격자로")
     ap.add_argument("--focus", action="store_true", help="격자에 ★1~★6 초점 줄")
     ap.add_argument("--heads", help="이목구비와 합칠 두상 id (--out 필수)")
     ap.add_argument("--faces", help="두상과 합칠 이목구비 id (--out 필수)")
     ap.add_argument("--faces-dir", default="pipeline3d/out/faces")
-    ap.add_argument("--out", default="/tmp/parts_grid.png")
+    ap.add_argument("--out", default=None)
     a = ap.parse_args()
 
     root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     facedir = a.faces_dir if os.path.isabs(a.faces_dir) else os.path.join(root, a.faces_dir)
     if a.heads and a.faces:
-        single(facedir, a.heads, a.faces, a.out)
+        out = a.out or os.path.join(root, "art/parts_single.png")
+        single(facedir, a.heads, a.faces, out)
+        return
+    if a.sheet:
+        out = a.out or os.path.join(root, "unity/Assets/Resources/Irem/Portraits/parts.png")
+        sheet(facedir, out)
         return
     if a.grid:
-        grid(facedir, a.focus, a.out)
+        grid(facedir, a.focus, a.out or "/tmp/parts_grid.png")
         return
-    ap.error("--grid 를 주거나 --heads/--faces 쌍을 줘라 (둘 다 pick.json 이 있어야 한다)")
+    ap.error("--grid / --sheet 를 주거나 --heads/--faces 쌍을 줘라 (둘 다 pick.json 이 있어야 한다)")
 
 
 if __name__ == "__main__":
