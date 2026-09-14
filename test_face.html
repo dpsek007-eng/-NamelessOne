@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <title>얼굴 데칼 테스트</title>
+  <style>
+    body { margin: 0; font-family: sans-serif; background: #222; color: #fff; }
+    #stage { width: 100%; height: 100vh; display: block; }
+    #info { position: absolute; top: 20px; left: 20px; background: rgba(0,0,0,0.7);
+            padding: 20px; border-radius: 8px; max-width: 400px; }
+  </style>
+</head>
+<body>
+<canvas id="stage"></canvas>
+<div id="info">
+  <h3>얼굴 데칼 테스트 — north_gatekeeper</h3>
+  <p id="status">로드 중...</p>
+  <p id="detail"></p>
+</div>
+
+<script type="module">
+import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
+import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/loaders/GLTFLoader.js';
+import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/controls/OrbitControls.js';
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x1a1a1a);
+
+const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 100);
+camera.position.set(0.5, 1.2, 1.5);
+
+const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('stage'), antialias: true });
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setPixelRatio(window.devicePixelRatio);
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.autoRotate = true;
+controls.autoRotateSpeed = 4;
+
+const light = new THREE.DirectionalLight(0xffffff, 0.8);
+light.position.set(5, 10, 5);
+scene.add(light);
+scene.add(new THREE.AmbientLight(0xffffff, 0.4));
+
+let mixer = null;
+const clock = new THREE.Clock();
+
+async function loadModel() {
+  try {
+    const loader = new GLTFLoader();
+    const gltf = await loader.load('/chars/out/demo/guard_soldier.glb');
+    const model = gltf.scene;
+
+    scene.add(model);
+
+    // 애니메이션 재생
+    if (gltf.animations.length > 0) {
+      mixer = new THREE.AnimationMixer(model);
+      const action = mixer.clipAction(gltf.animations[0]); // 첫 애니메이션 (숨)
+      action.play();
+      document.getElementById('detail').textContent =
+        `애니메이션: ${gltf.animations[0].name} (${gltf.animations.length}개 클립)`;
+    }
+
+    // 메시 정보
+    let meshCount = 0, vertCount = 0;
+    model.traverse(n => {
+      if (n.isMesh) {
+        meshCount++;
+        vertCount += n.geometry.attributes.position.count;
+      }
+    });
+
+    document.getElementById('status').textContent = `로드됨 ✓`;
+    document.getElementById('detail').textContent +=
+      `\n메시: ${meshCount}개, 정점: ${vertCount.toLocaleString()}개`;
+  } catch (e) {
+    document.getElementById('status').textContent = `에러: ${e.message}`;
+  }
+}
+
+function animate() {
+  requestAnimationFrame(animate);
+
+  if (mixer) mixer.update(clock.getDelta());
+  controls.update();
+  renderer.render(scene, camera);
+}
+
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+loadModel();
+animate();
+</script>
+</body>
+</html>

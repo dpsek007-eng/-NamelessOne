@@ -329,8 +329,13 @@ def main(argv):
 
         report = build_faced_glb(args.char, args.role, args.cls,
                                  decal_path, args.out)
-        report_path = os.path.join(args.out, "face_report.json")
+        # serve.py 호환: report.json 도 쓴다 (마지막 build 결과)
+        report_path = os.path.join(args.out, "report.json")
         with open(report_path, "w", encoding="utf-8") as f:
+            json.dump(report, f, ensure_ascii=False, indent=1)
+        # face_report.json 은 현재 빌드 상세 기록
+        face_report_path = os.path.join(args.out, "face_report.json")
+        with open(face_report_path, "w", encoding="utf-8") as f:
             json.dump(report, f, ensure_ascii=False, indent=1)
 
 
