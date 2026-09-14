@@ -47,9 +47,11 @@ const controls = new OrbitControls(camera, renderer.domElement);
 controls.target.set(0, 1.4, 0);   // 머리 높이를 본다
 // ?still 을 붙이면 회전을 멈추고 정면을 본다 (헤드리스 검증용)
 const params = new URLSearchParams(location.search);
-controls.autoRotate = !params.has('still');
+controls.autoRotate = !params.has('still') && !params.has('side') && !params.has('face');
 controls.autoRotateSpeed = 2;
 if (params.has('still')) camera.position.set(0, 1.55, 1.2);
+if (params.has('side')) { camera.position.set(1.0, 1.6, 0.5); controls.target.set(0, 1.65, 0); }
+if (params.has('face')) { camera.position.set(0, 1.66, 0.45); controls.target.set(0, 1.66, 0); }
 
 const light = new THREE.DirectionalLight(0xffffff, 2.2);
 light.position.set(2, 4, 3);
