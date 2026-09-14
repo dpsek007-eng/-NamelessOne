@@ -101,9 +101,9 @@ def make_decal(face_img, ch, out_path, head_w=197, head_h=249):
     # 얼굴을 머리 비율에 맞게 리사이즈
     # 얼굴은 머리 너비의 약 75% 를 차지한다
     target_fw = int(canvas_w * 0.75)
-    # MPFB 얼굴은 초상보다 세로로 길다 — 눈선을 맞추면 입이 2cm쯤
-    # 위에 떴다 (실측). 초상을 세로로 늘여 3D 비율에 맞춘다.
-    V_STRETCH = 1.35
+    # 얼굴 지오메트리를 뭉갠 뒤로는 몸의 입술 위치에 맞출 필요가
+    # 없다 — 초상 비율을 거의 그대로 쓴다 (1.25 는 입이 턱까지 내려갔다).
+    V_STRETCH = 1.05
     target_fh = int(target_fw * V_STRETCH)
     face_resized = face_img.resize((target_fw, target_fh), Image.LANCZOS).convert("RGBA")
 
@@ -114,19 +114,26 @@ def make_decal(face_img, ch, out_path, head_w=197, head_h=249):
     d = ImageDraw.Draw(mask)
     pad = int(target_fw * 0.10)   # 좌우 옆머리카락이 회색 띠로 남지 않게
     bot = int(target_fh * 0.04)   # 아래는 턱·입술을 살린다
-    top = int(target_fh * 0.32)   # 눈썹 바로 위까지 — 머리카락·모자 얼룩 제거
+    # 윗변은 눈썹 바로 위 — 0.32 는 눈썹을 지나 블러가 눈까지 지웠고,
+    # 0.20 은 모자챙 그림자(0.18~0.25)가 이마에 검은 띠로 남았다 (실측:
+    # 크롭에서 눈선이 36%, 눈썹이 ~26% 지점이다).
+    top = int(target_fh * 0.24)
     d.ellipse((pad, top, target_fw - pad, target_fh - bot), fill=255)
-    mask = mask.filter(ImageFilter.GaussianBlur(int(target_fw * 0.06)))
+    mask = mask.filter(ImageFilter.GaussianBlur(int(target_fw * 0.04)))
     face_resized.putalpha(mask)
 
-    # 배치: 얼굴(눈썹~턱) 중심을 머리 위에서 52% 지점에 —
-    # MPFB 머리는 눈이 대략 중간 높이라 42% 는 너무 높았다 (실측).
-    eye_y_ratio = 0.49   # 몸의 눈꺼풀 융기와 맞춘다 (0.52 는 반 칸 낮았다)
+    # 배치: 크롭의 눈선(위에서 36%)이 머리의 눈높이에 오게 붙인다.
+    # 이미지 '중심'을 눈높이에 두면 눈이 캔버스 39% 지점으로 올라가
+    # 타원 가장자리에 걸렸다 (실측).
+    EYE_IN_CROP = 0.36   # roster 크롭에서 눈선의 세로 위치
+    # 0.465 는 눈이 눈썹 아래 급경사에 얹혀 세로로 눌려 보였다 —
+    # 뭉갬을 40회로 올린 뒤로는 자국이 없어서 평평한 0.49 로 되돌린다.
+    eye_y_ratio = 0.49
     paste_cx = canvas_w // 2
     paste_cy = int(canvas_h * eye_y_ratio)
 
     px = paste_cx - face_resized.width // 2
-    py = paste_cy - face_resized.height // 2
+    py = paste_cy - int(EYE_IN_CROP * target_fh)
 
     canvas.paste(face_resized, (px, py), face_resized)
 
@@ -212,6 +219,50 @@ def build_faced_glb(char_id, role, cls, decal_path, out_dir, head_w_m=0.197, hea
         bpy.ops.mesh.delete(type="VERT")
         bpy.ops.object.mode_set(mode="OBJECT")
 
+    # --- 얼굴 앞면을 뭉갠다 — 마네킹처럼 ---
+    # 몸의 눈꺼풀 융기·입술 틈·콧날이 데칼 그림과 싸운다: 눈꺼풀이
+    # 그린 눈을 가리고, 입술 틈이 폴드를 만들어 입이 비뚤어지고,
+    # 콧날 경사가 텍스처를 늘인다 (실측). 얼굴은 그림이 전담하고
+    # 지오메트리는 매끈한 달걀면만 남긴다.
+    hgi = bm.vertex_groups["head"].index
+    egi = bm.vertex_groups["ears"].index if "ears" in bm.vertex_groups else -1
+
+    def _w(v, idx):
+        if idx < 0:
+            return 0.0
+        for g in v.groups:
+            if g.group == idx:
+                return g.weight
+        return 0.0
+
+    # 정점 참조는 EDIT<->OBJECT 왕복에서 무효가 된다(세그폴트) —
+    # 인덱스만 들고 다니고, 선택할 때마다 새로 잡는다.
+    head_info = [(v.index, v.co.y) for v in bm.data.vertices
+                 if _w(v, hgi) > 0.3 and _w(v, egi) < 0.3]
+    ys = [y for _, y in head_info]
+    fy0, fy1 = min(ys), max(ys)
+
+    def _smooth_sel(idxs, factor, repeat):
+        bpy.ops.object.mode_set(mode="EDIT")
+        bpy.ops.mesh.select_mode(type="VERT")
+        bpy.ops.mesh.select_all(action="DESELECT")
+        bpy.ops.object.mode_set(mode="OBJECT")
+        mv = bm.data.vertices
+        for i in idxs:
+            mv[i].select = True
+        bpy.ops.object.mode_set(mode="EDIT")
+        bpy.ops.mesh.vertices_smooth(factor=factor, repeat=repeat)
+        bpy.ops.object.mode_set(mode="OBJECT")
+
+    # 1차: 얼굴 핵심(앞 45%)을 강하게 — 눈구멍·입술·콧날을 녹인다
+    core = [i for i, y in head_info if y < fy0 + 0.45 * (fy1 - fy0)]
+    _smooth_sel(core, 0.5, 40)
+    # 2차: 좀 더 넓게(앞 60%) 약하게 — 뭉갠 경계를 부드럽게 잇는다
+    wide = [i for i, y in head_info if y < fy0 + 0.60 * (fy1 - fy0)]
+    _smooth_sel(wide, 0.5, 4)
+    print(f"[face_decal] 얼굴 앞면 뭉갬 — 핵심 {len(core)} / 경계 {len(wide)} 정점",
+          flush=True)
+
     # --- 스킨 머티리얼 — make_demo 와 같은 flat color ---
     # 데칼 텍스처를 몸 UV 에 그대로 입히면 몸 전체가 오염된다.
     # 몸은 민색으로 두고, 얼굴은 별도 평면으로 붙인다.
@@ -272,9 +323,9 @@ def build_faced_glb(char_id, role, cls, decal_path, out_dir, head_w_m=0.197, hea
     pb.free()
 
     # Shrinkwrap(PROJECT) — 격자를 +Y(뒤)로 쏘아 얼굴 표면에 입힌다.
-    # (NEAREST 는 코에서 격자가 접혀 부채살 자국이 났다.)
-    # project_limit: 입술 틈 따위로 새어 멀리 날아간 광선은 버린다 —
-    # 못 맞은 정점은 판에 남고 그 자리는 알파가 0 이라 안 보인다.
+    # (전체를 NEAREST 로 하면 가장자리 정점이 머리 실루엣 능선에
+    # 몰려 부채살로 접힌다 — 코를 뭉갠 뒤에도 마찬가지였다, 실측.)
+    # project_limit: 입술 틈 따위로 새어 멀리 날아간 광선은 버린다.
     bpy.context.view_layer.objects.active = face_ob
     sw = face_ob.modifiers.new("Shrinkwrap", "SHRINKWRAP")
     sw.target = proxy
@@ -286,10 +337,45 @@ def build_faced_glb(char_id, role, cls, decal_path, out_dir, head_w_m=0.197, hea
     sw.offset = 0.004
     bpy.ops.object.modifier_apply(modifier=sw.name)
 
-    # 입술 틈·눈꺼풀에 박힌 폴드를 편다
+    # 광선이 빗나간 정점은 판 위에 그대로 남아 옆에서 가시처럼
+    # 튀어나온다 — 그 정점'만' NEAREST 로 구조한다. 이웃은 이미
+    # 얼굴 위라 가까운 점이 바로 곁이고, 부채살은 안 생긴다.
+    plane_y = hy0 - 0.05
+    missed = [v.index for v in face_ob.data.vertices
+              if abs(v.co.y - plane_y) < 1e-4]
+    if missed:
+        vg = face_ob.vertex_groups.new(name="missed")
+        vg.add(missed, 1.0, "REPLACE")
+        sw2 = face_ob.modifiers.new("Rescue", "SHRINKWRAP")
+        sw2.target = proxy
+        sw2.wrap_method = "NEAREST_SURFACEPOINT"
+        sw2.offset = 0.004
+        sw2.vertex_group = "missed"
+        bpy.ops.object.modifier_apply(modifier=sw2.name)
+        print(f"[face_decal] 빗나간 정점 {len(missed)}개 구조", flush=True)
+
+    # 입술 틈으로 들어간 광선은 입안 벽에 맺힌다 (limit 안이라 못
+    # 거른다) — 이웃 평균보다 3mm 이상 깊이 박힌 정점을 끌어올린다.
+    fb = bmesh.new()
+    fb.from_mesh(face_ob.data)
+    dived = 0
+    for _ in range(3):
+        for v in fb.verts:
+            ns = [e.other_vert(v) for e in v.link_edges]
+            if not ns:
+                continue
+            avg = sum(n.co.y for n in ns) / len(ns)
+            if v.co.y > avg + 0.003:
+                v.co.y = avg
+                dived += 1
+    fb.to_mesh(face_ob.data)
+    fb.free()
+    print(f"[face_decal] 입안에 박힌 정점 {dived}개 끌어올림", flush=True)
+
+    # 남은 잔주름을 편다
     sm = face_ob.modifiers.new("Smooth", "SMOOTH")
     sm.factor = 1.0
-    sm.iterations = 4
+    sm.iterations = 2
     bpy.ops.object.modifier_apply(modifier=sm.name)
 
     # 스무딩이 데칼을 눈꺼풀 융기 속으로 끌어들인다 —
@@ -297,7 +383,7 @@ def build_faced_glb(char_id, role, cls, decal_path, out_dir, head_w_m=0.197, hea
     dp = face_ob.modifiers.new("Displace", "DISPLACE")
     dp.direction = "NORMAL"
     dp.mid_level = 0.0
-    dp.strength = 0.0025
+    dp.strength = 0.004   # 뭉갠 눈구멍 자국이 눈 그림을 삼키지 않게
     bpy.ops.object.modifier_apply(modifier=dp.name)
 
     bpy.data.objects.remove(proxy, do_unlink=True)

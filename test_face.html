@@ -49,9 +49,20 @@ controls.target.set(0, 1.4, 0);   // 머리 높이를 본다
 const params = new URLSearchParams(location.search);
 controls.autoRotate = !params.has('still') && !params.has('side') && !params.has('face');
 controls.autoRotateSpeed = 2;
-if (params.has('still')) camera.position.set(0, 1.55, 1.2);
-if (params.has('side')) { camera.position.set(1.0, 1.6, 0.5); controls.target.set(0, 1.65, 0); }
-if (params.has('face')) { camera.position.set(0, 1.66, 0.45); controls.target.set(0, 1.66, 0); }
+// 카메라는 모델 로드 후 실제 머리 높이에 맞춘다 (키가 캐릭터마다 다르다)
+function frameCamera(sceneRoot) {
+  // 스킨 메시의 bbox 는 바인드 좌표라 못 쓴다 — head 뼈의
+  // 월드 위치가 머리 높이다.
+  sceneRoot.updateMatrixWorld(true);
+  let headBone = null;
+  sceneRoot.traverse(n => { if (n.isBone && n.name === 'head') headBone = n; });
+  const p = new THREE.Vector3(0, 1.6, 0);
+  if (headBone) headBone.getWorldPosition(p);
+  const headY = p.y + 0.06;   // 뼈 밑동에서 눈높이쯤
+  if (params.has('still')) { camera.position.set(0, headY - 0.1, 1.2); controls.target.set(0, headY - 0.25, 0); }
+  if (params.has('side')) { camera.position.set(1.0, headY - 0.05, 0.5); controls.target.set(0, headY, 0); }
+  if (params.has('face')) { camera.position.set(0, headY, 0.45); controls.target.set(0, headY, 0); }
+}
 
 const light = new THREE.DirectionalLight(0xffffff, 2.2);
 light.position.set(2, 4, 3);
@@ -64,8 +75,10 @@ const clock = new THREE.Clock();
 async function loadModel() {
   try {
     const loader = new GLTFLoader();
-    const gltf = await loader.loadAsync('/chars/out/demo/guard_soldier.glb');
+    const model = params.get('model') || 'guard_soldier';
+    const gltf = await loader.loadAsync(`/chars/out/demo/${model}.glb`);
     scene.add(gltf.scene);
+    frameCamera(gltf.scene);
 
     // 애니메이션 버튼
     if (gltf.animations.length > 0) {
