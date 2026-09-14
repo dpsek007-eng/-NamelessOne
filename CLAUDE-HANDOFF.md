@@ -12,7 +12,7 @@
   - 번들에 커밋 전부(`bc838aa` 포함)가 들어 있다
 - ** 깃허브**(`dpsek007-eng/-NamelessOne`): 원격 `main` = `2f4c59b`, 로컬이 그 뒤 `N`개 앞 (2026-09-14 실측. N = `git rev-list --count 2f4c59b..HEAD` — 밑줄을 덧붙일 때마다 이 문서 맨 위 수치는 늘어난다)
   - `Navifra-Justin` 권한 문제로 push 불가 — dry-run 에러 그대로: `Permission to dpsek007-eng/-NamelessOne.git denied to Navifra-Justin`
-  - 미푸시 (14개): `9448ee4`·`8ba4867`·`0735820`·`1eef4d9`·`6af537e`·`e330338`·`a2daaed`·`8a07bee`·`e00fb08`·`986c68c`·`8baf797`·`9e5ff72` 외 2개 (정확한 수는 `git rev-list --count 2f4c59b..HEAD`)
+  - 미푸시 **0개** — 2026-09-14 push 완료 (`cf6d763`)
   - ※ 종전 「39개 미푸시」는 폐기 — 원격이 이미 `2f4c59b`까지 있었으므로 오래된 수치였다
   - 해결 방법: (1) `dpsek007-eng`가 `Navifra-Justin`을 collaborator로 초대, 또는
     (2) 서버 공개키(`ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEjfbZbP/pwTWcy9RAWTKN1Da1rO4QlRRktzDdWqw3eH justin@navifra.com`)를 write 권한 deploy key로 등록
