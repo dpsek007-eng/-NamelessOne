@@ -99,9 +99,10 @@ def make_decal(face_img, ch, out_path, head_w=197, head_h=249):
     canvas = Image.new("RGBA", (canvas_w, canvas_h), (0, 0, 0, 0))
 
     # 초상에 구워진 그림자(모자·관자놀이)가 3D 조명 아래서는 멍처럼
-    # 보인다 — 감마 0.75 로 어두운 부분만 들어올린다 (밝은 곳은 거의
-    # 그대로다).
-    lut = [round(255 * (i / 255) ** 0.75) for i in range(256)]
+    # 보인다 — 감마로 어두운 부분만 들어올린다 (밝은 곳은 거의
+    # 그대로다). 0.75 는 눈가·입꼬리가 여전히 멍처럼 남았다 (실측:
+    # 데칼 얼굴 스크린샷) — 0.68 로 더 올린다.
+    lut = [round(255 * (i / 255) ** 0.68) for i in range(256)]
     if face_img.mode != "RGB":
         face_img = face_img.convert("RGB")
     face_img = face_img.point(lut * 3)
@@ -413,6 +414,35 @@ def build_faced_glb(char_id, role, cls, decal_path, out_dir, head_w_m=0.197, hea
                 if y < nose_keep
                 and abs(mv[i].co.z - tip_co.z) < 0.03
                 and abs(mv[i].co.x - tip_co.x) < 0.025}
+
+    # --- 두상 슬림 — 두상이 그림보다 무겁다 ---
+    # 실측(맨몸 정면 스크린샷 vs 초상 크롭): 매크로 weight·muscle 이
+    # 얼굴에도 적용돼 볼·턱이 넓은데, 초상 다섯은 전부 갸름하다.
+    # 두 겹으로 좁힌다:
+    #   1) 두개골 전체 5% — 귀도 같이 (귀만 빼면 밑동에 계단이 생긴다).
+    #      실측: 하관만 좁히면 광대·두개골 폭(스크린샷 y 0.55~0.62,
+    #      334px)이 그대로라 여전히 무겁게 읽힌다.
+    #   2) 하관(광대 아래~턱) 추가 10% — 여긴 귀 밖이라 ear weight
+    #      램프로 잇는다. 합쳐서 턱은 최대 ~15%.
+    # 아래(목) 경계는 3cm 램프로 몸에 잇는다.
+    z_hi = tip_co.z + 0.02      # 광대 위 — 여기부터 위는 전체 슬림만
+    z_lo = tip_co.z - 0.10      # 턱 밑 — 여기부터 아래는 목, 그대로
+    SLIM_ALL, SLIM_JAW = 0.05, 0.10
+    n_slim = 0
+    for v in mv:
+        if _w(v, hgi) <= 0.05 and _w(v, egi) <= 0.05:
+            continue
+        base = SLIM_ALL * min(1.0, max(0.0, (v.co.z - z_lo + 0.03) / 0.03))
+        jaw = min((z_hi - v.co.z) / 0.03, (v.co.z - z_lo) / 0.03, 1.0)
+        jaw = SLIM_JAW * max(0.0, jaw) * max(0.0, 1.0 - _w(v, egi) / 0.3)
+        s = base + jaw
+        if s <= 0:
+            continue
+        v.co.x = tip_co.x + (v.co.x - tip_co.x) * (1.0 - s)
+        n_slim += 1
+    print(f"[face_decal] 두상 슬림 {n_slim}개 정점 (전체 {SLIM_ALL:.0%} + 하관 {SLIM_JAW:.0%})",
+          flush=True)
+
     # 1차: 얼굴 핵심(앞 55%)을 강하게 — 눈구멍·눈꺼풀·입술을 녹인다
     core = [i for i, y in head_info
             if y < fy0 + 0.55 * rng and i not in nose_ids]
@@ -437,6 +467,47 @@ def build_faced_glb(char_id, role, cls, decal_path, out_dir, head_w_m=0.197, hea
                and 0.008 <= abs(mv[i].co.x - tip_co.x) <= 0.06]
     _smooth_sel(eye_ids, 0.5, 300)
     print(f"[face_decal] 눈 아몬드 비눗막 {len(eye_ids)}개 정점", flush=True)
+    # 4차: 입술 융기 — 비눗막(300회)은 입에는 안 된다: 눈과 달리
+    # 입은 안쪽 주머니(구강)가 선택 경계에 걸려 막이 안으로 꺼진다
+    # (실측: 입 자리가 움푹 파이고 데칼에 흰 띠 접힘). 대신 상자
+    # 위(인중)·아래(턱) 테두리에서 x 기둥별로 가장 앞선 y 를 재고,
+    # 상자 안 겉면 정점을 그 사이 직선(막)에 눕힌다 — 막보다 8mm
+    # 이상 뒤(구강 안쪽)는 두고, 코 상자도 둔다.
+    mv = bm.data.vertices   # EDIT 왕복 뒤 재조회
+    ztop, zbot = tip_co.z - 0.010, tip_co.z - 0.050
+    xw = 0.035
+    front = fy0 + 0.5 * rng
+
+    def _xbin(x):
+        return round((x - tip_co.x) / 0.007)
+
+    rim_t, rim_b = {}, {}
+    for i, y in head_info:
+        v = mv[i]
+        if y >= front or abs(v.co.x - tip_co.x) > xw or i in nose_ids:
+            continue
+        b = _xbin(v.co.x)
+        if ztop < v.co.z <= ztop + 0.012:
+            rim_t[b] = min(rim_t.get(b, 9.0), v.co.y)
+        elif zbot - 0.012 <= v.co.z < zbot:
+            rim_b[b] = min(rim_b.get(b, 9.0), v.co.y)
+
+    lip_moved = []
+    for i, y in head_info:
+        v = mv[i]
+        if (y >= front or i in nose_ids or abs(v.co.x - tip_co.x) > xw
+                or not zbot <= v.co.z <= ztop):
+            continue
+        b = _xbin(v.co.x)
+        yt, yb = rim_t.get(b), rim_b.get(b)
+        if yt is None or yb is None:
+            continue
+        target = yt + (yb - yt) * (ztop - v.co.z) / (ztop - zbot)
+        if v.co.y < target + 0.008:   # 겉면만 — 구강 안쪽은 앵커도 이동도 없다
+            v.co.y = target
+            lip_moved.append(i)
+    _smooth_sel(lip_moved, 0.5, 4)    # 막 경계를 살짝 잇는다
+    print(f"[face_decal] 입술 막 {len(lip_moved)}개 정점", flush=True)
     print(f"[face_decal] 얼굴 앞면 뭉갬 — 핵심 {len(core)} / 경계 {len(wide)} 정점",
           flush=True)
 
@@ -530,6 +601,40 @@ def build_faced_glb(char_id, role, cls, decal_path, out_dir, head_w_m=0.197, hea
     else:
         print(f"[face_decal] 정렬 제어점이 꼬여 건너뜀: "
               f"{[(round(q, 3), round(p, 3)) for q, p in pins]}", flush=True)
+
+    # --- 투명 스커트 제거 ---
+    # 타원 마스크 밖(알파≈0) 격자면은 그릴 게 없는데도 실루엣을
+    # 감싸며 림에서 접혀, 알파 0 이어도 스페큘러가 지그재그 하이라이트
+    # 솔기로 보인다 (실측: 3/4 근접 뺨의 톱니 줄). 네 모서리+중심
+    # UV 알파가 전부 낮은 면은 지운다.
+    import bmesh
+    _img = bpy.data.images.load(decal_path, check_existing=True)
+    _iw, _ih = _img.size
+    _px = _img.pixels[:]
+
+    def _alpha(u, vv):
+        x = min(_iw - 1, max(0, int(u * _iw)))
+        y = min(_ih - 1, max(0, int(vv * _ih)))
+        return _px[(y * _iw + x) * 4 + 3]
+
+    uvl = face_ob.data.uv_layers.active.data
+    drop = []
+    for poly in face_ob.data.polygons:
+        uvs = [uvl[li].uv for li in poly.loop_indices]
+        cu = sum(t.x for t in uvs) / len(uvs)
+        cv = sum(t.y for t in uvs) / len(uvs)
+        a = max(_alpha(t.x, t.y) for t in uvs)
+        if max(a, _alpha(cu, cv)) < 0.02:
+            drop.append(poly.index)
+    if drop:
+        fb = bmesh.new()
+        fb.from_mesh(face_ob.data)
+        fb.faces.ensure_lookup_table()
+        bmesh.ops.delete(fb, geom=[fb.faces[i] for i in drop],
+                         context="FACES")
+        fb.to_mesh(face_ob.data)
+        fb.free()
+    print(f"[face_decal] 투명 면 {len(drop)}개 지움", flush=True)
 
     # 몸에는 눈구멍·입이 뻥 뚫려 있다 (실측: 민머리 렌더에 검은 구멍).
     # PROJECT 광선이 그 구멍으로 들어가 두개골 안쪽에 맺히면 데칼이
@@ -633,6 +738,47 @@ def build_faced_glb(char_id, role, cls, decal_path, out_dir, head_w_m=0.197, hea
         bpy.ops.object.modifier_apply(modifier=sw3.name)
     print(f"[face_decal] 코 그늘 정형 {len(under)}개 정점", flush=True)
 
+    # 접힘 절제 — 실루엣을 감싸다 NEAREST 로 구조된 가장자리 정점은
+    # 정면 투영된 이웃과 어긋난 채 접혀, 뺨 옆에 깊이 절벽이 격자
+    # 계단 모양 톱니 금으로 남는다 (실측: 3/4 근접 뺨 지그재그 —
+    # 스무딩 10회+재수축(림 정형)으로도, 가장자리 링 비탈로도,
+    # 알파 비례 밀착으로도 안 사라졌다 head6~11: 접힌 면은 어디로
+    # 옮겨도 법선이 구겨진 채라 어둡게 갈라진다). 그림도 거의 없는
+    # 면이니 — 구조된 정점과 1-이웃이 닿는 면을 통째로 잘라낸다.
+    if missed:
+        fb = bmesh.new()
+        fb.from_mesh(face_ob.data)
+        fb.verts.ensure_lookup_table()
+        rim = set(missed)
+        for i in missed:
+            for e in fb.verts[i].link_edges:
+                rim.add(e.other_vert(fb.verts[i]).index)
+        # 단 그림이 실린 면(알파 0.5 이상)은 남긴다 — 입술 옆에도
+        # 구조된 정점이 있어, 무조건 자르면 입가 데칼이 뜯긴다
+        # (실측 head12: 아랫입술 밑 흰 구멍).
+        _img3 = bpy.data.images.load(decal_path, check_existing=True)
+        _iw3, _ih3 = _img3.size
+        _px3 = _img3.pixels[:]
+        uvl3 = face_ob.data.uv_layers.active.data
+        doomed = []
+        for poly in face_ob.data.polygons:
+            if not any(vi in rim for vi in poly.vertices):
+                continue
+            amax = 0.0
+            for li in poly.loop_indices:
+                t = uvl3[li].uv
+                x = min(_iw3 - 1, max(0, int(t.x * _iw3)))
+                y = min(_ih3 - 1, max(0, int(t.y * _ih3)))
+                amax = max(amax, _px3[(y * _iw3 + x) * 4 + 3])
+            if amax < 0.5:
+                doomed.append(poly.index)
+        fb.faces.ensure_lookup_table()
+        bmesh.ops.delete(fb, geom=[fb.faces[i] for i in doomed],
+                         context="FACES")
+        fb.to_mesh(face_ob.data)
+        fb.free()
+        print(f"[face_decal] 접힌 면 {len(doomed)}개 절제", flush=True)
+
     # 남은 잔주름을 편다 — 단 코(맨 앞 1.5cm)는 빼고.
     # 전체에 걸면 굴곡이 제일 큰 코가 도로 펴져 옆모습이 밋밋해진다.
     # 코 '밑'(코끝보다 8mm 아래)은 앞쪽이어도 편다 — 코 그늘에서
@@ -657,6 +803,45 @@ def build_faced_glb(char_id, role, cls, decal_path, out_dir, head_w_m=0.197, hea
     dp.mid_level = 0.0
     dp.strength = 0.0015
     bpy.ops.object.modifier_apply(modifier=dp.name)
+
+    # 가장자리 붙이기 — 데칼은 offset 2mm + Displace 1.5mm 로 살에서
+    # 3.5mm 떠 있다. 몸은 매끈한데 데칼 껍데기가 뺨 실루엣을 넘어가는
+    # 자리(정면 투영과 NEAREST 구조의 경계 접힘)에 깊이 절벽이 생겨
+    # 격자 계단 모양 톱니 금이 보인다 (실측: ?body 몸만 찍으면 없다 —
+    # 데칼이 범인. 열린 가장자리 링을 3~5링 비탈로 낮춰도(head7~10)
+    # 그대로였다 — 절벽은 가장자리가 아니라 안쪽 접힘이다).
+    # 해법: 거리(링)가 아니라 '텍스처 알파'로 붙인다 — 알파가 옅은
+    # (타원 블러 페이드) 정점일수록 살 위 0.3mm 까지 끌어붙이면
+    # 그림이 사라지기 전에 껍데기가 살 높이로 얇아져, 실루엣을
+    # 넘는 자리엔 절벽이 남지 않는다. 알파 0.6 이상(그림 본체)은
+    # 손대지 않는다. (살 '속'(-2mm)으로 넣으면 비탈이 살갗을 뚫는
+    # 교차선이 계단째 톤을 끊는다 — 실측 head8. 살 위까지만.)
+    _img2 = bpy.data.images.load(decal_path, check_existing=True)
+    _iw2, _ih2 = _img2.size
+    _px2 = _img2.pixels[:]
+    uvl2 = face_ob.data.uv_layers.active.data
+    v_alpha = {}
+    for poly in face_ob.data.polygons:
+        for li, vi in zip(poly.loop_indices, poly.vertices):
+            t = uvl2[li].uv
+            x = min(_iw2 - 1, max(0, int(t.x * _iw2)))
+            y = min(_ih2 - 1, max(0, int(t.y * _ih2)))
+            a = _px2[(y * _iw2 + x) * 4 + 3]
+            v_alpha[vi] = max(v_alpha.get(vi, 0.0), a)
+    fade = [(vi, min(1.0, 1.0 - a / 0.6)) for vi, a in v_alpha.items()
+            if a < 0.6]
+    if fade:
+        vg_e = face_ob.vertex_groups.new(name="edge_tuck")
+        for vi, w in fade:
+            vg_e.add([vi], w, "REPLACE")
+        sw5 = face_ob.modifiers.new("EdgeTuck", "SHRINKWRAP")
+        sw5.target = proxy
+        sw5.wrap_method = "NEAREST_SURFACEPOINT"
+        sw5.offset = 0.0003
+        sw5.vertex_group = "edge_tuck"
+        bpy.ops.object.modifier_apply(modifier=sw5.name)
+        print(f"[face_decal] 페이드 {len(fade)}개 정점 알파 비례로 살에 붙임",
+              flush=True)
 
     bpy.data.objects.remove(proxy, do_unlink=True)
 
