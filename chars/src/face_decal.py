@@ -147,60 +147,93 @@ def make_decal(face_img, ch, out_path, head_w=197, head_h=249):
 
     canvas.paste(face_resized, (px, py), face_resized)
 
-    # --- 콧구멍 줄 재기 ---
-    # 초상마다 코 길이가 달라서 눈선 핀 고정만으로는 콧구멍이 3D
-    # 코끝 '아래' 인중에 찍힌다 (실측 guard/flee — "콧구멍이 코앞에
-    # 떠 있다"). 캔버스 중앙 좁은 띠(±8%)에서 눈 아래 첫 어두운
-    # 덩어리(콧구멍)의 세로 위치를 재서 기록한다 — build 가 UV 를
-    # 리매핑해 이 줄을 코끝 높이에 맞춘다. 입술은 더 아래 두 번째
-    # 덩어리라 "첫 덩어리의 최대점"이면 안 잡힌다 (5명 오버레이로
-    # 시각 검증함 — 새 초상을 넣으면 FD_DEBUG=1 로 다시 확인하라).
-    # 0.53 시작은 rean 처럼 눈이 낮게 붙은 초상에서 눈 검은자를
-    # 콧구멍으로 오인했다 (실측 0.533) — 0.56 부터 찾는다.
-    b_x0, b_y0 = int(canvas_w * 0.42), int(canvas_h * 0.56)
-    band = canvas.crop((b_x0, b_y0, int(canvas_w * 0.58), int(canvas_h * 0.80)))
-    lum = list(band.convert("L").getdata())
-    alp = list(band.getchannel("A").getdata())
-    bw = band.width
-    vals = sorted(l for l, a in zip(lum, alp) if a > 200)
-    med = vals[len(vals) // 2] if vals else 128
-    rows = []
-    for r in range(band.height):
-        s = 0
-        for c in range(bw):
-            i = r * bw + c
-            if alp[i] > 200 and lum[i] < med - 25:
-                s += med - 25 - lum[i]
-        rows.append(s)
-    peak = max(rows) if rows else 0
-    nose_frac = None
-    if peak > 0:
+    # --- 이목구비 줄 재기 (눈·콧구멍·입) ---
+    # 초상마다 비율이 달라 한 점 핀으로는 안 맞는다 (실측 guard:
+    # 그림 눈이 3D 눈보다 ~2cm 아래 뺨에 찍혀 "안 붙어" 보이고,
+    # 입은 콧구멍 정렬에 1:1 로 딸려 올라가 "너무 위"였다).
+    # 세 줄을 각각 재서 기록하고 build 가 UV 를 구간별로 리매핑해
+    # 3D 안구 높이·코끝·치아선에 각각 맞춘다.
+    lum = list(canvas.convert("L").getdata())
+    alp = list(canvas.getchannel("A").getdata())
+
+    def _dark_row(x0f, x1f, y0f, y1f, pick):
+        """띠 안 어두운 픽셀 가중합 프로필에서 특징 줄을 찾는다.
+
+        pick="first"/"last": 임계(0.4×peak)를 넘는 첫/마지막 덩어리의
+        최대점. 캔버스 세로 비율을 돌려준다 (못 찾으면 None).
+        """
+        x0, x1 = int(canvas_w * x0f), int(canvas_w * x1f)
+        y0, y1 = int(canvas_h * y0f), int(canvas_h * y1f)
+        vals = sorted(lum[r * canvas_w + c]
+                      for r in range(y0, y1) for c in range(x0, x1)
+                      if alp[r * canvas_w + c] > 200)
+        if not vals:
+            return None
+        med = vals[len(vals) // 2]
+        rows = []
+        for r in range(y0, y1):
+            s = 0
+            for c in range(x0, x1):
+                i = r * canvas_w + c
+                if alp[i] > 200 and lum[i] < med - 25:
+                    s += med - 25 - lum[i]
+            rows.append(s)
+        peak = max(rows)
+        if peak <= 0:
+            return None
         thr = peak * 0.4
+        clusters = []          # (덩어리 시작 줄, 최대점 줄)
         r = 0
-        while r < len(rows) and rows[r] <= thr:
-            r += 1
-        if r < len(rows):
-            best = r          # 첫 덩어리 안의 최대점 = 콧구멍 줄
-            while r < len(rows) and rows[r] > thr:
-                if rows[r] > rows[best]:
-                    best = r
+        while r < len(rows):
+            if rows[r] > thr:
+                start = best = r
+                while r < len(rows) and rows[r] > thr:
+                    if rows[r] > rows[best]:
+                        best = r
+                    r += 1
+                clusters.append((start, best))
+            else:
                 r += 1
-            nose_frac = (b_y0 + best) / canvas_h
+        if pick == "first":
+            # 띠 첫 줄에 붙은 덩어리는 띠 위쪽 어둠(코 밑 그림자)의
+            # 꼬리다 — 실측 guard: 입 띠 첫 덩어리가 인중 그림자였다.
+            clear = [b for s, b in clusters if s > 0]
+            best = clear[0] if clear else clusters[0][1]
+        else:
+            best = clusters[-1][1]
+        return (y0 + best) / canvas_h
+
+    # 눈: 넓은 띠에서 '마지막' 덩어리 — 첫 덩어리는 눈썹이다.
+    # (눈썹·눈이 한 덩어리로 붙으면 그 안의 최대점 = 동공/속눈썹 줄)
+    eye_frac = _dark_row(0.25, 0.75, 0.30, 0.555, "last")
+    # 콧구멍: 눈 밑 좁은 중앙 띠의 '첫' 덩어리. 0.53 시작은 rean 처럼
+    # 눈이 낮은 초상에서 눈 검은자를 오인했다 (실측 0.533) — 0.56 부터.
+    nose_frac = _dark_row(0.42, 0.58, 0.56, 0.80, "first")
+    # 입: 콧구멍 아래 첫 덩어리 = 입술 틈 (턱 그림자는 더 아래)
+    mouth_frac = None
+    if nose_frac:
+        mouth_frac = _dark_row(0.35, 0.65, nose_frac + 0.03,
+                               min(0.95, nose_frac + 0.18), "first")
 
     os.makedirs(os.path.dirname(out_path), exist_ok=True)
     canvas.save(out_path)
     meta_path = out_path[:-4] + "_meta.json"
     with open(meta_path, "w", encoding="utf-8") as f:
-        json.dump(dict(eye_frac=eye_y_ratio, nose_frac=nose_frac), f)
-    if os.environ.get("FD_DEBUG") and nose_frac:
+        json.dump(dict(eye_frac=eye_frac or eye_y_ratio,
+                       nose_frac=nose_frac, mouth_frac=mouth_frac), f)
+    if os.environ.get("FD_DEBUG"):
         dbg = canvas.copy()
         dd = ImageDraw.Draw(dbg)
-        yy = int(nose_frac * canvas_h)
-        dd.line((0, yy, canvas_w, yy), fill=(255, 0, 0, 255), width=3)
-        dd.line((0, paste_cy, canvas_w, paste_cy), fill=(0, 128, 255, 255), width=2)
-        dbg.save(out_path[:-4] + "_nose_debug.png")
+        for frac, col in ((eye_frac, (0, 200, 0, 255)),
+                          (nose_frac, (255, 0, 0, 255)),
+                          (mouth_frac, (255, 0, 255, 255))):
+            if frac:
+                yy = int(frac * canvas_h)
+                dd.line((0, yy, canvas_w, yy), fill=col, width=3)
+        dd.line((0, paste_cy, canvas_w, paste_cy), fill=(0, 128, 255, 255), width=1)
+        dbg.save(out_path[:-4] + "_feat_debug.png")
     print(f"[face_decal] 데칼 {canvas_w}x{canvas_h} → {out_path}"
-          f"  콧구멍 줄 {nose_frac}", flush=True)
+          f"  눈 {eye_frac} 콧구멍 {nose_frac} 입 {mouth_frac}", flush=True)
     return canvas
 
 
@@ -249,6 +282,25 @@ def build_faced_glb(char_id, role, cls, decal_path, out_dir, head_w_m=0.197, hea
         MG.paint(p, sp, L, cloth, accent)
     gar = MG.join(parts, f"garment_{BODY_SLUG[role]}_{sp['slug']}")
     MG.bind(gar, arm)
+
+    # MASK 적용 전에 3D 눈·입 높이를 잰다 — 안구 헬퍼 중심 z 가
+    # 눈높이, 윗니·아랫니 중간이 입선이다 (UV 리매핑의 과녁).
+    # MASK 를 적용하면 헬퍼 지오메트리가 삭제돼 잴 수 없다 (실측:
+    # 적용 후엔 그룹만 남고 정점 0개).
+    def _grp_z(name):
+        if name not in bm.vertex_groups:
+            return None
+        gx = bm.vertex_groups[name].index
+        zs = [v.co.z for v in bm.data.vertices
+              for g in v.groups if g.group == gx and g.weight > 0.1]
+        return sum(zs) / len(zs) if zs else None
+
+    _ez = [z for z in (_grp_z("helper-l-eye"), _grp_z("helper-r-eye")) if z]
+    eye_z = sum(_ez) / len(_ez) if _ez else None
+    _tz = [z for z in (_grp_z("helper-upper-teeth"),
+                       _grp_z("helper-lower-teeth")) if z]
+    mouth_z = sum(_tz) / len(_tz) if _tz else None
+    print(f"[face_decal] 3D 눈높이 {eye_z} 입선 {mouth_z}", flush=True)
 
     # 몸에서 케이지 제거 + 스킨 머티리얼
     bpy.context.view_layer.objects.active = bm
@@ -433,43 +485,51 @@ def build_faced_glb(char_id, role, cls, decal_path, out_dir, head_w_m=0.197, hea
     face_ob.scale = (plane_w, plane_h, 1.0)
     bpy.ops.object.transform_apply(scale=True, rotation=True)
 
-    # --- 세로 정렬: 그림 콧구멍 줄을 3D 코끝 높이에 맞춘다 ---
-    # 눈선만 핀 고정하면 초상 코가 3D 코보다 길 때 콧구멍이 코 밑
-    # 인중에 찍힌다 ("콧구멍이 코앞에 떠 있다", 실측 guard/flee).
-    # 격자 UV 의 V 를 조각별 선형으로 리매핑: 위끝-눈-콧구멍-아래끝
-    # 네 제어점을 지나게 한다. 격자 정점은 안 움직인다 — 어느 높이에
-    # 어느 그림 줄이 보이는지만 바꾼다.
+    # --- 세로 정렬: 그림 눈·콧구멍·입 줄을 3D 눈·코끝·입선에 맞춘다 ---
+    # 한 점(눈 0.49 가정) 핀만으로는 초상 비율이 다를 때 전부 어긋난다
+    # (실측 guard: 그림 눈이 3D 눈보다 ~2cm 아래 뺨에 → "안 붙어"
+    # 보임, 입은 콧구멍 정렬에 1:1 로 딸려 올라가 "너무 위"). 그림
+    # 쪽은 crop 이 잰 세 줄, 3D 쪽은 안구/치아 헬퍼 z 와 코끝 —
+    # 격자 UV 의 V 를 조각별 선형으로 리매핑한다. 격자 정점은 안
+    # 움직이고 어느 높이에 어느 그림 줄이 보이는지만 바꾼다.
     meta_path = decal_path[:-4] + "_meta.json"
-    eye_q = nose_q = None
+    eye_q = nose_q = mouth_q = None
     if os.path.exists(meta_path):
         with open(meta_path, encoding="utf-8") as f:
             _m = json.load(f)
         eye_q = _m.get("eye_frac")
         nose_q = _m.get("nose_frac")
-    if eye_q and nose_q:
-        plane_top = head_cz + plane_h / 2
-        # 콧구멍은 코끝보다 살짝(4mm) 아래 밑면에 있다
-        p_nose = (plane_top - (tip_co.z - 0.004)) / plane_h
-        # 눈 위는 항등, 눈~콧구멍은 선형 압축, 콧구멍 아래는 1:1
-        # 평행이동 — (1,1) 로 다시 늘리면 입술이 20% 커졌다 (실측
-        # guard). 아래로 넘치는 구간은 타원 마스크 밖 투명 영역이라
-        # 1 에 클램프해도 안 보인다.
-        if eye_q < p_nose and eye_q < nose_q:
-            def _remap(t):
-                if t <= eye_q:
-                    return t
-                if t <= p_nose:
-                    return eye_q + (nose_q - eye_q) * (t - eye_q) / (p_nose - eye_q)
-                return min(1.0, nose_q + (t - p_nose))
-            uvl = face_ob.data.uv_layers.active.data
-            for loop in face_ob.data.loops:
-                uv = uvl[loop.index].uv
-                uv.y = 1.0 - _remap(1.0 - uv.y)   # V=1 이 그림 위끝
-            print(f"[face_decal] 콧구멍 정렬: 그림 {nose_q:.3f} → 판 {p_nose:.3f}",
-                  flush=True)
-        else:
-            print(f"[face_decal] 콧구멍 정렬 제어점이 꼬여 건너뜀: "
-                  f"눈 {eye_q} 코 그림 {nose_q} 판 {p_nose}", flush=True)
+        mouth_q = _m.get("mouth_frac")
+    plane_top = head_cz + plane_h / 2
+    # 콧구멍은 코끝보다 살짝(4mm) 아래 밑면에 있다
+    p_nose = (plane_top - (tip_co.z - 0.004)) / plane_h
+    p_eye = (plane_top - eye_z) / plane_h if eye_z else None
+    p_mouth = (plane_top - mouth_z) / plane_h if mouth_z else None
+    pins = [(q, p) for q, p in ((eye_q, p_eye), (nose_q, p_nose),
+                                (mouth_q, p_mouth)) if q and p]
+    # 그림/판 둘 다 단조증가여야 한다 — 꼬이면 정렬을 통째로 접는다
+    ok = all(pins[i][0] < pins[i + 1][0] and pins[i][1] < pins[i + 1][1]
+             for i in range(len(pins) - 1))
+    if pins and ok:
+        def _remap(t):
+            # 양 끝 밖은 1:1 평행이동 — 구간을 늘리면 이목구비 크기가
+            # 변한다 (실측: (1,1) 재신장에 입술이 20% 커짐). 넘치는
+            # 구간은 타원 마스크 밖 투명 영역이라 클램프해도 안 보인다.
+            if t <= pins[0][1]:
+                return max(0.0, pins[0][0] + (t - pins[0][1]))
+            for (q0, p0), (q1, p1) in zip(pins, pins[1:]):
+                if t <= p1:
+                    return q0 + (q1 - q0) * (t - p0) / (p1 - p0)
+            return min(1.0, pins[-1][0] + (t - pins[-1][1]))
+        uvl = face_ob.data.uv_layers.active.data
+        for loop in face_ob.data.loops:
+            uv = uvl[loop.index].uv
+            uv.y = 1.0 - _remap(1.0 - uv.y)   # V=1 이 그림 위끝
+        print("[face_decal] 이목구비 정렬 그림→판: " + "  ".join(
+            f"{q:.3f}→{p:.3f}" for q, p in pins), flush=True)
+    else:
+        print(f"[face_decal] 정렬 제어점이 꼬여 건너뜀: "
+              f"{[(round(q, 3), round(p, 3)) for q, p in pins]}", flush=True)
 
     # 몸에는 눈구멍·입이 뻥 뚫려 있다 (실측: 민머리 렌더에 검은 구멍).
     # PROJECT 광선이 그 구멍으로 들어가 두개골 안쪽에 맺히면 데칼이
