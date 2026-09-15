@@ -72,8 +72,27 @@ def crop_face(roster_path, atlas_path, char_id, out_path, scale=2):
     face = img.crop(box)
     os.makedirs(os.path.dirname(out_path), exist_ok=True)
     face.save(out_path)
-    print(f"[face_decal] 크롭 {char_id}: {face.size[0]}x{face.size[1]}px → {out_path}",
-          flush=True)
+
+    # 머리카락 색 표본 — fbox 바로 위 띠는 모발(수호는 투구)이다.
+    # 배경 오염을 줄이려고 가로는 얼굴 가운데 절반만, 세로는 이마
+    # 위 4~22% 띠만 쓰고, 채널별 중앙값을 취한다 (평균은 배경
+    # 몇 픽셀에 끌려간다).
+    b_hi, b_lo = HAIR_STYLE.get(char_id, {}).get("band", (0.22, 0.04))
+    hb_x0 = fx + 0.25 * fw
+    hb_x1 = fx + 0.75 * fw
+    hb_y1 = fy - b_lo * fh
+    hb_y0 = max(y0 * scale, fy - b_hi * fh)
+    ch = dict(ch)
+    if hb_y1 - hb_y0 > 4:
+        band = img.crop((hb_x0, hb_y0, hb_x1, hb_y1)).convert("RGB")
+        px = list(band.getdata())
+        # 금속(투구)은 중앙값이 그늘에 끌려 탁해진다 — 밝은 쪽
+        # 분위수를 쓴다 (수호 q=0.75, 나머지 0.5=중앙값)
+        q = HAIR_STYLE.get(char_id, {}).get("q", 0.5)
+        ch["hair_rgb"] = [sorted(c[i] for c in px)[int((len(px) - 1) * q)]
+                          for i in range(3)]
+    print(f"[face_decal] 크롭 {char_id}: {face.size[0]}x{face.size[1]}px → {out_path}"
+          f"  머리색 {ch.get('hair_rgb')}", flush=True)
     return face, ch
 
 
@@ -221,7 +240,8 @@ def make_decal(face_img, ch, out_path, head_w=197, head_h=249):
     meta_path = out_path[:-4] + "_meta.json"
     with open(meta_path, "w", encoding="utf-8") as f:
         json.dump(dict(eye_frac=eye_frac or eye_y_ratio,
-                       nose_frac=nose_frac, mouth_frac=mouth_frac), f)
+                       nose_frac=nose_frac, mouth_frac=mouth_frac,
+                       hair_rgb=ch.get("hair_rgb")), f)
     if os.environ.get("FD_DEBUG"):
         dbg = canvas.copy()
         dd = ImageDraw.Draw(dbg)
@@ -241,6 +261,21 @@ def make_decal(face_img, ch, out_path, head_w=197, head_h=249):
 # ---------------------------------------------------------------------------
 # 2단계: Blender 에서 데칼을 머리 앞에 붙이고 GLB 로 내보내기
 # ---------------------------------------------------------------------------
+
+# 캐릭터별 머리 모양 — 초상 관찰 (2026-09-15 /tmp/portraits_row.png):
+# 수호=금빛 투구, 세렌=긴 갈색 머리, 레안=뒤로 넘긴 짧은 머리,
+# 유안=짧은 머리+수염, 미로=곱슬 갈색. 색은 crop 이 초상에서 잰다.
+HAIR_STYLE = {
+    # 수호는 fbox 바로 위가 보라색 챙이라 (실측 /tmp/hairband.png)
+    # 그 위 금빛 돔(30~50%)에서 색을 잰다
+    "north_gatekeeper": dict(kind="helmet", offset=0.010, band=(0.50, 0.30),
+                             q=0.75),
+    "seren": dict(kind="long", offset=0.014),
+    "rean": dict(kind="short", offset=0.012),
+    "yuan": dict(kind="short", offset=0.010),
+    "miro": dict(kind="short", offset=0.014),
+}
+
 
 def build_faced_glb(char_id, role, cls, decal_path, out_dir, head_w_m=0.197, head_h_m=0.249):
     """Blender 에서 body + face plane + rig + animations 를 GLB 로.
@@ -364,6 +399,10 @@ def build_faced_glb(char_id, role, cls, decal_path, out_dir, head_w_m=0.197, hea
     # 인덱스만 들고 다니고, 선택할 때마다 새로 잡는다.
     head_info = [(v.index, v.co.y) for v in bm.data.vertices
                  if _w(v, hgi) > 0.3 and _w(v, egi) < 0.3]
+    # 귀 정점 — 투구 선택용. 빌드 끝에선 v.groups 웨이트가 0 으로
+    # 읽힌다 (실측: bmesh deform 도 동일) — 지금 인덱스를 잡아둔다.
+    ear_info = [(v.index, v.co.y) for v in bm.data.vertices
+                if _w(v, egi) > 0.3]
     ys = [y for _, y in head_info]
     fy0, fy1 = min(ys), max(ys)
     if os.environ.get("FD_DEBUG"):
@@ -564,13 +603,14 @@ def build_faced_glb(char_id, role, cls, decal_path, out_dir, head_w_m=0.197, hea
     # 격자 UV 의 V 를 조각별 선형으로 리매핑한다. 격자 정점은 안
     # 움직이고 어느 높이에 어느 그림 줄이 보이는지만 바꾼다.
     meta_path = decal_path[:-4] + "_meta.json"
-    eye_q = nose_q = mouth_q = None
+    eye_q = nose_q = mouth_q = hair_rgb = None
     if os.path.exists(meta_path):
         with open(meta_path, encoding="utf-8") as f:
             _m = json.load(f)
         eye_q = _m.get("eye_frac")
         nose_q = _m.get("nose_frac")
         mouth_q = _m.get("mouth_frac")
+        hair_rgb = _m.get("hair_rgb")
     plane_top = head_cz + plane_h / 2
     # 콧구멍은 코끝보다 살짝(4mm) 아래 밑면에 있다
     p_nose = (plane_top - (tip_co.z - 0.004)) / plane_h
@@ -889,6 +929,126 @@ def build_faced_glb(char_id, role, cls, decal_path, out_dir, head_w_m=0.197, hea
     mod = face_ob.modifiers.new("Armature", "ARMATURE")
     mod.object = arm
 
+    # --- 머리카락 셸 --- ("왜케 안이쁘지 머리카락은 없어?")
+    # 두피 정점(head weight>0.3, ears 제외, 헤어라인 위)을 복제해
+    # 법선으로 부풀린 껍데기. 헤어라인은 정수리 기준으로 앞은 이마
+    # 위, 뒤는 뒷통수 아래까지 y 에 따라 선형으로 내려간다. 색은
+    # crop 이 초상의 이마 위 띠에서 잰 중앙값 (수호는 투구 금색이
+    # 자연히 잡힌다).
+    import bmesh as _bmesh_h
+    style = HAIR_STYLE.get(char_id, dict(kind="short", offset=0.012))
+    kind = style["kind"]
+    h_off = style["offset"]
+    mv2 = bm.data.vertices
+    z_top = max(mv2[i].co.z for i, _ in head_info)
+    if kind == "helmet":
+        # 정수리만 덮으면 갈색 빵모자로 보인다 (실측 guard 1차) —
+        # 투구답게 눈썹 위 2.5cm 까지 내려 이마·관자놀이를 덮는다
+        front_z = (eye_z + 0.018) if eye_z else z_top - 0.075
+        back_z = z_top - 0.12
+    else:
+        # 앞 0.045 는 이마가 휑하다 (실측 seren 1차) — 0.058 로 내림
+        front_z, back_z = z_top - 0.058, z_top - 0.095
+
+    def _hairline(y, x=None):
+        t = (y - fy0) / max(1e-6, fy1 - fy0)
+        fz = front_z
+        if kind != "helmet" and x is not None:
+            # 일자 앞머리는 바가지머리로 보인다 (실측 seren 2차) —
+            # 가운데는 올리고 관자놀이 쪽은 내려 가르마 아치를 만든다
+            s = min(1.0, abs(x - head_cx) / 0.09) ** 1.5
+            fz = z_top - 0.050 - 0.028 * s
+        return fz + (back_z - fz) * max(0.0, min(1.0, t))
+
+    # head_info 가 이미 head>0.3 ∧ ears<0.3 정점 목록이다 — bmesh
+    # deform 레이어는 이 시점엔 head 웨이트를 0 으로 읽는다 (실측:
+    # dfl 존재해도 head=0). 인덱스 집합으로 고른다 (from_mesh 는
+    # 정점 순서를 보존한다).
+    if kind == "helmet":
+        # 투구는 귀 위까지 덮는다 — 귀를 빼면 테두리에 귀 구멍이 남는다
+        cand = head_info + ear_info
+    else:
+        cand = head_info
+    keep_ids = {i for i, y in cand
+                if mv2[i].co.z >= _hairline(y, mv2[i].co.x)}
+    hbm = _bmesh_h.new()
+    hbm.from_mesh(bm.data)
+    doomed_hv = [v for v in hbm.verts if v.index not in keep_ids]
+    _bmesh_h.ops.delete(hbm, geom=doomed_hv, context="VERTS")
+
+    # 헤어라인 경계는 z 문턱 절단이라 계단 톱니가 남는다 (실측
+    # seren 1차: 이마에 사각 이빨) — 경계 링만 스무딩으로 둥글린다
+    bnd_v = list({vv for e in hbm.edges if e.is_boundary for vv in e.verts})
+    if kind == "helmet":
+        # 투구 테는 매끈한 금속 테여야 한다 — 경계 정점 z 를
+        # 헤어라인 평면에 딱 맞춰 계단을 없앤다
+        for v in bnd_v:
+            v.co.z = _hairline(v.co.y, v.co.x)
+    else:
+        for _ in range(8):
+            _bmesh_h.ops.smooth_vert(hbm, verts=bnd_v, factor=0.5,
+                                     use_axis_x=True, use_axis_y=True,
+                                     use_axis_z=True)
+
+    # 부풀리기 — 헤어라인 쪽은 살에 붙게 테이퍼 (절벽 방지)
+    hbm.normal_update()
+    for v in hbm.verts:
+        hl = _hairline(v.co.y, v.co.x)
+        t = (v.co.z - hl) / max(1e-6, z_top - hl)
+        w = 0.25 + 0.75 * max(0.0, min(1.0, t))
+        v.co += v.normal * (h_off * w)
+
+    # 긴 머리 — 뒷·옆 경계 링을 두 번 아래로 뽑아 커튼을 만든다
+    if kind == "long":
+        # 귀 앞까지 잡으면 얇은 띠가 뺨 옆에 매달린다 (실측 seren
+        # 1차) — 뒤통수 절반만. 안으로 조이지 말고 뒤로 늘어뜨린다.
+        y_mid = (fy0 + fy1) / 2
+        cur = [e for e in hbm.edges if e.is_boundary
+               and all(vv.co.y > y_mid + 0.02 for vv in e.verts)]
+        for k, dz in enumerate((0.07, 0.10)):
+            ret = _bmesh_h.ops.extrude_edge_only(hbm, edges=cur)
+            new_v = {g for g in ret["geom"]
+                     if isinstance(g, _bmesh_h.types.BMVert)}
+            for vv in new_v:
+                vv.co.z -= dz
+                vv.co.x = head_cx + (vv.co.x - head_cx) * (1.0, 0.96)[k]
+                vv.co.y += (0.012, 0.008)[k]
+            cur = [g for g in ret["geom"]
+                   if isinstance(g, _bmesh_h.types.BMEdge)
+                   and all(nv in new_v for nv in g.verts)]
+
+    _bmesh_h.ops.recalc_face_normals(hbm, faces=hbm.faces)
+    hair_me = bpy.data.meshes.new("hair")
+    hbm.to_mesh(hair_me)
+    hbm.free()
+    hair_ob = bpy.data.objects.new("hair", hair_me)
+    bpy.context.collection.objects.link(hair_ob)
+    for poly in hair_me.polygons:
+        poly.use_smooth = True
+
+    rgb = hair_rgb or [60, 50, 45]
+    lin = [pow(c / 255.0, 2.2) for c in rgb]
+    hmat = bpy.data.materials.new("hair")
+    hmat.use_nodes = True
+    h_bsdf = hmat.node_tree.nodes.get("Principled BSDF")
+    h_bsdf.inputs["Base Color"].default_value = (*lin, 1.0)
+    if kind == "helmet":
+        # 0.85 는 환경맵 없는 뷰어에서 갈색으로 죽는다 — 0.5 로
+        h_bsdf.inputs["Metallic"].default_value = 0.5
+        h_bsdf.inputs["Roughness"].default_value = 0.35
+    else:
+        h_bsdf.inputs["Roughness"].default_value = 0.6
+    hair_me.materials.append(hmat)
+
+    hair_ob.parent = arm
+    vgh = hair_ob.vertex_groups.new(name="head")
+    for v in hair_me.vertices:
+        vgh.add([v.index], 1.0, 'REPLACE')
+    hmod = hair_ob.modifiers.new("Armature", "ARMATURE")
+    hmod.object = arm
+    print(f"[face_decal] 머리 {kind} 정점 {len(hair_me.vertices)}개"
+          f" 색 {rgb}", flush=True)
+
     # --- 동작 네 벌 ---
     made = []
     for name, fn in MD.CLIPS:
@@ -907,8 +1067,8 @@ def build_faced_glb(char_id, role, cls, decal_path, out_dir, head_w_m=0.197, hea
     slug = f"{BODY_SLUG[role]}_{sp['slug']}"
     out_path = os.path.join(out_dir, slug)
 
-    # face_ob 를 export 대상에 포함
-    MD.export_anim([bm, gar, face_ob, arm], out_path)
+    # face_ob·hair_ob 를 export 대상에 포함
+    MD.export_anim([bm, gar, face_ob, hair_ob, arm], out_path)
 
     report = dict(
         char_id=char_id, role=role, cls=cls, slug=slug,
