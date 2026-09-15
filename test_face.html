@@ -77,6 +77,12 @@ async function loadModel() {
     const loader = new GLTFLoader();
     const model = params.get('model') || 'guard_soldier';
     const gltf = await loader.loadAsync(`/chars/out/demo/${model}.glb`);
+    // ?body 를 붙이면 데칼 격자를 숨긴다 (아티팩트가 몸인지 데칼인지 분리)
+    if (params.has('body')) {
+      gltf.scene.traverse(n => {
+        if ((n.isMesh || n.isSkinnedMesh) && n.name.startsWith('face_')) n.visible = false;
+      });
+    }
     scene.add(gltf.scene);
     frameCamera(gltf.scene);
 

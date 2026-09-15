@@ -215,6 +215,17 @@ def build_faced_glb(char_id, role, cls, decal_path, out_dir, head_w_m=0.197, hea
                   "JointCubes", "HelperGeometry"]
     didx = {bm.vertex_groups[n].index for n in DEL_GROUPS
             if n in bm.vertex_groups}
+    if os.environ.get("FD_DEBUG"):
+        print("  [debug] 버텍스그룹 전체:",
+              sorted(g.name for g in bm.vertex_groups), flush=True)
+        for n in DEL_GROUPS:
+            if n in bm.vertex_groups:
+                gx = bm.vertex_groups[n].index
+                cnt = sum(1 for v in bm.data.vertices
+                          for g in v.groups if g.group == gx and g.weight > 0.1)
+                print(f"  [debug] {n}: {cnt}개", flush=True)
+            else:
+                print(f"  [debug] {n}: 그룹 없음", flush=True)
     if didx:
         bpy.ops.object.mode_set(mode="EDIT")
         bpy.ops.mesh.select_all(action="DESELECT")
@@ -251,6 +262,26 @@ def build_faced_glb(char_id, role, cls, decal_path, out_dir, head_w_m=0.197, hea
                  if _w(v, hgi) > 0.3 and _w(v, egi) < 0.3]
     ys = [y for _, y in head_info]
     fy0, fy1 = min(ys), max(ys)
+    if os.environ.get("FD_DEBUG"):
+        # 눈썹 아치 상자 (앞면, 눈 위): 어떤 정점이고 왜 안 녹나
+        hi_set = {i for i, _ in head_info}
+        arc = [v for v in bm.data.vertices
+               if 1.675 < v.co.z < 1.715 and 0.012 < abs(v.co.x) < 0.055
+               and v.co.y < -0.10]
+        print(f"  [debug] 아치 상자 정점 {len(arc)}개", flush=True)
+        import collections
+        why = collections.Counter()
+        for v in arc:
+            if v.index in hi_set:
+                why["head_info 포함(녹음)"] += 1
+            elif _w(v, hgi) <= 0.3:
+                gs = sorted(((bm.vertex_groups[g.group].name, round(g.weight, 2))
+                             for g in v.groups), key=lambda t: -t[1])[:3]
+                why[f"head<=0.3 상위그룹 {gs}"] += 1
+            else:
+                why["ears>=0.3"] += 1
+        for k, c in why.most_common(8):
+            print(f"  [debug]   {c:4d} × {k}", flush=True)
 
     def _smooth_sel(idxs, factor, repeat):
         bpy.ops.object.mode_set(mode="EDIT")
@@ -264,20 +295,45 @@ def build_faced_glb(char_id, role, cls, decal_path, out_dir, head_w_m=0.197, hea
         bpy.ops.mesh.vertices_smooth(factor=factor, repeat=repeat)
         bpy.ops.object.mode_set(mode="OBJECT")
 
-    # 맨 앞 12%(코 끝·콧날)는 따로 약하게만 녹인다 —
-    # 다 녹이면 옆모습이 판판해 코 음영이 얼룩처럼 보이고(40회),
-    # 그대로 두면 가파른 콧등 옆면에 텍스처가 밀려 계단 자국이 남는다(0회).
+    # 코만 남기고 앞면 전부를 녹인다. 예전엔 "맨 앞 12% 깊이"를
+    # 통째로 예외로 뒀는데, 실측하니 그 깊이 대역이 높이 16cm
+    # (1.59~1.75m)를 덮어 눈썹·눈꺼풀 융기(1.69~1.75, ~230정점)까지
+    # 안 녹고 데칼을 뚫고 나왔다 — 그린 눈 위에 창백한 아치가 겹쳤다.
+    # 코는 깊이가 아니라 상자다: 머리 맨 앞 정점(코끝) 주변
+    # 높이 ±3cm, 좌우 ±2.5cm.
     rng = fy1 - fy0
     nose_keep = fy0 + 0.12 * rng
-    # 1차: 얼굴 핵심(앞 45%)을 강하게 — 눈구멍·입술을 녹인다
-    core = [i for i, y in head_info if nose_keep <= y < fy0 + 0.45 * rng]
+    mv = bm.data.vertices
+    tip_i = min(head_info, key=lambda t: t[1])[0]
+    tip_co = mv[tip_i].co.copy()
+    nose_ids = {i for i, y in head_info
+                if y < nose_keep
+                and abs(mv[i].co.z - tip_co.z) < 0.03
+                and abs(mv[i].co.x - tip_co.x) < 0.025}
+    # 1차: 얼굴 핵심(앞 55%)을 강하게 — 눈구멍·눈꺼풀·입술을 녹인다
+    core = [i for i, y in head_info
+            if y < fy0 + 0.55 * rng and i not in nose_ids]
     _smooth_sel(core, 0.5, 40)
-    # 1.5차: 코만 약하게 — 낮은 둔덕으로 만든다
-    nose = [i for i, y in head_info if y < nose_keep]
-    _smooth_sel(nose, 0.5, 8)
-    # 2차: 좀 더 넓게(앞 60%) 약하게 — 뭉갠 경계를 부드럽게 잇는다
-    wide = [i for i, y in head_info if y < fy0 + 0.60 * rng]
+    # 코는 아예 녹이지 않는다 — 계단 자국의 진범은 플랫 셰이딩이었다
+    # (shade_smooth 로 해결). 4회짜리 2차 패스도 코 돌출을 눈에 띄게
+    # 줄이므로 코를 뺀다.
+    # 2차: 좀 더 넓게(앞 70%) 약하게 — 뭉갠 경계를 부드럽게 잇는다
+    wide = [i for i, y in head_info
+            if y < fy0 + 0.70 * rng and i not in nose_ids]
     _smooth_sel(wide, 0.5, 4)
+    # 3차: 눈 아몬드만 소프필름으로. 40회 스무딩은 폭 2cm 눈구멍
+    # 융기를 못 지운다 (라플라시안은 넓은 형상일수록 느리게 붕괴 —
+    # 데칼 없이 몸만 찍어 확인: 창백한 아몬드 두 개가 그대로).
+    # 작은 선택만 돌리면 미선택 이웃이 고정 경계가 되어 수백 회에
+    # 비눗막처럼 수렴한다 — 눈 상자(코끝 기준 위 2.5~7cm,
+    # 좌우 0.8~6cm)만 300회.
+    mv = bm.data.vertices   # EDIT 왕복 뒤 이전 참조는 죽어 있다 — 재조회
+    eye_ids = [i for i, y in head_info
+               if y < fy0 + 0.5 * rng
+               and tip_co.z + 0.025 <= mv[i].co.z <= tip_co.z + 0.07
+               and 0.008 <= abs(mv[i].co.x - tip_co.x) <= 0.06]
+    _smooth_sel(eye_ids, 0.5, 300)
+    print(f"[face_decal] 눈 아몬드 비눗막 {len(eye_ids)}개 정점", flush=True)
     print(f"[face_decal] 얼굴 앞면 뭉갬 — 핵심 {len(core)} / 경계 {len(wide)} 정점",
           flush=True)
 
@@ -337,6 +393,9 @@ def build_faced_glb(char_id, role, cls, decal_path, out_dir, head_w_m=0.197, hea
     pb.from_mesh(proxy_data)
     caps = bmesh.ops.holes_fill(pb, edges=pb.edges[:], sides=0)
     print(f"[face_decal] 프록시 캡 {len(caps['faces'])}개", flush=True)
+    # (프록시를 달걀처럼 통째로 뭉개는 시도는 실패 — 프록시가 몸
+    # 표면에서 1~2cm 벗어나 데칼이 껍데기처럼 떠 보였다, 실측.
+    # 눈구멍 주머니는 몸 자체의 눈 비눗막 패스가 없앤다.)
     pb.to_mesh(proxy_data)
     pb.free()
 
@@ -352,7 +411,7 @@ def build_faced_glb(char_id, role, cls, decal_path, out_dir, head_w_m=0.197, hea
     sw.use_positive_direction = True
     sw.use_negative_direction = False
     sw.project_limit = 0.12
-    sw.offset = 0.004
+    sw.offset = 0.002   # 4mm 는 Displace 와 합쳐 데칼이 붕 떠 보였다
     bpy.ops.object.modifier_apply(modifier=sw.name)
 
     # 광선이 빗나간 정점은 판 위에 그대로 남아 옆에서 가시처럼
@@ -367,18 +426,24 @@ def build_faced_glb(char_id, role, cls, decal_path, out_dir, head_w_m=0.197, hea
         sw2 = face_ob.modifiers.new("Rescue", "SHRINKWRAP")
         sw2.target = proxy
         sw2.wrap_method = "NEAREST_SURFACEPOINT"
-        sw2.offset = 0.004
+        sw2.offset = 0.002
         sw2.vertex_group = "missed"
         bpy.ops.object.modifier_apply(modifier=sw2.name)
         print(f"[face_decal] 빗나간 정점 {len(missed)}개 구조", flush=True)
 
     # 입술 틈으로 들어간 광선은 입안 벽에 맺힌다 (limit 안이라 못
     # 거른다) — 이웃 평균보다 3mm 이상 깊이 박힌 정점을 끌어올린다.
+    # 반드시 얼굴 중앙 기둥(입이 있는 곳)만: 전체에 걸면 옆얼굴의
+    # 가파른 경사면 정점이 실루엣 림에 접힌 이웃보다 "깊어" 보여
+    # 3패스에 걸쳐 데칼 옆면 전체가 앞으로 끌려나온다 — 실측 눈가
+    # 12~21mm 부양, "눈이 붕 떠 있다"의 진범.
     fb = bmesh.new()
     fb.from_mesh(face_ob.data)
     dived = 0
     for _ in range(3):
         for v in fb.verts:
+            if abs(v.co.x - head_cx) > 0.025:
+                continue
             ns = [e.other_vert(v) for e in v.link_edges]
             if not ns:
                 continue
@@ -390,18 +455,26 @@ def build_faced_glb(char_id, role, cls, decal_path, out_dir, head_w_m=0.197, hea
     fb.free()
     print(f"[face_decal] 입안에 박힌 정점 {dived}개 끌어올림", flush=True)
 
-    # 남은 잔주름을 편다
+    # 남은 잔주름을 편다 — 단 코(맨 앞 1.5cm)는 빼고.
+    # 전체에 걸면 굴곡이 제일 큰 코가 도로 펴져 옆모습이 밋밋해진다.
+    ymin = min(v.co.y for v in face_ob.data.vertices)
+    flat_ids = [v.index for v in face_ob.data.vertices
+                if v.co.y > ymin + 0.015]
+    vg_flat = face_ob.vertex_groups.new(name="flat_zone")
+    vg_flat.add(flat_ids, 1.0, "REPLACE")
     sm = face_ob.modifiers.new("Smooth", "SMOOTH")
     sm.factor = 1.0
     sm.iterations = 2
+    sm.vertex_group = "flat_zone"
     bpy.ops.object.modifier_apply(modifier=sm.name)
 
     # 스무딩이 데칼을 눈꺼풀 융기 속으로 끌어들인다 —
-    # 법선 방향 2.5mm 로 되밀어 그린 눈이 가려지지 않게 한다
+    # 법선 방향으로 살짝 되밀어 그린 눈이 가려지지 않게 한다.
+    # 4mm 는 데칼이 얼굴에서 붕 떠 보였다 (offset 과 합쳐 8mm).
     dp = face_ob.modifiers.new("Displace", "DISPLACE")
     dp.direction = "NORMAL"
     dp.mid_level = 0.0
-    dp.strength = 0.004   # 뭉갠 눈구멍 자국이 눈 그림을 삼키지 않게
+    dp.strength = 0.0015
     bpy.ops.object.modifier_apply(modifier=dp.name)
 
     bpy.data.objects.remove(proxy, do_unlink=True)
