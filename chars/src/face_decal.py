@@ -105,8 +105,35 @@ def make_decal(face_img, ch, out_path, head_w=197, head_h=249):
     """
     from PIL import Image
 
-    # 스킨색 (make_demo.py skin.diffuse_color 와 같다)
-    SKIN = (173, 140, 120)
+    # 스킨색 — 초상에서 자동 추출 (기본값은 기존 고정값)
+    # 뺨(눈 밑~코 옆) 양쪽 띠를 채널별 중앙값으로 잰다. 눈·입술·
+    # 수염·머리카락(더 어둡거나 유채색)·배경을 피하려고 좌우 14%와
+    # 중앙 코 띠를 뺀다. 평균이 아니라 중앙값 — 배경 머리카락 몇
+    # 픽셀이 끼어도 안 흔들린다.
+    lut = [round(255 * (i / 255) ** 0.68) for i in range(256)]
+
+    def _sample_skin_color(img):
+        if img.mode != "RGB":
+            img = img.convert("RGB")
+        w, h = img.size
+        px = []
+        for x0f, x1f in ((0.14, 0.40), (0.60, 0.86)):   # 왼·오른 뺨
+            px += list(img.crop((int(w * x0f), int(h * 0.40),
+                                 int(w * x1f), int(h * 0.62))).getdata())
+        if not px:
+            return (173, 140, 120)
+        med = len(px) // 2
+        rgb = (sorted(p[0] for p in px)[med],
+               sorted(p[1] for p in px)[med],
+               sorted(p[2] for p in px)[med])
+        # 데칼엔 감마 0.68 이라 어두운 곳이 밝아져 있다 — 3D 살 재질도
+        # 그 밝아진 톤에 맞춰야 목이 얼굴과 맞는다. 같은 LUT 를 먹인
+        # 값을 메타에 남긴다.
+        return tuple(lut[c] for c in rgb)
+
+    # 초상에서 피부색 추출 — 데칼에 들어가는 최종 톤
+    skin_rgb = _sample_skin_color(face_img)
+    print(f"[face_decal] 피부색 {skin_rgb}", flush=True)
 
     # 캔버스는 머리 비율의 4배 해상도 — 197x249 그대로 쓰면
     # 얼굴에 픽셀 블록이 그대로 보인다 (크롭 원본이 768px 이다).
@@ -120,8 +147,8 @@ def make_decal(face_img, ch, out_path, head_w=197, head_h=249):
     # 초상에 구워진 그림자(모자·관자놀이)가 3D 조명 아래서는 멍처럼
     # 보인다 — 감마로 어두운 부분만 들어올린다 (밝은 곳은 거의
     # 그대로다). 0.75 는 눈가·입꼬리가 여전히 멍처럼 남았다 (실측:
-    # 데칼 얼굴 스크린샷) — 0.68 로 더 올린다.
-    lut = [round(255 * (i / 255) ** 0.68) for i in range(256)]
+    # 데칼 얼굴 스크린샷) — 0.68 로 더 올린다. (lut 는 skintone
+    # 샘플링에서 이미 만들었다.)
     if face_img.mode != "RGB":
         face_img = face_img.convert("RGB")
     face_img = face_img.point(lut * 3)
@@ -235,13 +262,43 @@ def make_decal(face_img, ch, out_path, head_w=197, head_h=249):
         mouth_frac = _dark_row(0.35, 0.65, nose_frac + 0.03,
                                min(0.95, nose_frac + 0.18), "first")
 
+    # --- 눈 둘레 그늘 닦기 ---
+    # 감마로 전면이 밝아져도 눈 밑·눈 안쪽 셰이딩은 멍처럼 남는다.
+    # 눈선 띠에서 '중간 어둠'(살구보다 좀 어두운 회색)을 살구 밝기로
+    # 끌어올린다. 단 너무 어둡거나 유채색인 픽셀은 눈·속눈썹·머리
+    # 카락이므로 건드리지 않아야 한다.
+    if eye_frac:
+        sk = sum(skin_rgb) / 3.0
+        lo, hi = 0.50 * sk, 0.92 * sk
+        y0 = max(0, int(eye_frac * canvas_h) - int(canvas_h * 0.03))
+        y1 = min(canvas_h, int(eye_frac * canvas_h) + int(canvas_h * 0.055))
+        pxc = canvas.load()
+        n_dodge = 0
+        for yy in range(y0, y1):
+            for xx in range(canvas_w):
+                r, g, b, a = pxc[xx, yy]
+                if a < 8:
+                    continue
+                L = 0.299 * r + 0.587 * g + 0.114 * b
+                if not (lo < L <= hi):
+                    continue
+                if max(r, g, b) - min(r, g, b) > 26:   # 유채색 = 눈·머리카락
+                    continue
+                k = (hi - L) / max(1e-6, hi - lo)
+                lift = int(0.6 * k * (sk - L))
+                if lift > 0:
+                    pxc[xx, yy] = (min(255, r + lift), min(255, g + lift),
+                                   min(255, b + lift), a)
+                    n_dodge += 1
+        print(f"[face_decal] 눈 그늘 닦기 {n_dodge}px", flush=True)
+
     os.makedirs(os.path.dirname(out_path), exist_ok=True)
     canvas.save(out_path)
     meta_path = out_path[:-4] + "_meta.json"
     with open(meta_path, "w", encoding="utf-8") as f:
         json.dump(dict(eye_frac=eye_frac or eye_y_ratio,
                        nose_frac=nose_frac, mouth_frac=mouth_frac,
-                       hair_rgb=ch.get("hair_rgb")), f)
+                       hair_rgb=ch.get("hair_rgb"), skin_rgb=skin_rgb), f)
     if os.environ.get("FD_DEBUG"):
         dbg = canvas.copy()
         dd = ImageDraw.Draw(dbg)
@@ -553,14 +610,26 @@ def build_faced_glb(char_id, role, cls, decal_path, out_dir, head_w_m=0.197, hea
     # --- 스킨 머티리얼 — make_demo 와 같은 flat color ---
     # 데칼 텍스처를 몸 UV 에 그대로 입히면 몸 전체가 오염된다.
     # 몸은 민색으로 두고, 얼굴은 별도 평면으로 붙인다.
+    # 색은 crop 이 초상 뺨에서 잰 값(데칼 감마까지 먹인 톤). Base
+    # Color 는 glTF 가 선형으로 받아 sRGB 로 보여주므로 pow(2.2) 로
+    # 넣어야 데칼 얼굴과 목·귀 톤이 맞는다 — 예전 하드코딩 (0.68,
+    # 0.55, 0.47) 을 그대로 넣으면 선형이라 화면에 더 밝게 떠
+    # "데칼 얼굴만 어둡게" 보였다.
+    _meta_path = decal_path[:-4] + "_meta.json"
+    _m = None
+    if os.path.exists(_meta_path):
+        with open(_meta_path, encoding="utf-8") as f:
+            _m = json.load(f)
+    _srgb = (_m.get("skin_rgb") if _m else None) or (173, 140, 120)
+    _lin = [pow(c / 255.0, 2.2) for c in _srgb]
     skin = bpy.data.materials.new("skin")
-    skin.diffuse_color = (0.68, 0.55, 0.47, 1.0)
+    skin.diffuse_color = (*[c / 255.0 for c in _srgb], 1.0)
     # Blender 5.x 는 새 머티리얼에 노드가 켜져 있다 — Principled 의
     # Base Color 도 같이 맞춰야 glTF 로 살색이 나간다.
     if skin.node_tree:
         pn = skin.node_tree.nodes.get("Principled BSDF")
         if pn:
-            pn.inputs["Base Color"].default_value = (0.68, 0.55, 0.47, 1.0)
+            pn.inputs["Base Color"].default_value = (*_lin, 1.0)
     bm.data.materials.clear()
     bm.data.materials.append(skin)
     MG.bind(bm, arm)
@@ -1049,6 +1118,20 @@ def build_faced_glb(char_id, role, cls, decal_path, out_dir, head_w_m=0.197, hea
     print(f"[face_decal] 머리 {kind} 정점 {len(hair_me.vertices)}개"
           f" 색 {rgb}", flush=True)
 
+    # --- 조명 — Blender 씬만 열어도 캐릭터가 보이게 기본 해 하나 ---
+    # export_lights=True 로 GLB 에도 실려 나가고, 순정 glTF 뷰어에서도
+    # 살아 보인다. test_face.html 의 자체 Directional+Ambient(1.2) 는
+    # 이미 흰 면을 포화시킬 정도라 이 해가 더해도 노출은 흔들리지 않는다.
+    so = None
+    if not any(o.type == "LIGHT" for o in bpy.context.scene.objects):
+        sd = bpy.data.lights.new("sun", "SUN")
+        sd.energy = 2.0
+        sd.angle = 0.04
+        so = bpy.data.objects.new("sun", sd)
+        bpy.context.collection.objects.link(so)
+        so.location = (1.2, -1.5, 2.5)
+        so.rotation_euler = (math.radians(-35), 0.0, math.radians(-40))
+
     # --- 동작 네 벌 ---
     made = []
     for name, fn in MD.CLIPS:
@@ -1067,8 +1150,8 @@ def build_faced_glb(char_id, role, cls, decal_path, out_dir, head_w_m=0.197, hea
     slug = f"{BODY_SLUG[role]}_{sp['slug']}"
     out_path = os.path.join(out_dir, slug)
 
-    # face_ob·hair_ob 를 export 대상에 포함
-    MD.export_anim([bm, gar, face_ob, hair_ob, arm], out_path)
+    # face_ob·hair_ob·sun 무대 조명을 export 대상에 포함
+    MD.export_anim([bm, gar, face_ob, hair_ob, arm] + ([so] if so else []), out_path)
 
     report = dict(
         char_id=char_id, role=role, cls=cls, slug=slug,

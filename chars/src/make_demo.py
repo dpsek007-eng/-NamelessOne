@@ -284,6 +284,7 @@ def export_anim(objs, path_noext):
         export_animation_mode="NLA_TRACKS",
         export_bake_animation=True,
         export_optimize_animation_size=False,
+        export_lights=True,
     )
 
 
