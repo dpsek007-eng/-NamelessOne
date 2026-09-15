@@ -147,9 +147,60 @@ def make_decal(face_img, ch, out_path, head_w=197, head_h=249):
 
     canvas.paste(face_resized, (px, py), face_resized)
 
+    # --- 콧구멍 줄 재기 ---
+    # 초상마다 코 길이가 달라서 눈선 핀 고정만으로는 콧구멍이 3D
+    # 코끝 '아래' 인중에 찍힌다 (실측 guard/flee — "콧구멍이 코앞에
+    # 떠 있다"). 캔버스 중앙 좁은 띠(±8%)에서 눈 아래 첫 어두운
+    # 덩어리(콧구멍)의 세로 위치를 재서 기록한다 — build 가 UV 를
+    # 리매핑해 이 줄을 코끝 높이에 맞춘다. 입술은 더 아래 두 번째
+    # 덩어리라 "첫 덩어리의 최대점"이면 안 잡힌다 (5명 오버레이로
+    # 시각 검증함 — 새 초상을 넣으면 FD_DEBUG=1 로 다시 확인하라).
+    # 0.53 시작은 rean 처럼 눈이 낮게 붙은 초상에서 눈 검은자를
+    # 콧구멍으로 오인했다 (실측 0.533) — 0.56 부터 찾는다.
+    b_x0, b_y0 = int(canvas_w * 0.42), int(canvas_h * 0.56)
+    band = canvas.crop((b_x0, b_y0, int(canvas_w * 0.58), int(canvas_h * 0.80)))
+    lum = list(band.convert("L").getdata())
+    alp = list(band.getchannel("A").getdata())
+    bw = band.width
+    vals = sorted(l for l, a in zip(lum, alp) if a > 200)
+    med = vals[len(vals) // 2] if vals else 128
+    rows = []
+    for r in range(band.height):
+        s = 0
+        for c in range(bw):
+            i = r * bw + c
+            if alp[i] > 200 and lum[i] < med - 25:
+                s += med - 25 - lum[i]
+        rows.append(s)
+    peak = max(rows) if rows else 0
+    nose_frac = None
+    if peak > 0:
+        thr = peak * 0.4
+        r = 0
+        while r < len(rows) and rows[r] <= thr:
+            r += 1
+        if r < len(rows):
+            best = r          # 첫 덩어리 안의 최대점 = 콧구멍 줄
+            while r < len(rows) and rows[r] > thr:
+                if rows[r] > rows[best]:
+                    best = r
+                r += 1
+            nose_frac = (b_y0 + best) / canvas_h
+
     os.makedirs(os.path.dirname(out_path), exist_ok=True)
     canvas.save(out_path)
-    print(f"[face_decal] 데칼 {canvas_w}x{canvas_h} → {out_path}", flush=True)
+    meta_path = out_path[:-4] + "_meta.json"
+    with open(meta_path, "w", encoding="utf-8") as f:
+        json.dump(dict(eye_frac=eye_y_ratio, nose_frac=nose_frac), f)
+    if os.environ.get("FD_DEBUG") and nose_frac:
+        dbg = canvas.copy()
+        dd = ImageDraw.Draw(dbg)
+        yy = int(nose_frac * canvas_h)
+        dd.line((0, yy, canvas_w, yy), fill=(255, 0, 0, 255), width=3)
+        dd.line((0, paste_cy, canvas_w, paste_cy), fill=(0, 128, 255, 255), width=2)
+        dbg.save(out_path[:-4] + "_nose_debug.png")
+    print(f"[face_decal] 데칼 {canvas_w}x{canvas_h} → {out_path}"
+          f"  콧구멍 줄 {nose_frac}", flush=True)
     return canvas
 
 
@@ -382,6 +433,44 @@ def build_faced_glb(char_id, role, cls, decal_path, out_dir, head_w_m=0.197, hea
     face_ob.scale = (plane_w, plane_h, 1.0)
     bpy.ops.object.transform_apply(scale=True, rotation=True)
 
+    # --- 세로 정렬: 그림 콧구멍 줄을 3D 코끝 높이에 맞춘다 ---
+    # 눈선만 핀 고정하면 초상 코가 3D 코보다 길 때 콧구멍이 코 밑
+    # 인중에 찍힌다 ("콧구멍이 코앞에 떠 있다", 실측 guard/flee).
+    # 격자 UV 의 V 를 조각별 선형으로 리매핑: 위끝-눈-콧구멍-아래끝
+    # 네 제어점을 지나게 한다. 격자 정점은 안 움직인다 — 어느 높이에
+    # 어느 그림 줄이 보이는지만 바꾼다.
+    meta_path = decal_path[:-4] + "_meta.json"
+    eye_q = nose_q = None
+    if os.path.exists(meta_path):
+        with open(meta_path, encoding="utf-8") as f:
+            _m = json.load(f)
+        eye_q = _m.get("eye_frac")
+        nose_q = _m.get("nose_frac")
+    if eye_q and nose_q:
+        plane_top = head_cz + plane_h / 2
+        # 콧구멍은 코끝보다 살짝(4mm) 아래 밑면에 있다
+        p_nose = (plane_top - (tip_co.z - 0.004)) / plane_h
+        # 눈 위는 항등, 눈~콧구멍은 선형 압축, 콧구멍 아래는 1:1
+        # 평행이동 — (1,1) 로 다시 늘리면 입술이 20% 커졌다 (실측
+        # guard). 아래로 넘치는 구간은 타원 마스크 밖 투명 영역이라
+        # 1 에 클램프해도 안 보인다.
+        if eye_q < p_nose and eye_q < nose_q:
+            def _remap(t):
+                if t <= eye_q:
+                    return t
+                if t <= p_nose:
+                    return eye_q + (nose_q - eye_q) * (t - eye_q) / (p_nose - eye_q)
+                return min(1.0, nose_q + (t - p_nose))
+            uvl = face_ob.data.uv_layers.active.data
+            for loop in face_ob.data.loops:
+                uv = uvl[loop.index].uv
+                uv.y = 1.0 - _remap(1.0 - uv.y)   # V=1 이 그림 위끝
+            print(f"[face_decal] 콧구멍 정렬: 그림 {nose_q:.3f} → 판 {p_nose:.3f}",
+                  flush=True)
+        else:
+            print(f"[face_decal] 콧구멍 정렬 제어점이 꼬여 건너뜀: "
+                  f"눈 {eye_q} 코 그림 {nose_q} 판 {p_nose}", flush=True)
+
     # 몸에는 눈구멍·입이 뻥 뚫려 있다 (실측: 민머리 렌더에 검은 구멍).
     # PROJECT 광선이 그 구멍으로 들어가 두개골 안쪽에 맺히면 데칼이
     # 깔때기처럼 파인다. 그래서 구멍을 메운 프록시 복제본에 쏜다.
@@ -455,11 +544,43 @@ def build_faced_glb(char_id, role, cls, decal_path, out_dir, head_w_m=0.197, hea
     fb.free()
     print(f"[face_decal] 입안에 박힌 정점 {dived}개 끌어올림", flush=True)
 
+    # 코 그늘 정형 — 코 밑은 광선 사각지대라 NEAREST 구조 정점이
+    # 코 밑면·인중에 뭉쳐 쌓인다 (인접 줄 사이 y 가 1cm 뛴다).
+    # 콧구멍 정렬로 그 자리에 콧구멍~윗입술 그림 띠가 오면서 뭉침이
+    # 부채살 줄무늬 + 가로 솔기로 드러났다 (실측 guard 인중).
+    # 그 정점만 이웃과 고르게 편 뒤(15회) 표면에 다시 붙인다.
+    fb = bmesh.new()
+    fb.from_mesh(face_ob.data)
+    fb.verts.ensure_lookup_table()
+    under = [v.index for v in fb.verts
+             if abs(v.co.x - head_cx) < 0.03
+             and tip_co.z - 0.03 < v.co.z < tip_co.z - 0.005]
+    uverts = [fb.verts[i] for i in under]
+    for _ in range(15):
+        bmesh.ops.smooth_vert(fb, verts=uverts, factor=0.5,
+                              use_axis_x=True, use_axis_y=True,
+                              use_axis_z=True)
+    fb.to_mesh(face_ob.data)
+    fb.free()
+    if under:
+        vg_u = face_ob.vertex_groups.new(name="under_nose")
+        vg_u.add(under, 1.0, "REPLACE")
+        sw3 = face_ob.modifiers.new("NoseShadow", "SHRINKWRAP")
+        sw3.target = proxy
+        sw3.wrap_method = "NEAREST_SURFACEPOINT"
+        sw3.offset = 0.002
+        sw3.vertex_group = "under_nose"
+        bpy.ops.object.modifier_apply(modifier=sw3.name)
+    print(f"[face_decal] 코 그늘 정형 {len(under)}개 정점", flush=True)
+
     # 남은 잔주름을 편다 — 단 코(맨 앞 1.5cm)는 빼고.
     # 전체에 걸면 굴곡이 제일 큰 코가 도로 펴져 옆모습이 밋밋해진다.
+    # 코 '밑'(코끝보다 8mm 아래)은 앞쪽이어도 편다 — 코 그늘에서
+    # NEAREST 로 구조된 정점이 지그재그로 접혀 인중에 검은 가시
+    # 자국을 남긴다 (실측 guard).
     ymin = min(v.co.y for v in face_ob.data.vertices)
     flat_ids = [v.index for v in face_ob.data.vertices
-                if v.co.y > ymin + 0.015]
+                if v.co.y > ymin + 0.015 or v.co.z < tip_co.z - 0.008]
     vg_flat = face_ob.vertex_groups.new(name="flat_zone")
     vg_flat.add(flat_ids, 1.0, "REPLACE")
     sm = face_ob.modifiers.new("Smooth", "SMOOTH")
