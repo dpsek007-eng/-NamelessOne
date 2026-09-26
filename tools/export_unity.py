@@ -102,7 +102,8 @@ def garden(proto_chars):
     kb = os.path.getsize(ROOT + '/garden.json') / 1024
     nb = len([1 for a in agents if not a['wKeys']])
     print(f"뜰 — 표 {kb:.0f}KB (잔상 {len(agents)}, 일터 {len(T['stations'])}, "
-          f"인연 규칙 {len(T['bonds'])}, 대사 {len(T['lines'])}줄, 성향 없는 잔상 {nb})")
+          f"인연 규칙 {len(T['bonds'])}, "
+          f"대사 {sum(len(r['lines']) for r in T['lines'])}줄({len(T['lines'])}뱅크), 성향 없는 잔상 {nb})")
 
 
 def main():
