@@ -10,12 +10,10 @@
 - **원본 서버** 경로: `/media/hdd8/justin/my_project/TOP`
 - **이사 번들** 경로: `/media/hdd8/justin/my_project/이사/`
   - 번들에 커밋 전부(`bc838aa` 포함)가 들어 있다
-- ** 깃허브**(`dpsek007-eng/-NamelessOne`): 원격 `main` = `2f4c59b`, 로컬이 그 뒤 `N`개 앞 (2026-09-14 실측. N = `git rev-list --count 2f4c59b..HEAD` — 밑줄을 덧붙일 때마다 이 문서 맨 위 수치는 늘어난다)
-  - `Navifra-Justin` 권한 문제로 push 불가 — dry-run 에러 그대로: `Permission to dpsek007-eng/-NamelessOne.git denied to Navifra-Justin`
-  - 미푸시 **0개** — 2026-09-14 push 완료 (`cf6d763`)
-  - ※ 종전 「39개 미푸시」는 폐기 — 원격이 이미 `2f4c59b`까지 있었으므로 오래된 수치였다
-  - 해결 방법: (1) `dpsek007-eng`가 `Navifra-Justin`을 collaborator로 초대, 또는
-    (2) 서버 공개키(`ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEjfbZbP/pwTWcy9RAWTKN1Da1rO4QlRRktzDdWqw3eH justin@navifra.com`)를 write 권한 deploy key로 등록
+- ** 깃허브**(`dpsek007-eng/-NamelessOne`): **push 된다.** 2026-09-27 실측 — `5f443eb..4a405d2  main -> main`
+  - 미푸시 **0개** (`git rev-list --count origin/main..HEAD` 로 언제든 다시 잰다)
+  - ※ 종전 「권한 문제로 push 불가」는 폐기 — 그 뒤로 두 번(2026-09-14, 2026-09-27) 실제로 올라갔다
+  - 서버 공개키: `ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEjfbZbP/pwTWcy9RAWTKN1Da1rO4QlRRktzDdWqw3eH justin@navifra.com`
 
 ---
 
@@ -197,7 +195,7 @@ Git user: Navifra-Justin
 ## 12. 다음에 이어서 할 것
 
 1. ~~캐릭터 외형 젊어지기~~ — **완료** (커밋 `e330338`) — 재작성 · 514장 재생성 · 격자 검증 · 커밋 전부 끝
-2. **GitHub push 문제 해결** (권한 또는 deploy key) — ⛔ 사용자 행동 필요: `dpsek007-eng`가 collaborator 초대를 보내거나, 공개키(`CLAUDE-HANDOFF.md` 1절)를 write 권한 deploy key로 등록해야 한다. 미푸시 N개 (원격 `main`=`2f4c59b`, N = `git rev-list --count 2f4c59b..HEAD`)
+2. ~~GitHub push 문제 해결~~ — **해결됨.** 2026-09-27 실측으로 push 된다 (1절). 미푸시 0개
 3. ~~소지품 47개 손 뼈 부착~~ — **게임 경로 해결** — 2D 스프라이트(draw_prop)에서 47종 전부 손에 그림. 3D 캐스트 GLB에는 미부착 상태이나 실루엣 실험 결과 소품 불가 분리 확인됨
 4. ~~머리·두건 6종 생성~~ — **완료** (`tools/rig.py` + `tools/art.py`, HEAD/BALD 상수, 6타입 분기)
 5. ~~두상 포트레이트 파트 완성~~ — **완료** (커밋 `8ba4867`) — 이목구비 8축 정의 → 48조합 조립 → 시트+Manifest → Portrait.shader+FocusDriver
