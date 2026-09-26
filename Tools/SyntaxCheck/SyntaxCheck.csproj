@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <RootNamespace>Irem.Tools</RootNamespace>
+    <AssemblyName>SyntaxCheck</AssemblyName>
+  </PropertyGroup>
+  <!-- 이 저장소에서 NuGet 을 부르는 유일한 곳이다. 로슬린 파서 하나뿐이고,
+       첫 빌드에 nuget.org 가 필요하다(도커 안에서 받는다 — 서버에 dotnet 을 설치하지 않았다).
+       유니티 패키지는 하나도 늘지 않는다. -->
+  <ItemGroup>
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.9.2" />
+  </ItemGroup>
+</Project>

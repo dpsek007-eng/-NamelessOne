@@ -98,7 +98,64 @@ namespace Irem.Editor
             }
             catch (Exception e) { NO("전투 중 예외 — " + e.Message + "\n" + e.StackTrace); }
 
-            // 5) 신 — 없으면 열어도 아무것도 안 보인다
+            // 5) 뜰 — 3D 쪽. 표·몸·옷·동작이 다 있어야 한 사람이 선다.
+            var gta = Resources.Load<TextAsset>("Irem/garden");
+            Check(gta != null, "뜰 표 읽기 Assets/Resources/Irem/garden.json");
+            if (gta != null)
+            {
+                var G = JsonUtility.FromJson<GardenTables>(gta.text);
+                Check(G != null && G.agents != null && G.agents.Length > 0,
+                      $"뜰 표 해석 — 잔상 {G?.agents?.Length}, 일터 {G?.stations?.Length}, "
+                    + $"인연 규칙 {G?.bonds?.Length}, 지도 {G?.w}×{G?.h}");
+                Check(IremGardenScene.Ready() == 0, "뜰 자산 — 표·몸·옷·동작·땅");
+
+                // 5-b) 뜰을 실제로 굴려 본다. 순수 C# 쪽이라 유니티가 없어도 도는 곳이지만
+                //      (Tools/GardenRunner 가 도커로 재는 자리다) 여기서도 한 번 본다 —
+                //      유니티가 읽은 표로 도는지는 유니티에서만 알 수 있다.
+                if (G != null && G.agents != null && G.agents.Length > 0)
+                {
+                    try
+                    {
+                        var g = GardenSetup.Build(G, 42);
+                        for (int i = 0; i < 100; i++) g.Tick();
+                        int atWork = g.Cast.Count(s => s.AtWork);
+                        int active = g.Found.Count(b => b.Active);
+                        Check(g.Log.Count > 0,
+                              $"뜰 100걸음 — 사건 {g.Log.Count}건, 일터에 선 잔상 {atWork}/{g.Cast.Count}, "
+                            + $"성립한 인연 {g.Found.Count} 가운데 발동 {active}");
+                    }
+                    catch (Exception e) { NO("뜰 계산 중 예외 — " + e.Message + "\n" + e.StackTrace); }
+
+                    // 5-c) 몸을 실제로 세워 본다. 컴파일이 된다고 스물셋이 서는 것은 아니다.
+                    try
+                    {
+                        var probe = new GameObject("__garden");
+                        // 카메라를 준다. 뜰은 카메라를 잡아 각도와 거리를 정하므로
+                        // (GardenDirector.FrameCamera) 없으면 세울 수가 없다.
+                        var pcam = probe.AddComponent<Camera>();
+                        var g = GardenSetup.Build(G, 42);
+                        var dir = probe.AddComponent<GardenDirector>();
+                        dir.Begin(G, g, pcam);
+                        int bodies = 0, bones = 0;
+                        foreach (var sm in probe.GetComponentsInChildren<SkinnedMeshRenderer>(true))
+                        { bodies++; bones += sm.bones?.Length ?? 0; }
+                        int views = probe.GetComponentsInChildren<ShadeView3D>(true).Length;
+                        Check(views == g.Cast.Count,
+                              $"뜰 조립 — 잔상 {views}/{g.Cast.Count}, 스킨 메시 {bodies}, 뼈 {bones}");
+                        for (int i = 0; i < 100; i++) dir.PlayStep();
+                        Check(dir.ShownTurn > 0,
+                              $"뜰 재생 100걸음 — {dir.ShownTurn}걸음째, 일한 걸음 {dir.WorkSteps}, "
+                            + $"말을 건 인연 {dir.Spoken}");
+                        UnityEngine.Object.DestroyImmediate(probe);
+                        var ges = UnityEngine.Object
+                            .FindFirstObjectByType<UnityEngine.EventSystems.EventSystem>();
+                        if (ges != null) UnityEngine.Object.DestroyImmediate(ges.gameObject);
+                    }
+                    catch (Exception e) { NO("뜰 조립 중 예외 — " + e.Message + "\n" + e.StackTrace); }
+                }
+            }
+
+            // 6) 신 — 없으면 열어도 아무것도 안 보인다
             EnsureScene();
             Done();
         }

@@ -9,7 +9,7 @@ using Irem.Sim;
 
 namespace Irem.Game
 {
-    public sealed class BattleDirector : MonoBehaviour
+    public sealed class BattleDirector : MonoBehaviour, IBattleStage
     {
         public BattleTables T;
         public FloorDef Floor;
@@ -30,7 +30,10 @@ namespace Irem.Game
         public int ShownTurn { get; private set; }
         public string SpeedLabel => Mathf.RoundToInt(0.42f / StepSeconds).ToString();
         public ShadeView ViewOf(int idx) => _views.TryGetValue(idx, out var v) ? v : null;
+        // 낯으로 물을 때만 낯을 돌려준다. 위의 서명은 그대로 둔다.
+        IShadeView IBattleStage.ViewOf(int idx) => ViewOf(idx);
         public int ShownHp(int idx) => _hp.TryGetValue(idx, out var h) ? h : 0;
+        public float TagLift => 0f;        // 2D 는 리그 자리에 붙인다 — 지금 화면이 그렇다
         public void TogglePause() => Paused = !Paused;
         public void CycleSpeed() => StepSeconds = StepSeconds > 0.12f ? StepSeconds / 2f : 0.42f;
 

@@ -1,7 +1,7 @@
 # 이어서.md — 이렘의 탑(TOP) 프로젝트 계속하기
 
 > **이 파일은 Claude Code 세션이 끊겼을 때, 이어서 작업하려면 반드시 읽어라.**
-> 마지막 갱신: 2026-09-14, 남은 열린 항목 전부 판정 확인 — 결함이 아니라 설계 결정에 맡긴 것들
+> 마지막 갱신: 2026-09-27, 에이전트 시스템(뜰 + 3D 전투 층) — **13절**을 먼저 읽어라
 
 ---
 
@@ -204,5 +204,71 @@ Git user: Navifra-Justin
 6. ~~Unity `_Focus`~~ — **완료** (커밋 `8ba4867`) — `Portrait.shader` (Irem/Portrait) + `FocusDriver.cs`
 7. **★7/★8 천장 문제** — 판정 완료: **결함 아님, 열린 설계 결정** — 두 건 다 「상한을 ★8 이상으로 여는 그때」에 다시 정하기로 문서에 명시됨. 지금 ★6 상한 상태는 도구·문서 전부 일관(2026-09-14 회귀 점검 통과)
 8. **docs/13 3부, docs/18 겹치기 미정 해소** — ⛔ 설계 결정. 3부는 문서가 명시적으로 "미리 확정하지 않는다"
+9. **유니티를 열어 3D를 확인** — ⛔ 사용자 행동 필요. 이 서버에 유니티가 없어 `Irem.Game`·`Irem.Editor`는
+   미검증이다. 방법과 실측값은 **13절**
 
 > **2026-09-14 회귀 점검**: sim 도구 9종 전부 무오류 실행(power · pacing · fusion · cap · summon_value · gacha · bondi · trait_odds · focus_curve), `check_unique` 11명 스키마 통과, `docs/18` 소환 표(★6=5%) ↔ `gacha_sim.py DEEP` 일치. 현재 ★6 상한 상태는 잡혀 있다.
+
+---
+
+## 13. 에이전트 시스템 — 뜰과 3D 전투 층 (2026-09-27)
+
+사용자 지시: 「모든 캐릭터가 에이전트로 동작하는 시스템으로 구축해줘. 캐릭터는 3d 캐릭터니깐.
+3d 환경에서 움직이게 해줘.」 확정한 네 가지: 실행 환경 **Unity** · 두뇌 **하이브리드**
+(이동·행동은 결정론적 유틸리티 AI, 대사만 LLM) · 무대 **뜰 + 전투 층** · 규모 **23명**.
+
+### 어디에 무엇이 있나
+
+| 자리 | 파일 | 하는 일 |
+|---|---|---|
+| `Irem.Sim` (엔진 참조 0) | `Heart.cs` | 뜰 잔상의 마음. `Mind`를 품는다(복사·상속 아님) |
+| | `Bonds.cs` | `tools/bonds.py` 이식. 규칙 28, 발동 칸 4 |
+| | `Garden.cs` | 뜰 한 걸음 → `GardenEvent` 목록. `Grid`의 SPFA를 그대로 쓴다 |
+| | `GardenSetup.cs` | 23명을 세우고 일터를 잡는다 |
+| `Irem.Data` | `GardenData.cs` | `AgentDef`/`StationDef`/`BondRule`/`LineBank` POCO |
+| `Irem.Game` | `IShadeView.cs` | 2D·3D 몸이 같은 말을 알아듣는 낯 |
+| | `ShadeView3D.cs` | Playables 로 6클립을 섞는다 |
+| | `CastLoad.cs` | 몸 FBX + 옷 FBX → `IremChar.Wear` → 한 사람 |
+| | `Ground3D.cs` | 땅·그림자 데칼. **뜰과 전투 층이 같은 것을 쓴다** |
+| | `GardenDirector.cs` · `GardenHud.cs` | 뜰 재생 |
+| | `IBattleStage.cs` | 2D·3D 연출자가 **같은 `BattleHud`**를 쓰게 하는 낯 |
+| | `Battle3DDirector.cs` | 같은 `Battle.Events` 를 3D 로 재생. `Battle.cs`는 한 줄도 안 건드렸다 |
+| `Irem.Editor` | `IremGardenScene.cs` | `[이렘/뜰 신]` · `[이렘/전투를 3D 로]` |
+| 도구 | `Tools/GardenRunner` | 유니티 없이 뜰을 돌린다 (도커 dotnet) |
+| | `Tools/SyntaxCheck` | 유니티 없이 **문법만** 본다 (Roslyn) |
+| | `tools/lines.py` · `check_lines.py` | 대사를 굽고 검사한다 |
+
+### 실측값 (2026-09-27, 도커 dotnet SDK 8.0)
+
+```bash
+docker run --rm -v "$PWD":/w -w /w mcr.microsoft.com/dotnet/sdk:8.0 \
+  dotnet run --project Tools/GardenRunner -- garden 2000 42
+```
+
+- **뜰 지도**: 28×18 = 504칸 · 딛을 수 있는 칸 397 · 일터 14곳, **14곳 전부 성문에서 이어짐**
+- **2000걸음 · 시드 42**: 일터에 선 잔상 20/22 · **한 번도 일하지 못한 잔상 0** ·
+  일한 걸음 합 40,081 · 말을 건 인연 5/5 · 사건 92,695건
+- **재현**: 시드 42 두 번 → `diff` 0. 시드 7 → 다르다 (일한 걸음 39,187 · 말을 건 인연 4/5 · 사건 93,611건)
+- **인연**: 규칙 28 · 인원 23 · **성립 12종** (관계 7 · 생업 1 · 계층 3 · 시대 1) · 발동 4 · 대기 8 · 최후 기준 7명
+- **파이썬 ↔ C# 인연 일치**: `python3 tools/check_bonds_parity.py <C#출력>` → 12줄 대 12줄, **다른 줄 0**
+- **동작 FBX** (`unity/Assets/Art/Chars/Clips/motion.fbx`, 2,711,676 bytes): 뼈 53 · **6클립** —
+  숨 97(순환) · 걷기 33(순환) · 휘두름 48 · 맞음 18 · 무너짐 40 · 돌아본다 72
+  ※ `tables.json`의 `clips`는 5개다 — `돌아본다`는 3D 전용이라 2D 표에 없다
+- **대사**: `data/lines.json` — 잔상 23명 × 뱅크 6종 = **497줄**, `check_lines.py` 통과.
+  **실행 중에 API를 부르지 않는다** (구워서 커밋했다)
+- **문법**: `Tools/SyntaxCheck` — 40파일 오류 0
+
+### 이 서버에서 검증하지 못한 것 (정직하게)
+
+**유니티가 이 서버에 없다.** 그래서 `Irem.Game`·`Irem.Editor`의 C#은 **쓰기만 했고
+컴파일·실행 검증을 못 했다.** `Tools/SyntaxCheck`가 재는 것은 문법뿐이다 — 형·유니티 API·
+Playables 리타깃은 유니티를 열어야 나온다. 사용자 손이 필요한 자리:
+
+```bash
+Unity -batchmode -quit -executeMethod Irem.Editor.IremSelfTest.Run   # 5절 「뜰」 검사가 들어 있다
+# 그리고 메뉴에서  [이렘/뜰 신]  을 열어 눈으로 본다
+# 전투를 3D 로 보려면  [이렘/전투를 3D 로]  를 켠다 (EditorPrefs "이렘.전투3D")
+```
+
+`Irem.Sim`·`Irem.Data`는 `noEngineReferences: true`라 위 실측값 전부가 도커에서 나왔다.
+에이전트 두뇌·뜰·인연이 여기 들어 있으므로 **이 작업의 핵심은 이 서버에서 재어졌다.**

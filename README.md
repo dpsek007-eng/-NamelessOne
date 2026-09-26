@@ -35,9 +35,11 @@
 ## 구조
 
 ```
-docs/    설계 문서 21개 — 세계관 · 시스템 · 스토리 100층 · 검증 기록
-tools/   밸런스 시뮬레이터 · 외형 도구 25개 (Python)
-data/    캐릭터 15명 · 층 30개 (JSON)
+docs/    설계 문서 23개 — 세계관 · 시스템 · 스토리 100층 · 검증 기록
+tools/   밸런스 시뮬레이터 · 외형 도구 34개 (Python)
+data/    캐릭터 23명 · 층 60개 · 뜰 인연 · 뜰 대사 497줄 (JSON)
+unity/   Unity 6 프로젝트. asmdef 4개 — Sim·Data 는 엔진 참조 0
+Tools/   .NET 콘솔 3개 — 유니티 없이 재는 자리 (도커 dotnet)
 ```
 
 ### 문서
@@ -49,6 +51,7 @@ data/    캐릭터 15명 · 층 30개 (JSON)
 | `09`~`13` | 스토리라인 · 시스템 구조 · 비트시트 · 대본 · 확장구조 |
 | `14`~`16` | 1막 · 2막 · 3-4막 대본 (1~100층) |
 | `17`~`21` | 편성 · 소환 · 방치와 등반 · 소실 · 페이싱 |
+| `22`~`23` | 아트 · 옮기기 |
 
 ### 검증된 수치
 
@@ -68,6 +71,9 @@ data/    캐릭터 15명 · 층 30개 (JSON)
 행동으로 적어 봄  전신 59/90 (관문 70)                  ← ⚠ 다섯 판 450장, 초상 실험은 접었다
 소지품을 쥐여 봄  중앙값 1.247% (문턱 1.776%)           ← ⚠ 두 번 재고 두 번 미달. 소지품도 아니다
 1막 30층 도달   중앙값 18일 (5~24일 · 20/20)  ← 병목은 재화가 아니라 머릿수
+뜰 2000걸음     일터에 선 잔상 20/22 · 못 일한 잔상 0 · 사건 92,695건  ← 시드 42, 두 번 돌려 diff 0
+뜰 인연         규칙 28 → 성립 12종 (관계 7·생업 1·계층 3·시대 1) · 발동 4 · 대기 8
+파이썬 ↔ C#     인연 12줄 대 12줄, 다른 줄 0             ← 규칙을 두 언어로 적으면 갈라진다
 ```
 
 시뮬레이터 실행:
@@ -81,6 +87,17 @@ python3 tools/trait_odds.py     # ★6 특성이 고유일 확률
 python3 tools/focus_curve.py    # 초점 곡선 (얼굴이 또렷해지는 속도)
 python3 tools/pacing_sim.py     # 1막 페이싱
 python3 tools/shade_gen.py 10   # 무명 잔상 생성
+```
+
+뜰(에이전트 23명)은 유니티 없이 돈다 — 도커의 dotnet SDK 로 실행한다:
+
+```bash
+docker run --rm -v "$PWD":/w -w /w mcr.microsoft.com/dotnet/sdk:8.0 \
+  dotnet run --project Tools/GardenRunner -- garden 2000 42   # 뜰 2000걸음 (map · bonds 모드도 있다)
+docker run --rm -v "$PWD":/w -w /w mcr.microsoft.com/dotnet/sdk:8.0 \
+  dotnet run --project Tools/SyntaxCheck -- unity/Assets/Scripts   # 유니티 없이 문법만 본다
+python3 tools/check_bonds_parity.py <C#출력>   # 인연이 파이썬과 글자까지 같은가
+python3 tools/check_lines.py                   # 뜰 대사 497줄 검사 (실행 중에 API 를 부르지 않는다)
 ```
 
 외형 확인:
@@ -100,6 +117,10 @@ python3 tools/focus_stack.py --boxes --pick # 얼굴 상자 · 종마다 대표 
 
 - ✅ 1부 스토리 100층 전체
 - ✅ 시스템 설계 12종 · 밸런스 검증
-- ✅ 1막 캐릭터 11명 · 층 사양 30개
-- ⬜ 2막 캐릭터 · 층 사양 (31~60층)
-- ⬜ Unity 구현 (`Irem.Sim` 부터)
+- ✅ 층 사양 60개 (1·2막, `data/floors.json` — 56개 층에 길이 여러 갈래)
+- ✅ 캐릭터 23명 (`data/characters.json`) — 고유 특성이 쓰인 사람은 **11명**
+- ✅ 잔상 23명이 에이전트로 도는 뜰 (`Irem.Sim` · 도커로 실측)
+- ⬜ 고유 특성 남은 12명 (★1~3 무명·편린)
+- ⬜ 3막·4막 층 사양 (61~100층) — 대본은 `docs/16` 에 있다
+- ⬜ Unity 구현 — 3D 뜰·전투 층 코드는 있으나 **유니티가 이 서버에 없어 미검증**
+  (`CLAUDE-HANDOFF.md` 13절)

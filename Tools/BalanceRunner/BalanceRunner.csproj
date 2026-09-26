@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <RootNamespace>Irem.Runner</RootNamespace>
+  </PropertyGroup>
+  <!-- 유니티 프로젝트의 소스를 그대로 참조한다. 사본을 두지 않는다. -->
+  <ItemGroup>
+    <Compile Include="../../unity/Assets/Scripts/Irem.Data/**/*.cs" />
+    <Compile Include="../../unity/Assets/Scripts/Irem.Sim/**/*.cs" />
+  </ItemGroup>
+</Project>

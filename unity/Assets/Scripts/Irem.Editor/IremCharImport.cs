@@ -14,6 +14,10 @@
 //    회색 Standard 두 장이 생긴다. 우리가 쓸 것은 실루엣 머티리얼이므로
 //    아예 들여오지 않는다. 슬롯 순서(0 천, 1 강조)만 살아 있으면 된다.
 //
+// 그리고 Assets/Art/Props 아래의 일터 소품(FBX 14장)도 여기서 받는다. 사람이 아니므로
+// 뼈도 아바타도 애니메이션도 없다 — 다만 머티리얼은 사람과 같은 이유로 안 받는다.
+// 소품에도 Irem/Silhouette 를 씌우기 때문이다(GardenDirector.Stone).
+//
 // 3. 동작(Clips/). 여기에만 애니메이션이 있다. 몸·옷은 정지 자산이라
 //    애니메이션이 짐만 되므로 블렌더에서 bake_anim=False 로 나온다
 //    (chars/src/make_bodies.py). 움직이는 것은 chars/src/make_clips.py 가
@@ -29,6 +33,7 @@ namespace Irem.Editor
     public sealed class IremCharImport : AssetPostprocessor
     {
         const string Root = "/Art/Chars/";
+        const string Props = "/Art/Props/";   // 일터 소품 — pipeline3d 가 구운 것
 
         // 동작 FBX 가 아바타를 베껴 오는 몸. chars/src/make_clips.py 의
         // SRC_ROLE 과 같아야 한다 — 다른 몸에서 뜨면 뼈 위치가 어긋난다.
@@ -49,6 +54,7 @@ namespace Irem.Editor
         void OnPreprocessModel()
         {
             var p = assetPath.Replace('\\', '/');
+            if (p.Contains(Props)) { PrepProp((ModelImporter)assetImporter); return; }
             if (!p.Contains(Root)) return;
 
             var m = (ModelImporter)assetImporter;
@@ -91,6 +97,27 @@ namespace Irem.Editor
             }
         }
 
+        /// 일터 소품. 건물과 도구이므로 뼈도 아바타도 없다.
+        /// 기본값으로 두면 회색 Standard 머티리얼이 열넷 × 여러 장 생기고,
+        /// 그 위에 실루엣을 씌우므로 전부 버려진다. 아예 받지 않는다.
+        static void PrepProp(ModelImporter m)
+        {
+            m.globalScale        = 1f;
+            m.useFileScale       = true;
+            m.importCameras      = false;
+            m.importLights       = false;
+            m.importVisibility   = false;
+            m.importBlendShapes  = false;
+            m.importAnimation    = false;
+            m.materialImportMode = ModelImporterMaterialImportMode.None;
+            m.importNormals      = ModelImporterNormals.Import;
+            m.importTangents     = ModelImporterTangents.None;
+            m.animationType      = ModelImporterAnimationType.None;
+            m.avatarSetup        = ModelImporterAvatarSetup.NoAvatar;
+            // 소품은 뼈를 갈아 끼우지 않으므로(사람과 다른 점이다) 계층을 접어도 된다.
+            m.optimizeGameObjects = true;
+        }
+
         static Avatar LoadSourceAvatar()
         {
             var av = AssetDatabase.LoadAllAssetsAtPath(ClipAvatarSource)
@@ -130,6 +157,13 @@ namespace Irem.Editor
         void OnPostprocessModel(GameObject go)
         {
             var p = assetPath.Replace('\\', '/');
+            if (p.Contains(Props))
+            {
+                // 소품에 메시가 없으면 뜰에 이름표만 서고 건물이 안 보인다.
+                if (go.GetComponentInChildren<MeshRenderer>() == null)
+                    Debug.LogError($"[이렘] {p} 에 메시가 없다. 일터 소품이 뜰에 안 보일 것이다.");
+                return;
+            }
             if (!p.Contains(Root)) return;
 
             if (p.Contains(Root + "Clips/"))

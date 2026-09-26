@@ -14,7 +14,7 @@ namespace Irem.Game
         public Camera Cam;
         public Battle B;
         public FloorDef Floor;
-        public BattleDirector Dir;
+        public IBattleStage Dir;          // 2D BattleDirector · 3D Battle3DDirector
 
         RectTransform _root, _tags, _float;
         TextMeshProUGUI _title, _goal, _turn, _ticker;
@@ -24,7 +24,7 @@ namespace Irem.Game
                                   RectTransform bub, TextMeshProUGUI bubT)> _tag = new();
         readonly List<string> _lines = new();
 
-        public void Build(Camera cam, Battle b, FloorDef f, BattleDirector dir)
+        public void Build(Camera cam, Battle b, FloorDef f, IBattleStage dir)
         {
             Cam = cam; B = b; Floor = f; Dir = dir;
             var canvas = UIKit.Root(transform, "전투 UI", 10);
@@ -169,7 +169,7 @@ namespace Irem.Game
                 if (!_tag.TryGetValue(u.Idx, out var t)) continue;
                 var v = Dir.ViewOf(u.Idx);
                 if (v == null) { t.rt.gameObject.SetActive(false); continue; }
-                var sp = Cam.WorldToScreenPoint(v.transform.position);
+                var sp = Cam.WorldToScreenPoint(v.Pos + Vector3.up * Dir.TagLift);
                 bool vis = sp.z > 0;
                 t.rt.gameObject.SetActive(vis);
                 if (!vis) continue;

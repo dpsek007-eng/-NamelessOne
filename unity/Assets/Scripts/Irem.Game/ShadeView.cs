@@ -9,7 +9,7 @@ using Irem.Data;
 namespace Irem.Game
 {
     [RequireComponent(typeof(SpriteRenderer))]
-    public sealed class ShadeView : MonoBehaviour
+    public sealed class ShadeView : MonoBehaviour, IShadeView
     {
         public Sprite[] Frames;
         public BattleTables T;
@@ -27,6 +27,10 @@ namespace Irem.Game
 
         public string Clip => _clip?.name ?? "idle";
         public bool Facing { get; private set; } = true;      // true = 오른쪽
+
+        // IShadeView 가 물어보는 자리. 리그가 있으면 리그가 곧 몸의 자리다.
+        // (읽기만 하는 것을 하나 더한 것이고, 위의 동작은 한 줄도 바뀌지 않았다)
+        public Vector3 Pos => (Rig != null ? Rig : transform).position;
 
         void Awake()
         {

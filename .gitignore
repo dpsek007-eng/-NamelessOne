@@ -13,6 +13,9 @@ venv/
 [Ll]ogs/
 [Uu]ser[Ss]ettings/
 *.csproj
+# 단, Tools/ 의 .NET 콘솔은 손으로 쓴 것이라 저장소에 있어야 한다.
+# 위 *.csproj 는 유니티가 만드는 것을 걸러내려고 둔 줄이다 — 이 셋은 유니티가 만들지 않는다.
+!Tools/*/*.csproj
 *.sln
 *.userprefs
 sysinfo.txt
