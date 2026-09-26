@@ -95,6 +95,12 @@ namespace Irem.Sim
             ["헌신"] = (4, 2, 0.75, 7), ["탐구"] = (5, 2, 1.00, 10),
             ["도피"] = (2, 4, 1.20, 8), ["미상"] = (2, 3, 1.00, 7),
         };
+        /// 역할이 정한 걸음과 시야. 뜰도 같은 표를 본다 —
+        /// 같은 사람이 층에서와 뜰에서 다르게 걸으면 안 되고,
+        /// 표를 두 벌 만들면 한쪽만 고쳐져 조용히 갈라진다(docs/10).
+        public static int MoveOf(string role) => (Kit.TryGetValue(role, out var k) ? k : Kit["미상"]).mv;
+        public static int SightOf(string role) => (Kit.TryGetValue(role, out var k) ? k : Kit["미상"]).sight;
+
         static readonly Dictionary<string, int> StartX = new()
         { ["수호"] = 2, ["저항"] = 2, ["도피"] = 2, ["헌신"] = 1, ["탐구"] = 0, ["미상"] = 1 };
         static readonly Dictionary<string, int> StartY = new()

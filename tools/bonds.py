@@ -77,11 +77,18 @@ ROLE_BOND={
 ACTIVE_SLOTS=4
 PRIORITY={"관계":0,"생업":1,"계층":2,"최후":3,"시대":4}   # 구체적인 것이 우선
 
-def find_bonds(shades):
+def find_bonds(shades, rel=None):
     """뜰 한 구역의 잔상 목록을 받아 성립하는 인연을 반환한다.
        shade는 dict이며 cls / trade / era / role 키를 갖는다.
+       관계 인연을 같이 재려면 rel 에 data/characters.json 의 bonds 중 type=="관계" 인 것을
+       넘긴다. 그때는 shade 에 id 키도 있어야 한다.
        반환값은 성립 목록일 뿐이고, 실제 발동은 ACTIVE_SLOTS 개까지만이다."""
     out=[]
+    # 관계 인연은 지정된 잔상이 전부 있어야 성립한다. 둘일 때도 있고 셋일 때도 있다.
+    if rel:
+        have={s.get("id") for s in shades}
+        for r in rel:
+            if all(m in have for m in r.get("members",[])): out.append(("관계",r,None))
     cls=[s.get("cls") for s in shades]
     trd=[s.get("trade") for s in shades]
     era=[s.get("era") for s in shades]
@@ -98,7 +105,9 @@ def find_bonds(shades):
     # 시대 인연은 구역 최다 시대 하나만 성립한다 (같은 문구가 여러 번 뜨지 않게)
     ecnt={e:era.count(e) for e in set(era) if e}
     if ecnt:
-        top=max(ecnt, key=ecnt.get)
+        # 동수일 때 set 순회 순서에 따라 답이 달라지면 안 된다 — 이름 순으로 고정한다.
+        # (실측: 23명 구역에서는 붕괴기 11명으로 동수가 아니다. C# Bonds.TopEra 도 같게 둔다.)
+        top=max(sorted(ecnt), key=ecnt.get)
         if ecnt[top]>=ERA_BOND["n"]: out.append(("시대",ERA_BOND,top))
     # 최후 인연은 구역 인원에 비례한다. 18명 구역에서 3명은 너무 쉽다.
     need=max(3, round(len(shades)*0.30))
@@ -115,3 +124,43 @@ def render(kind,b,arg):
     t=b["title"] if kind!="시대" else b["title"]
     st=b["story"].format(era=arg) if arg else b["story"]
     return kind,t,st,b["reward"],b.get("note")
+
+
+# ── 규칙을 한 꼴로 편다 ────────────────────────────────────
+# 내보내기(tools/export_unity.py)와 C# 이식(Irem.Sim/Bonds.cs)이 같은 목록을 본다.
+# 규칙을 두 언어로 각각 적으면 조용히 갈라진다 — 생성기에서 이미 겪은 일이다(docs/10).
+def rules(rel=None):
+    """인연 규칙 전부를 같은 꼴의 dict 목록으로 돌려준다. 순서가 곧 사양이다 —
+       find_bonds 가 만드는 순서와 같아야 C# 쪽 목록과 글자까지 맞는다."""
+    out=[]
+    for r in (rel or []):
+        out.append(dict(id=r["id"], kind="관계", title=r["title"], story=r["story"],
+                        reward=r.get("reward",""), note=r.get("note",""),
+                        members=list(r.get("members",[])),
+                        avoid_first=bool(r.get("avoid_first"))))
+    for p in CLASS_PAIRS:
+        na,nb=p["n"]
+        out.append(dict(id=p["id"], kind="계층", title=p["title"], story=p["story"],
+                        reward=p["reward"], note=p.get("note",""),
+                        a=p["a"], b=p["b"], na=na, nb=nb))
+    for p in TRADE_PAIRS:
+        out.append(dict(id=p["id"], kind="생업", title=p["title"], story=p["story"],
+                        reward=p["reward"], note=p.get("note",""), a=p["a"], b=p["b"]))
+    for r,b in ROLE_BOND.items():
+        out.append(dict(id="last_"+r, kind="최후", title=b["title"], story=b["story"],
+                        reward=b["reward"], note=b.get("note",""), role=r, n=b["n"], ratio=0.30))
+    out.append(dict(id="era", kind="시대", title=ERA_BOND["title"], story=ERA_BOND["story"],
+                    reward=ERA_BOND["reward"], note="", n=ERA_BOND["n"]))
+    return out
+
+
+def rule_id(kind, b, arg):
+    """find_bonds 가 돌려준 한 줄이 rules() 의 어느 규칙인지 — 파이썬·C# 비교에 쓴다."""
+    if kind=="관계": return b["id"]
+    if kind=="계층": return b["id"]
+    if kind=="생업": return b["id"]
+    if kind=="최후":
+        for r,x in ROLE_BOND.items():
+            if x["title"]==b["title"]: return "last_"+r
+        return "last_?"
+    return "era"

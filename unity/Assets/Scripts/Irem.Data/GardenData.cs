@@ -1,0 +1,102 @@
+// 뜰의 표. BattleData.cs 와 같은 규칙이다 —
+// JsonUtility 는 사전을 못 읽으므로 전부 배열로 편다. 엔진도 JSON 라이브러리도 참조하지 않는다.
+//
+// 이 표는 tools/export_unity.py 가 쓴다. 손으로 고치지 않는다.
+// 원본은 data/characters.json(잔상·관계 인연) · data/garden.json(지도·일터) ·
+// tools/trades.py(생업→일터·계층) · tools/bonds.py(자동 인연 규칙) 네 곳이다.
+using System;
+using System.Collections.Generic;
+
+namespace Irem.Data
+{
+    /// 뜰에 사는 잔상 하나. 전투의 CharDef 와 겹치는 것이 많지만 쓰는 곳이 다르다 —
+    /// 여기엔 전투 수치가 없고, 대신 일터와 옷·몸의 파일 이름이 있다.
+    [Serializable]
+    public class AgentDef
+    {
+        public string id, name, role, era, cls, trade, place;
+        public string body, garment;        // Art/Chars/Bodies/{body}.fbx · Garments/{garment}.fbx
+        public string col, tag, idleLine;
+        public string deed;                 // 뜰에서 하는 일 한 줄 (characters.json garden.desc)
+        public int r, floor;
+        public string[] wKeys; public float[] wVals;     // 성향의 무게 — Mind.From 이 읽는다
+
+        public Dictionary<string, double> Weights()
+        {
+            var d = new Dictionary<string, double>();
+            if (wKeys == null || wVals == null) return d;
+            for (int i = 0; i < wKeys.Length && i < wVals.Length; i++) d[wKeys[i]] = wVals[i];
+            return d;
+        }
+    }
+
+    /// 일터 한 곳. name 은 tools/trades.py 의 place 와 같아야 한다 —
+    /// 생업에서 일터를 찾는 유일한 열쇠다.
+    [Serializable]
+    public class StationDef
+    {
+        public string name, prop, desc;
+        public int x, y;
+    }
+
+    /// 인연 규칙 하나. 다섯 종류를 한 꼴로 편다.
+    ///   관계 — members 에 적힌 잔상이 전부 있으면 성립 (둘일 때도 있고 셋일 때도 있다)
+    ///          shy 가 켜져 있으면 members[0] 이 나머지를 처음엔 피한다
+    ///   생업 — a·b 두 생업이 다 있으면
+    ///   계층 — a 가 na 명 이상, b 가 nb 명 이상 (a==b 면 합쳐서 na+nb 명)
+    ///   최후 — role 이 max(3, 인원×ratio) 명 이상
+    ///   시대 — 구역 최다 시대가 n 명 이상. 최다 하나만 성립한다
+    [Serializable]
+    public class BondRule
+    {
+        public string id, kind, title, story, reward, note;
+        public string[] members;
+        public string a, b, role;
+        public int na, nb, n;
+        public float ratio;
+        public bool shy;                    // 처음엔 피한다 — 데이터가 그렇다고 적어 둔 인연만
+    }
+
+    /// 대사 뱅크 한 줄. tools/lines.py 가 미리 굽는다. 게임은 실행 중에 API 를 부르지 않는다.
+    [Serializable]
+    public class LineRow
+    {
+        public string id, bank;
+        public string[] lines;
+    }
+
+    [Serializable]
+    public class GardenTables
+    {
+        public int w, h;
+        public string[] map;
+        public TerrDef[] terrain;
+        public AgentDef[] agents;
+        public StationDef[] stations;
+        public BondRule[] bonds;
+        public LineRow[] lines;
+        public int idleX, idleY;            // 일터 없는 잔상이 서 있는 자리
+        public int activeSlots;             // 동시에 켤 수 있는 인연 수 (tools/bonds.py ACTIVE_SLOTS)
+
+        public StationDef Station(string name)
+        {
+            if (stations == null) return null;
+            foreach (var s in stations) if (s.name == name) return s;
+            return null;
+        }
+        public AgentDef Agent(string id)
+        {
+            if (agents == null) return null;
+            foreach (var a in agents) if (a.id == id) return a;
+            return null;
+        }
+        /// 그 잔상의 그 상황 대사들. 없으면 빈 배열 — 없는 것을 만들어 내지 않는다.
+        public string[] Bank(string id, string bank)
+        {
+            if (lines != null)
+                foreach (var l in lines)
+                    if (l.id == id && l.bank == bank) return l.lines ?? new string[0];
+            return new string[0];
+        }
+    }
+}

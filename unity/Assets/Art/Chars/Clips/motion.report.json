@@ -1,0 +1,45 @@
+{
+  "src_role": "수호",
+  "src_height_m": 1.8476,
+  "bones": 53,
+  "path": "unity/Assets/Art/Chars/Clips/motion.fbx",
+  "bytes": 2711676,
+  "clips": [
+    {
+      "unity": "idle",
+      "action": "숨",
+      "frames": 97,
+      "loop": true
+    },
+    {
+      "unity": "walk",
+      "action": "걷기",
+      "frames": 33,
+      "loop": true
+    },
+    {
+      "unity": "attack",
+      "action": "휘두름",
+      "frames": 48,
+      "loop": false
+    },
+    {
+      "unity": "hurt",
+      "action": "맞음",
+      "frames": 18,
+      "loop": false
+    },
+    {
+      "unity": "fall",
+      "action": "쓰러짐",
+      "frames": 40,
+      "loop": false
+    },
+    {
+      "unity": "look",
+      "action": "돌아본다",
+      "frames": 72,
+      "loop": false
+    }
+  ]
+}
