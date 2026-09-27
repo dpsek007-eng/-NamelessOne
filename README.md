@@ -74,6 +74,7 @@ Tools/   .NET 콘솔 3개 — 유니티 없이 재는 자리 (도커 dotnet)
 뜰 2000걸음     일터에 선 잔상 20/22 · 못 일한 잔상 0 · 사건 92,695건  ← 시드 42, 두 번 돌려 diff 0
 뜰 인연         규칙 28 → 성립 12종 (관계 7·생업 1·계층 3·시대 1) · 발동 4 · 대기 8
 파이썬 ↔ C#     인연 12줄 대 12줄, 다른 줄 0             ← 규칙을 두 언어로 적으면 갈라진다
+뜰 웹 재생      600걸음 27,704건을 구워 브라우저가 재생   ← 계산은 Garden.cs 한 벌뿐, 웹은 재생만 한다
 ```
 
 시뮬레이터 실행:
@@ -95,6 +96,8 @@ python3 tools/shade_gen.py 10   # 무명 잔상 생성
 docker run --rm -v "$PWD":/w -w /w mcr.microsoft.com/dotnet/sdk:8.0 \
   dotnet run --project Tools/GardenRunner -- garden 2000 42   # 뜰 2000걸음 (map · bonds 모드도 있다)
 docker run --rm -v "$PWD":/w -w /w mcr.microsoft.com/dotnet/sdk:8.0 \
+  dotnet run --project Tools/GardenRunner -- web 600 42        # 굽는다 → viewer/garden.json (브라우저가 재생할 사건 목록)
+docker run --rm -v "$PWD":/w -w /w mcr.microsoft.com/dotnet/sdk:8.0 \
   dotnet run --project Tools/SyntaxCheck -- unity/Assets/Scripts   # 유니티 없이 문법만 본다
 python3 tools/check_bonds_parity.py <C#출력>   # 인연이 파이썬과 글자까지 같은가
 python3 tools/check_lines.py                   # 뜰 대사 497줄 검사 (실행 중에 API 를 부르지 않는다)
@@ -104,6 +107,9 @@ python3 tools/check_lines.py                   # 뜰 대사 497줄 검사 (실�
 
 ```bash
 python3 tools/serve.py                     # 브라우저로 본다 (헤드리스 서버용)
+#   /viewer/            — 잔상 쉰다섯 벌을 돌려 본다
+#   /viewer/garden.html — 뜰이 돌아가는 것을 본다. 계산은 Irem.Sim/Garden.cs 가 끝냈고 이 쪽은 재생만 한다.
+#                         ?to=420&stop=1 로 그 걸음에서 멈춰 세울 수 있다 (화면을 찍을 때 쓴다)
 python3 tools/shot.py http://127.0.0.1:8000/viewer/#one /tmp/a.png --wait 100   # 화면을 찍는다 (움직이는 탭은 크롬 --screenshot 으로 안 찍힌다)
 blender -b --python chars/src/make_demo.py -- --out chars/out/cast   # 쉰다섯 벌 (CPU, 약 8분)
 python3 tools/silhouette_diff.py           # 실루엣이 정말 갈리는가 (실측)
@@ -122,5 +128,6 @@ python3 tools/focus_stack.py --boxes --pick # 얼굴 상자 · 종마다 대표 
 - ✅ 잔상 23명이 에이전트로 도는 뜰 (`Irem.Sim` · 도커로 실측)
 - ⬜ 고유 특성 남은 12명 (★1~3 무명·편린)
 - ⬜ 3막·4막 층 사양 (61~100층) — 대본은 `docs/16` 에 있다
+- ✅ 뜰을 브라우저에서 본다 (`viewer/garden.html` — 유니티 없이, 3D 몸·동작 그대로)
 - ⬜ Unity 구현 — 3D 뜰·전투 층 코드는 있으나 **유니티가 이 서버에 없어 미검증**
   (`CLAUDE-HANDOFF.md` 13절)

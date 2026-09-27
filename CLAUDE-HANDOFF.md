@@ -232,7 +232,9 @@ Git user: Navifra-Justin
 | | `IBattleStage.cs` | 2D·3D 연출자가 **같은 `BattleHud`**를 쓰게 하는 낯 |
 | | `Battle3DDirector.cs` | 같은 `Battle.Events` 를 3D 로 재생. `Battle.cs`는 한 줄도 안 건드렸다 |
 | `Irem.Editor` | `IremGardenScene.cs` | `[이렘/뜰 신]` · `[이렘/전투를 3D 로]` |
-| 도구 | `Tools/GardenRunner` | 유니티 없이 뜰을 돌린다 (도커 dotnet) |
+| 웹 | `viewer/garden.html` | **유니티 없이 뜰을 본다.** 구운 사건 목록을 three.js 로 재생만 한다 |
+| | `viewer/garden.json` | `GardenRunner -- web` 이 굽는다. 손으로 고치지 마라 |
+| 도구 | `Tools/GardenRunner` | 유니티 없이 뜰을 돌린다 (도커 dotnet). `garden`·`map`·`bonds`·`web` |
 | | `Tools/SyntaxCheck` | 유니티 없이 **문법만** 본다 (Roslyn) |
 | | `tools/lines.py` · `check_lines.py` | 대사를 굽고 검사한다 |
 
@@ -255,6 +257,11 @@ docker run --rm -v "$PWD":/w -w /w mcr.microsoft.com/dotnet/sdk:8.0 \
 - **대사**: `data/lines.json` — 잔상 23명 × 뱅크 6종 = **497줄**, `check_lines.py` 통과.
   **실행 중에 API를 부르지 않는다** (구워서 커밋했다)
 - **문법**: `Tools/SyntaxCheck` — 40파일 오류 0
+- **웹 재생** (`viewer/garden.json`, 2,087,244 bytes): 시드 42 · 600걸음 · **사건 27,704건**
+  (말 13,108 · 일 12,070 · 걸음 1,628 · 걸음표 600 · 섬 108 · 쉼 90 · 만남 49 · 피함 45 · 인연 6) ·
+  잔상 23명 몸 GLB 15종 **빠진 것 0** · 일터 14곳 소품 **빠진 것 0** · 지도 28×18
+  브라우저에서 스스로 재생되는 것을 확인했다 (헤드리스 크롬 50초에 65걸음 —
+  프레임이 느린 것이지 재생 간격 0.34초의 값이 아니다)
 
 ### 이 서버에서 검증하지 못한 것 (정직하게)
 
@@ -270,3 +277,26 @@ Unity -batchmode -quit -executeMethod Irem.Editor.IremSelfTest.Run   # 5절 「�
 
 `Irem.Sim`·`Irem.Data`는 `noEngineReferences: true`라 위 실측값 전부가 도커에서 나왔다.
 에이전트 두뇌·뜰·인연이 여기 들어 있으므로 **이 작업의 핵심은 이 서버에서 재어졌다.**
+
+### 웹으로 뜰을 보는 법 (유니티가 없는 서버에서)
+
+유니티 WebGL 빌드는 여기서 못 만든다 — 유니티가 없다. 대신 **뜰 자체를 브라우저에서 본다.**
+계산은 `Irem.Sim/Garden.cs` 가 끝내 놓은 것을 그대로 굽고, 웹은 `GardenDirector` 와
+같은 재생 규칙으로 되돌리기만 한다. **계산을 두 벌 적지 않았다** (docs/10 대원칙).
+
+```bash
+docker run --rm -v "$PWD":/w -w /w mcr.microsoft.com/dotnet/sdk:8.0 \
+  dotnet run --project Tools/GardenRunner -- web 600 42    # viewer/garden.json 을 굽는다
+python3 tools/serve.py                                     # 0.0.0.0:8000
+#   같은 망에서:  http://192.168.0.208:8000/viewer/garden.html
+#   화면을 찍을 때: ?to=420&stop=1  (그 걸음에서 멈춰 선다)
+```
+
+웹이 유니티와 다른 곳은 셋뿐이고 페이지 머리 주석에 적어 두었다:
+**끝이 있다**(구운 600걸음을 다 재생하면 처음으로 돌아간다) · **드래그로 돌려 볼 수 있다** ·
+**말풍선을 끌 수 있다**(말이 사건의 절반이라 화면이 덮인다 — 유니티에 없는 단추다).
+손잡이 하나가 더 있다: 유니티는 왼손 좌표, three.js 는 오른손 좌표라 같은 숫자가 거울로 뒤집힌다.
+뒤집는 자리는 `cell()` 과 카메라 앞방향 **두 줄뿐**이다.
+
+**이것이 통과한 것은 「계산과 재생 규칙이 맞다」는 뜻이다. 「유니티에서 돈다」는 뜻이 아니다** —
+`Irem.Game` 의 C# 은 여기서 컴파일된 적이 없다.

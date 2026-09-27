@@ -1,0 +1,615 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>이렘의 탑 — 뜰 (브라우저 재생)</title>
+<!--
+  뜰을 브라우저에서 본다.
+
+  유니티가 이 서버에 없다. 그래서 GardenDirector 가 세우는 화면을 눈으로 볼 수가 없었다.
+  그런데 계산은 순수 C# 이고(Irem.Sim/Garden.cs) 3D 몸은 이미 GLB 로 있다(chars/out/cast).
+  그래서 **여기서는 아무것도 계산하지 않는다.** Tools/GardenRunner 가 굽어 둔
+  viewer/garden.json — 유니티가 재생할 그 사건 목록 — 을 그대로 재생만 한다.
+
+  두 벌로 갈라지면 안 되는 것을 여기에 다시 적지 않았다:
+    · 사건 목록          → Garden.Tick() 이 만든 것을 읽기만 한다
+    · 칸 자리            → Ground3D.Cell(x,y) = (x, 0, -y) 와 같은 식
+    · 타일 고르는 법     → ArtLoad.TileName 과 같은 식 (abs(x*7+y*13+ch) % 5)
+    · 땅 메시 감는 법    → Ground3D.Slab 과 같은 순서
+    · 실루엣 칠하는 법   → Art/Chars/Silhouette.shader 의 식을 GLSL 로 옮겼다
+    · 동작 섞는 법       → ShadeView3D (0.25초 크로스페이드, walk 는 0.34초 유지)
+    · 재생 규칙          → GardenDirector.Step (한 박자에 한 걸음)
+  식을 옮긴 곳은 옆에 원본 파일을 적어 두었다. 숫자가 갈리면 그 줄을 보라.
+
+  유니티와 다른 것 (정직하게):
+    · 끝이 있다. 유니티는 재생이 계산을 따라잡으면 Garden.Tick() 을 한 번 더 부른다.
+      브라우저는 계산을 못 하므로(안 하므로) 구운 걸음까지 재생하고 처음으로 돌아간다.
+    · 드래그로 돌려 볼 수 있다. 유니티 쪽 카메라는 정해진 각으로만 본다.
+    · 이것이 통과한 것은 「계산과 재생 규칙이 맞다」는 뜻이다.
+      「유니티에서 돈다」는 뜻이 아니다 — Irem.Game 의 C# 은 여기서 컴파일된 적이 없다.
+-->
+<style>
+  :root { --ink:#141210; --line:#2a2622; --dim:#8b8279; --ember:#c8863a; }
+  * { box-sizing:border-box; }
+  html,body { margin:0; height:100%; background:var(--ink); color:#ded7cd; overflow:hidden;
+    font:13px/1.55 "Noto Sans CJK KR","Nanum Gothic","Malgun Gothic",sans-serif; }
+  canvas { display:block; position:fixed; inset:0; }
+  .pane { position:fixed; background:rgba(20,18,16,.82); border:1px solid var(--line);
+    border-radius:6px; padding:10px 12px; backdrop-filter:blur(3px); }
+  #top { left:12px; top:12px; min-width:330px; }
+  #top h1 { margin:0 0 4px; font-size:15px; font-weight:600; letter-spacing:.02em; }
+  #top .sub { color:var(--dim); font-size:11.5px; }
+  #bar { display:flex; gap:6px; align-items:center; margin-top:8px; flex-wrap:wrap; }
+  button { background:#241f1b; color:#ded7cd; border:1px solid var(--line); border-radius:4px;
+    padding:4px 9px; cursor:pointer; font:inherit; font-size:12px; }
+  button:hover { border-color:var(--ember); color:#f0e6d8; }
+  button.on { background:var(--ember); color:#191512; border-color:var(--ember); }
+  #turn { color:var(--ember); font-variant-numeric:tabular-nums; }
+  #right { right:12px; top:12px; width:214px; max-height:calc(100vh - 24px); overflow:auto; }
+  #right h2 { margin:0 0 6px; font-size:11.5px; color:var(--dim); font-weight:600;
+    text-transform:none; letter-spacing:.06em; }
+  .row { display:flex; align-items:center; gap:6px; padding:2px 4px; border-radius:3px;
+    cursor:pointer; font-size:12px; }
+  .row:hover { background:#2a231d; }
+  .row.on { background:#3a2c1c; }
+  .dot { width:8px; height:8px; border-radius:50%; flex:none; }
+  .row .who { flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .row .job { color:var(--dim); font-size:10.5px; flex:none; }
+  #feed { left:12px; bottom:12px; width:min(560px,52vw); min-height:96px; }
+  #feed div { color:#c9bfb2; font-size:12px; white-space:pre-wrap; }
+  #feed div:last-child { color:#f0e6d8; }
+  #sum { color:var(--ember); font-size:11.5px; margin-bottom:5px; }
+  .tag { position:fixed; transform:translate(-50%,-100%); pointer-events:none;
+    font-size:11px; color:#e6ddd1; text-shadow:0 1px 2px #000,0 0 6px #000; white-space:nowrap; }
+  .tag.st { color:#a89a88; font-size:10.5px; letter-spacing:.04em; }
+  /* width:max-content 가 없으면 화면 가장자리에서 상자가 한 글자 너비로 눌린다 */
+  .bub { position:fixed; transform:translate(-50%,-100%); pointer-events:none;
+    width:max-content; max-width:190px;
+    background:rgba(28,24,20,.92); border:1px solid #3c342c; border-radius:5px;
+    padding:3px 7px; font-size:11.5px; color:#efe6d9; text-shadow:none; white-space:pre-wrap; }
+  #boot { position:fixed; inset:0; display:grid; place-content:center; text-align:center;
+    background:var(--ink); z-index:9; }
+  #boot b { color:var(--ember); }
+  .bad { color:#d2694a; }
+</style>
+
+<canvas id="c"></canvas>
+
+<div id="boot"><div><b>뜰을 세우는 중…</b><div id="bootmsg" class="sub" style="color:#8b8279;margin-top:6px">garden.json</div></div></div>
+
+<div id="top" class="pane">
+  <h1>이렘의 탑 — 뜰</h1>
+  <div class="sub" id="head">…</div>
+  <div id="bar">
+    <button id="play">멈춤</button>
+    <button id="speed">1배</button>
+    <button id="wide" class="on">전체</button>
+    <button id="silh" class="on">실루엣</button>
+    <button id="talk" class="on">말</button>
+    <span class="sub"><span id="turn">0</span> 걸음째</span>
+  </div>
+</div>
+
+<div id="right" class="pane">
+  <h2>잔상 <span id="ncast"></span>명 — 누르면 따라간다</h2>
+  <div id="cast"></div>
+  <h2 style="margin-top:10px">일터 <span id="nst"></span>곳</h2>
+  <div id="stations"></div>
+  <h2 style="margin-top:10px">인연</h2>
+  <div id="bonds"></div>
+</div>
+
+<div id="feed" class="pane"><div id="sum"></div><div id="lines"></div></div>
+
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+}}
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { GLTFLoader }    from 'three/addons/loaders/GLTFLoader.js';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { clone as skClone } from 'three/addons/utils/SkeletonUtils.js';
+
+const boot = document.getElementById('boot'), bootmsg = document.getElementById('bootmsg');
+const say = s => bootmsg.innerHTML = s;
+const fail = s => { boot.innerHTML = `<div style="max-width:620px;padding:20px"><b class="bad">세우지 못했다.</b><div class="sub" style="color:#8b8279;margin-top:8px">${s}</div></div>`; };
+addEventListener('error', e => fail('자바스크립트 오류 — ' + (e.message||e)));
+
+/* ── 굽어 둔 사건 목록. 여기서 다시 계산하지 않는다 ───────────────── */
+const G = await (await fetch('garden.json?v=' + Date.now())).json();
+const K = {};                       // 'Walk' → 번호. kinds 는 C# 의 Enum.GetNames(typeof(Gv))
+G.kinds.forEach((n,i) => K[n] = i);
+const C = {};                       // 'turn' → 열 번호. cols 는 GardenRunner 가 적어 둔다
+G.cols.forEach((n,i) => C[n] = i);
+const CAST = G.cast, NST = G.stations;
+const REPO = '../';                 // viewer/ 에서 저장소 뿌리로
+
+document.getElementById('ncast').textContent = CAST.length;
+document.getElementById('nst').textContent = NST.length;
+document.getElementById('head').innerHTML =
+  `시드 ${G.seed} · 구운 걸음 ${G.ticks} · 사건 ${G.log.length.toLocaleString()}건 · 지도 ${G.w}×${G.h}` +
+  `<br>계산은 <code>Irem.Sim/Garden.cs</code> 가 끝냈다. 이 페이지는 재생만 한다.`;
+
+/* ── 무대 ────────────────────────────────────────────────────────── */
+const PITCH = 35;                   // GardenDirector.Pitch
+const FOV   = 42;                   // GardenDirector.FrameCamera
+let STEP    = 0.34;                 // GardenDirector.StepSeconds
+const canvas = document.getElementById('c');
+const rend = new THREE.WebGLRenderer({canvas, antialias:true});
+rend.setPixelRatio(Math.min(devicePixelRatio, 2));
+rend.setClearColor(0x141210);        // 유니티 쪽 backgroundColor 와 같은 값
+const sc  = new THREE.Scene();
+const cam = new THREE.PerspectiveCamera(FOV, innerWidth/innerHeight, 0.3, 260);
+const ctrl = new OrbitControls(cam, canvas);
+ctrl.enableDamping = true; ctrl.dampingFactor = 0.08;
+
+/* 칸 하나가 1m — Ground3D.Cell(x,y) = (x, 0, -y) 와 같은 자리다.
+   다만 z 부호가 반대다. 유니티는 왼손 좌표, three.js 는 오른손 좌표여서
+   같은 숫자를 그대로 쓰면 지도가 좌우로 뒤집혀 보인다(실제로 그렇게 나왔다).
+   「지도의 위쪽이 화면의 위쪽」이 Ground3D 주석이 정한 것이므로 그쪽을 지킨다.
+   뒤집는 데는 이 한 줄과 바로 아래 카메라 앞방향뿐이다. */
+const cell = (x,y) => new THREE.Vector3(x, 0, y);
+const CENTER = new THREE.Vector3((G.w-1)/2, 0, (G.h-1)/2);
+
+/* 뜰 전체가 들어가는 거리 — GardenDirector.WholeGarden 과 같은 식 */
+function wholeGarden() {
+  const vr = Math.tan(FOV*0.5*Math.PI/180), hr = vr*Math.max(0.5, cam.aspect);
+  const dw = (G.w*0.5 + 1.5)/Math.max(0.05, hr);
+  const dh = (G.h*0.5*Math.cos(PITCH*Math.PI/180) + 1.5)/Math.max(0.05, vr);
+  return Math.max(dw, dh);
+}
+/* 카메라 앞방향. 유니티는 Quaternion.Euler(35,0,0) → (0,-sin35,+cos35) 이고,
+   여기는 z 를 뒤집었으므로 (0,-sin35,-cos35) 다. 내려보는 각은 같은 35도다. */
+const FWD = new THREE.Vector3(0, -Math.sin(PITCH*Math.PI/180), -Math.cos(PITCH*Math.PI/180));
+const eye = (look, d) => look.clone().addScaledVector(FWD, -d);
+function frameWide() {
+  const d = wholeGarden();
+  cam.position.copy(eye(CENTER, d)); ctrl.target.copy(CENTER); ctrl.update();
+}
+
+/* ── 땅 — 타일 그림은 2D 전투가 쓰는 것을 그대로 쓴다 ─────────────── */
+/* ArtLoad.TileName 과 같은 식이다. 갈리면 땅이 딴 그림이 된다. */
+const TILEKEY = {'#':'block', ':':'rubble', '~':'crack', '_':'drain',
+                 '^':'high',  'o':'cover',  'w':'water', 'x':'fire'};
+function tileName(ch, x, y, variants=5) {
+  const k = TILEKEY[ch] || 'plain';
+  return k + '_' + (Math.abs(x*7 + y*13 + ch.charCodeAt(0)) % Math.max(1, variants));
+}
+const at = (x,y) => {
+  const row = G.map[y]; if (row === undefined) return '.';
+  return x < 0 || x >= row.length ? '.' : row[x];
+};
+function buildGround() {
+  const group = new Map();
+  for (let y = 0; y < G.h; y++) for (let x = 0; x < G.w; x++) {
+    const n = tileName(at(x,y), x, y);
+    if (!group.has(n)) group.set(n, []);
+    group.get(n).push([x,y]);
+  }
+  const tl = new THREE.TextureLoader();
+  for (const [n, cells] of group) {
+    /* Ground3D.Slab 과 같은 순서로 감는다 */
+    const v = new Float32Array(cells.length*12), uv = new Float32Array(cells.length*8);
+    const nm = new Float32Array(cells.length*12), ix = new Uint32Array(cells.length*6);
+    cells.forEach(([x,y], i) => {
+      const b = i*4, p = i*12, q = i*8, t = i*6;
+      const P = [[x-.5,y-.5],[x-.5,y+.5],[x+.5,y+.5],[x+.5,y-.5]];
+      const U = [[0,0],[0,1],[1,1],[1,0]];
+      for (let k = 0; k < 4; k++) {
+        v[p+k*3]=P[k][0]; v[p+k*3+1]=0; v[p+k*3+2]=P[k][1];
+        uv[q+k*2]=U[k][0]; uv[q+k*2+1]=U[k][1];
+        nm[p+k*3]=0; nm[p+k*3+1]=1; nm[p+k*3+2]=0;
+      }
+      ix[t]=b; ix[t+1]=b+1; ix[t+2]=b+2; ix[t+3]=b; ix[t+4]=b+2; ix[t+5]=b+3;
+    });
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.BufferAttribute(v,3));
+    g.setAttribute('uv',       new THREE.BufferAttribute(uv,2));
+    g.setAttribute('normal',   new THREE.BufferAttribute(nm,3));
+    g.setIndex(new THREE.BufferAttribute(ix,1));
+    const tex = tl.load(REPO + 'unity/Assets/Resources/Irem/Tiles/' + n + '.png');
+    tex.magFilter = THREE.NearestFilter; tex.minFilter = THREE.LinearMipmapLinearFilter;
+    tex.colorSpace = THREE.SRGBColorSpace;
+    tex.wrapS = tex.wrapT = THREE.ClampToEdgeWrapping;
+    /* 감는 방향이 z 를 뒤집으면서 같이 뒤집힌다. 수평 한 장이라 양면으로 둔다. */
+    sc.add(new THREE.Mesh(g, new THREE.MeshBasicMaterial({map:tex, side:THREE.DoubleSide})));
+  }
+}
+buildGround();
+
+/* ── 실루엣 — Art/Chars/Silhouette.shader 를 옮긴 것 ──────────────── */
+/* 셋만 한다: 단색으로 칠하고, 한 방향 빛으로 20%만 밝기를 주고, 발밑에서 알파를 깎는다. */
+const SIL_V = `
+  #include <common>
+  #include <skinning_pars_vertex>
+  varying vec3 vN; varying float vY;
+  void main() {
+    #include <beginnormal_vertex>
+    #include <skinbase_vertex>
+    #include <skinnormal_vertex>
+    #include <defaultnormal_vertex>
+    vN = transformedNormal;
+    #include <begin_vertex>
+    #include <skinning_vertex>
+    #include <project_vertex>
+    vY = (modelMatrix * vec4(transformed, 1.0)).y - modelMatrix[3][1];
+  }`;
+const SIL_F = `
+  uniform vec3 colour; uniform vec3 lightDir;
+  uniform float wrap, fadeTop, fadeOn;
+  varying vec3 vN; varying float vY;
+  void main() {
+    float l = (1.0 - wrap) + wrap * clamp(dot(normalize(vN), normalize(lightDir)), 0.0, 1.0);
+    float a = mix(1.0, smoothstep(0.0, max(1e-4, fadeTop), vY), fadeOn);
+    if (a < 0.01) discard;
+    gl_FragColor = vec4(colour * l, a);
+  }`;
+function silMat(hex, fadeOn = 1) {
+  return new THREE.ShaderMaterial({
+    vertexShader:SIL_V, fragmentShader:SIL_F,
+    uniforms:{ colour:{value:new THREE.Color(hex)},
+               lightDir:{value:new THREE.Vector3(0.3,0.9,0.4)},   // 셰이더의 _Light 기본값
+               wrap:{value:0.20}, fadeTop:{value:0.22}, fadeOn:{value:fadeOn} },
+    side:THREE.DoubleSide, transparent:true, depthWrite:true,
+  });
+}
+const STONE = 0x1b1917;             // GardenDirector.StoneCol — 건물은 흐려지지 않는다
+/* 실루엣을 끄면 빛을 받는 재질로 바꿔 본다. 3D 를 뜯어볼 때 쓴다 — 유니티에는 없는 것이다. */
+sc.add(new THREE.HemisphereLight(0xbfc8d6, 0x1a1c20, 1.6));
+const key = new THREE.DirectionalLight(0xfff2d8, 1.4); key.position.set(2,3,4); sc.add(key);
+
+function paint(root, hex, fadeOn) {
+  root.traverse(n => {
+    if (!n.isMesh) return;
+    n.frustumCulled = false;        // 팔을 들면 상자가 화면 밖으로 나가 사라진다
+    n.userData.sil  = silMat(hex, fadeOn);
+    n.userData.lit  = new THREE.MeshStandardMaterial({color:hex, roughness:.8, metalness:.02});
+    n.material = n.userData.sil;
+  });
+}
+
+/* ── 몸 · 소품 ───────────────────────────────────────────────────── */
+const loader = new GLTFLoader();
+const CLIP = {idle:'숨', walk:'걷기', attack:'휘두름', look:'돌아본다'};  // GLB 안의 이름
+const views = new Map();            // idx → 잔상 하나
+const glbs = new Map();
+async function glb(url) {
+  if (!glbs.has(url)) glbs.set(url, loader.loadAsync(url));
+  return glbs.get(url);
+}
+
+const cast3 = new THREE.Group(); sc.add(cast3);
+const props3 = new THREE.Group(); sc.add(props3);
+let missBody = 0, missProp = 0;
+
+/* 발밑 그림자 — 이것 하나로 땅에 서 있는 것처럼 보인다 */
+const shadowTex = (() => {
+  const cv = document.createElement('canvas'); cv.width = cv.height = 64;
+  const g = cv.getContext('2d').createRadialGradient(32,32,2,32,32,31);
+  g.addColorStop(0,'rgba(0,0,0,.55)'); g.addColorStop(1,'rgba(0,0,0,0)');
+  const cx = cv.getContext('2d'); cx.fillStyle = g; cx.fillRect(0,0,64,64);
+  return new THREE.CanvasTexture(cv);
+})();
+const shadowGeo = new THREE.PlaneGeometry(1.5, 1.5);
+const shadowMat = new THREE.MeshBasicMaterial({map:shadowTex, transparent:true, depthWrite:false});
+
+/* 잔상 한 명. ShadeView3D 와 같은 말을 알아듣는다 —
+   Play / MoveRig / Warp / FaceTo 뿐이다. */
+class Shade {
+  constructor(def, root, gltf) {
+    this.def = def; this.root = root;
+    this.mixer = new THREE.AnimationMixer(root);
+    this.clips = {};
+    for (const [en, ko] of Object.entries(CLIP)) {
+      const a = gltf.animations.find(x => x.name === ko);
+      if (a) this.clips[en] = a;
+    }
+    this.act = null; this.name = ''; this.hold = 0;
+    this.yaw = 0; this.yawWant = 0;
+    this.from = root.position.clone(); this.to = root.position.clone();
+    this.left = 0; this.dur = 1;
+    this.play('idle', true);
+  }
+  play(clip, force = false) {
+    if (this.hold > 0 && !force) return;
+    const a = this.clips[clip]; if (!a) return;
+    const loop = (clip === 'idle' || clip === 'walk');
+    if (this.name === clip && loop) return;
+    const nx = this.mixer.clipAction(a);
+    nx.setLoop(loop ? THREE.LoopRepeat : THREE.LoopOnce, Infinity);
+    nx.clampWhenFinished = true;
+    if (this.act && this.act !== nx) this.act.fadeOut(0.25);      // ShadeView3D.Fade
+    nx.reset().setEffectiveWeight(1).fadeIn(this.act ? 0.25 : 0).play();
+    this.act = nx; this.name = clip;
+    this.hold = loop ? 0 : a.duration;
+    if (clip === 'walk') this.hold = 0.34;                        // ShadeView.Play 와 같은 값
+  }
+  moveRig(p, seconds) {
+    this.from.copy(this.root.position); this.to.copy(p);
+    this.dur = Math.max(0.02, seconds); this.left = this.dur;
+    this.faceTo(p);
+    this.play('walk', true);
+  }
+  warp(p) { this.root.position.copy(p); this.from.copy(p); this.to.copy(p); this.left = 0; }
+  /* 건너뛸 때. 미끄러지던 것을 끝난 자리에 놓는다 */
+  settle() { this.root.position.copy(this.to); this.left = 0;
+             this.yaw = this.yawWant; this.root.rotation.y = this.yaw; }
+  faceTo(p) {
+    const dx = p.x - this.root.position.x, dz = p.z - this.root.position.z;
+    if (dx*dx + dz*dz < 1e-4) return;
+    this.yawWant = Math.atan2(dx, dz);
+  }
+  pos() { return this.root.position; }
+  update(dt) {
+    if (this.left > 0) {
+      this.left = Math.max(0, this.left - dt);
+      const k = 1 - this.left/this.dur;
+      this.root.position.lerpVectors(this.from, this.to, k);
+    }
+    if (this.hold > 0) {
+      this.hold -= dt;
+      if (this.hold <= 0) { this.hold = 0; this.play('idle', true); }
+    }
+    // 돌아서는 것은 좌우 반전이 아니라 Y축 회전이다 — 3D 라서 그렇다
+    let d = this.yawWant - this.yaw;
+    while (d >  Math.PI) d -= Math.PI*2;
+    while (d < -Math.PI) d += Math.PI*2;
+    this.yaw += d * (1 - Math.exp(-dt*11));                        // ShadeView3D.TurnSpeed
+    this.root.rotation.y = this.yaw;
+    this.mixer.update(dt);
+  }
+}
+
+/* 다 한꺼번에 받는다. 하나씩 기다리면 스물셋을 세우는 데 그만큼 곱절이 걸린다.
+   받는 순서는 아무래도 좋다 — 세우는 순서는 아래에서 목록 차례대로다. */
+async function fetchAll() {
+  const urls = [...new Set([
+    ...NST.map(s => REPO + 'pipeline3d/out/props/' + s.prop + '.glb'),
+    ...CAST.map(c => REPO + 'chars/out/cast/' + c.slug + '.glb'),
+  ])];
+  let done = 0;
+  say(`몸과 소품 ${urls.length}종을 받는 중…`);
+  await Promise.all(urls.map(u => glb(u)
+    .catch(() => null)
+    .then(g => { say(`받는 중 ${++done}/${urls.length} — ${u.split('/').pop()}`); return g; })));
+}
+
+/* 일터 열넷. 건물을 새로 모델링하지 않는다 — pipeline3d 가 구운 것을 쓴다. */
+async function buildStations() {
+  for (const s of NST) {
+    let g; try { g = await glb(REPO + 'pipeline3d/out/props/' + s.prop + '.glb'); }
+    catch (e) { missProp++; continue; }
+    const o = g.scene.clone(true);
+    o.position.copy(cell(s.x, s.y));
+    const d = CENTER.clone().sub(o.position); d.y = 0;
+    if (d.lengthSq() > 0.01) o.rotation.y = Math.atan2(d.x, d.z);   // 뜰 가운데를 보게
+    paint(o, STONE, 0);
+    props3.add(o);
+  }
+}
+
+async function buildCast() {
+  for (const c of CAST) {
+    let g; try { g = await glb(REPO + 'chars/out/cast/' + c.slug + '.glb'); }
+    catch (e) { missBody++; continue; }
+    const root = skClone(g.scene);      // 스킨 메시는 뼈까지 같이 복제해야 한다
+    paint(root, c.col, 1);
+    const sh = new THREE.Mesh(shadowGeo, shadowMat);
+    sh.rotation.x = -Math.PI/2; sh.position.y = 0.02; root.add(sh);
+    cast3.add(root);
+    const v = new Shade(c, root, g);
+    v.warp(cell(c.x, c.y));
+    v.faceTo(CENTER);
+    v.yaw = v.yawWant;
+    views.set(c.idx, v);
+  }
+}
+await fetchAll();
+say('세우는 중…');
+await buildStations();
+await buildCast();
+frameWide();
+
+/* ── 이름표 · 말풍선 — GardenHud 가 하는 일 ──────────────────────── */
+const tags = new Map(), bubs = new Map();
+for (const c of CAST) {
+  const t = document.createElement('div'); t.className = 'tag'; t.textContent = c.name;
+  t.style.color = c.col; document.body.appendChild(t); tags.set(c.idx, t);
+  const b = document.createElement('div'); b.className = 'bub'; b.style.display = 'none';
+  document.body.appendChild(b); bubs.set(c.idx, {el:b, until:0});
+}
+const stags = NST.map(s => {
+  const t = document.createElement('div'); t.className = 'tag st'; t.textContent = s.name;
+  document.body.appendChild(t); return t;
+});
+function bubble(idx, text, sec = 2.2) {
+  const b = bubs.get(idx); if (!b || !text) return;
+  b.el.textContent = text; b.el.style.display = ''; b.until = now + sec;
+}
+const lines = [];
+function feed(s) {
+  if (!s) return;
+  lines.push(s); while (lines.length > 5) lines.shift();
+  document.getElementById('lines').innerHTML = lines.map(x => `<div>${x}</div>`).join('');
+}
+
+/* ── 오른쪽 목록 ─────────────────────────────────────────────────── */
+let follow = -1;
+document.getElementById('cast').innerHTML = CAST.map(c =>
+  `<div class="row" data-i="${c.idx}"><span class="dot" style="background:${c.col}"></span>` +
+  `<span class="who">${c.name}</span><span class="job">${c.place||'—'}</span></div>`).join('');
+document.getElementById('cast').onclick = e => {
+  const r = e.target.closest('.row'); if (!r) return;
+  const i = +r.dataset.i;
+  follow = follow === i ? -1 : i;                       // 같은 사람을 다시 누르면 놓는다
+  [...document.querySelectorAll('#cast .row')].forEach(x => x.classList.toggle('on', +x.dataset.i === follow));
+  document.getElementById('wide').classList.toggle('on', follow < 0);
+};
+document.getElementById('stations').innerHTML = NST.map(s =>
+  `<div class="row"><span class="who">${s.name}</span><span class="job">${s.x},${s.y}</span></div>`).join('');
+const nm = i => (i >= 0 && i < CAST.length) ? CAST[i].name : '';
+document.getElementById('bonds').innerHTML = G.bonds.length
+  ? G.bonds.map(b => `<div class="row"><span class="who">${nm(b.a)} ↔ ${nm(b.b)}</span>` +
+      `<span class="job">${b.title}${b.shy ? ' · 아직' : ''}</span></div>`).join('')
+  : '<div class="sub">없음</div>';
+
+/* ── 재생 — GardenDirector.Step 이 하는 일을 그대로 한다 ──────────── */
+const L = G.log;
+const col = {turn:C.turn, k:C.k, a:C.a, t:C.t, x:C.x, y:C.y, n:C.n, s:C.s};
+let i = 0, shownTurn = 0, workSteps = 0, spoken = 0, paused = false, now = 0, acc = 0;
+
+function reset() {
+  i = 0; shownTurn = 0;
+  for (const c of CAST) { const v = views.get(c.idx); if (v) { v.warp(cell(c.x, c.y)); v.play('idle', true); } }
+  feed('— 구운 걸음이 끝났다. 처음으로 돌아간다 (브라우저는 계산하지 않는다) —');
+}
+
+function step(e) {
+  const k = e[col.k], a = e[col.a], t = e[col.t], s = e[col.s];
+  const V = j => views.get(j);
+  switch (k) {
+    case K.Turn:  shownTurn = e[col.n]; break;
+    case K.Walk:  V(a)?.moveRig(cell(e[col.x], e[col.y]), STEP*0.85); break;
+    case K.Work:  workSteps++; V(a)?.play('attack', true); break;     // 「휘두름」이 일하는 몸짓이다
+    case K.Rest:
+    case K.Stand: V(a)?.play('idle'); break;                          // 앉는 동작이 없다
+    case K.Meet: {
+      const x = V(a), y = V(t);
+      if (x && y) { x.faceTo(y.pos()); y.faceTo(x.pos()); }
+      x?.play('look', true);
+      feed(`${nm(a)} ↔ ${nm(t)} — ${s === 'miss' ? '그리워서 다가갔다' : '마주 섰다'}`);
+      break;
+    }
+    case K.Avoid: V(a)?.play('look', true); feed(`${nm(a)} — ${nm(t)}를 피한다`); break;
+    case K.Say:   bubble(a, s); break;
+    case K.Think: bubble(a, s, 1.6); break;
+    case K.Bond:
+      if (a < 0) { document.getElementById('sum').textContent = s || ''; }
+      else { spoken++; feed(`${nm(a)} ↔ ${nm(t)} — ${s}`); bubble(t, s, 3.2); }
+      break;
+  }
+}
+
+/* 한 걸음을 통째로 재생한다. 다음 Turn 이 나오면 거기서 멈춘다 —
+   그 다음 걸음은 다음 박자의 몫이다. (GardenDirector.PlayStep) */
+function playStep() {
+  if (i >= L.length) { reset(); }
+  let guard = 0;
+  while (i < L.length && guard < 4096) {
+    const e = L[i];
+    if (e[col.k] === K.Turn && guard > 0) break;
+    i++; guard++;
+    step(e);
+  }
+}
+
+/* ── 단추 ────────────────────────────────────────────────────────── */
+const btnPlay = document.getElementById('play'), btnSpeed = document.getElementById('speed');
+btnPlay.onclick = () => { paused = !paused; btnPlay.textContent = paused ? '재생' : '멈춤'; };
+btnSpeed.onclick = () => {                                    // GardenDirector.CycleSpeed
+  STEP = STEP > 0.10 ? STEP/2 : 0.34;
+  btnSpeed.textContent = Math.round(0.34/STEP) + '배';
+};
+document.getElementById('wide').onclick = e => {
+  follow = -1; e.target.classList.add('on');
+  [...document.querySelectorAll('#cast .row')].forEach(x => x.classList.remove('on'));
+  frameWide();
+};
+const btnSil = document.getElementById('silh');
+btnSil.onclick = () => {
+  const on = !btnSil.classList.contains('on');
+  btnSil.classList.toggle('on', on);
+  for (const g of [cast3, props3]) g.traverse(n => {
+    if (n.isMesh && n.userData.sil) n.material = on ? n.userData.sil : n.userData.lit;
+  });
+};
+/* 주소에 ?to=300 을 붙이면 그 걸음까지 건너뛰고 시작하고, ?stop=1 이면 멈춘 채로 뜬다.
+   한 장면을 다시 불러오려고 둔 것이다. 이 서버에서 머리 없는 크롬으로 화면을 찍어
+   확인할 때도 이것을 쓴다 — 브라우저 창을 열 사람이 없어서 그 방법밖에 없었다. */
+{
+  const Q = new URLSearchParams(location.search);
+  const to = Math.max(0, parseInt(Q.get('to') || '0', 10) || 0);
+  for (let k = 0; k < to; k++) playStep();
+  if (to) for (const v of views.values()) v.settle();
+  if (Q.get('stop') === '1') { paused = true; btnPlay.textContent = '재생'; }
+  const who = Q.get('who');
+  if (who) {
+    const c = CAST.find(x => x.id === who || String(x.idx) === who);
+    if (c) document.querySelector(`#cast .row[data-i="${c.idx}"]`)?.click();
+  }
+}
+
+/* 말풍선을 닫는다. 한 걸음에 스물셋이 저마다 말하므로(사건의 절반이 Say 다)
+   켜 두면 글자가 뜰을 덮는다. 유니티에도 없는 단추다 — 여기서만 닫는다. */
+const btnTalk = document.getElementById('talk');
+let talk = true;
+btnTalk.onclick = () => { talk = !talk; btnTalk.classList.toggle('on', talk); };
+
+addEventListener('keydown', e => {
+  if (e.code === 'Space') { e.preventDefault(); btnPlay.click(); }
+  if (e.key === 'b' || e.key === 'ㅠ') btnTalk.click();
+  if (e.key === '+' || e.key === '=') btnSpeed.click();
+});
+
+/* ── 한 바퀴 ─────────────────────────────────────────────────────── */
+function resize() {
+  const w = innerWidth, h = innerHeight;
+  rend.setSize(w, h, false); cam.aspect = w/h; cam.updateProjectionMatrix();
+}
+addEventListener('resize', resize); resize();
+boot.remove();
+if (missBody || missProp)
+  feed(`<span class="bad">몸 ${missBody}명 · 소품 ${missProp}곳을 못 읽었다.</span>`);
+
+const clock = new THREE.Clock();
+const vv = new THREE.Vector3();
+function project(p, el, up) {
+  vv.copy(p); vv.y += up; vv.project(cam);
+  if (vv.z > 1) { el.style.display = 'none'; return false; }
+  /* 화면 밖으로 새면 글자만 반쯤 걸린다. 가장자리 안쪽에 가둔다. */
+  const w = el.offsetWidth || 60, h = el.offsetHeight || 16;
+  const x = Math.min(innerWidth  - w/2 - 4, Math.max(w/2 + 4, ( vv.x*0.5 + 0.5)*innerWidth));
+  const y = Math.min(innerHeight - 4,       Math.max(h + 4,    (-vv.y*0.5 + 0.5)*innerHeight));
+  el.style.left = x + 'px'; el.style.top = y + 'px';
+  el.style.display = '';
+  return true;
+}
+(function loop() {
+  requestAnimationFrame(loop);
+  const dt = Math.min(0.1, clock.getDelta());
+  now += dt;
+
+  if (!paused) {
+    acc += dt;
+    let guard = 0;
+    while (acc >= STEP && guard++ < 8) { acc -= STEP; playStep(); }
+  }
+  for (const v of views.values()) v.update(dt);
+
+  /* 카메라 — 한 사람을 따라가면 가까이 붙는다 (GardenDirector.Steer) */
+  if (follow >= 0 && views.has(follow)) {
+    const p = views.get(follow).pos().clone(); p.y += 0.9;
+    ctrl.target.lerp(p, 1 - Math.exp(-dt*2.4));
+    const want = eye(ctrl.target, 9);                          // NearDist
+    cam.position.lerp(want, 1 - Math.exp(-dt*2.4));
+  }
+  ctrl.update();
+
+  /* 이름표 · 말풍선 */
+  for (const [idx, el] of tags) {
+    const v = views.get(idx); if (!v) { el.style.display = 'none'; continue; }
+    const b = bubs.get(idx), hasBub = talk && b && b.until > now;
+    el.style.display = hasBub ? 'none' : '';                   // 말할 때는 이름표를 숨긴다
+    if (!hasBub) project(v.pos(), el, 1.95);
+    if (b) {
+      if (hasBub) { b.el.style.display = ''; project(v.pos(), b.el, 2.0); }
+      else b.el.style.display = 'none';
+    }
+  }
+  NST.forEach((s, j) => { stags[j].style.display = ''; project(cell(s.x, s.y), stags[j], 1.1); });
+
+  document.getElementById('turn').textContent = shownTurn;
+  rend.render(sc, cam);
+})();
+</script>

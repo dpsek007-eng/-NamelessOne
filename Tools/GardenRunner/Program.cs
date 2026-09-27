@@ -50,6 +50,81 @@ if (mode == "map")
     return;
 }
 
+if (mode == "web")
+{
+    // 웹 뷰어가 재생할 사건 목록을 내보낸다.
+    //
+    // 유니티가 이 서버에 없어 3D 를 눈으로 볼 수가 없다. 그런데 계산은 순수 C# 이고
+    // 3D 몸은 이미 GLB 로 있다(chars/out/cast, 동작 네 벌). 그래서 **유니티의
+    // GardenDirector 가 재생하는 것과 같은 목록**을 브라우저가 재생하게 한다.
+    //
+    // 여기서 다시 계산하지 않는다 — 위 garden 모드와 같은 Garden 을 굴려 그 Log 를 적는다.
+    // 계산을 두 벌 적으면 웹에서 본 것과 유니티에서 도는 것이 조용히 갈라진다(docs/10).
+    int wt = args.Length > 1 ? int.Parse(args[1]) : 600;
+    ulong ws = args.Length > 2 ? ulong.Parse(args[2]) : 42UL;
+    var W = GardenSetup.Build(T, ws);
+    // 세운 자리를 먼저 적어 둔다. 재생은 여기서 시작해야 한다 —
+    // 다 굴린 뒤의 자리를 적으면 브라우저는 결말부터 보게 된다.
+    int[] ix = new int[W.Cast.Count], iy = new int[W.Cast.Count];
+    foreach (var c in W.Cast) { ix[c.Idx] = c.X; iy[c.Idx] = c.Y; }
+    // 사건에는 몇 걸음째인지가 없다. 굴리면서 같이 적어 둔다.
+    var turns = new List<int>();
+    for (int i = 0; i < wt; i++)
+    {
+        W.Tick();
+        while (turns.Count < W.Log.Count) turns.Add(W.Turn);
+    }
+
+    var sb = new System.Text.StringBuilder();
+    string Q(string x) => JsonSerializer.Serialize(x ?? "");
+    sb.Append("{\n");
+    sb.Append($"\"note\":\"Tools/GardenRunner -- web {wt} {ws} 가 쓴다. 손으로 고치지 마라.\",\n");
+    sb.Append($"\"seed\":{ws},\"ticks\":{wt},\"w\":{T.w},\"h\":{T.h},\n");
+    sb.Append("\"map\":[");
+    for (int y = 0; y < T.map.Length; y++) sb.Append((y > 0 ? "," : "") + Q(T.map[y]));
+    sb.Append("],\n\"stations\":[");
+    for (int i = 0; i < T.stations.Length; i++)
+    {
+        var st = T.stations[i];
+        sb.Append((i > 0 ? "," : "") + $"{{\"name\":{Q(st.name)},\"prop\":{Q(st.prop)},"
+                + $"\"desc\":{Q(st.desc)},\"x\":{st.x},\"y\":{st.y}}}");
+    }
+    sb.Append("],\n\"cast\":[");
+    for (int i = 0; i < W.Cast.Count; i++)
+    {
+        var c = W.Cast[i];
+        sb.Append((i > 0 ? "," : "") + $"{{\"idx\":{c.Idx},\"id\":{Q(c.Id)},\"name\":{Q(c.Name)},"
+                + $"\"role\":{Q(c.Def.role)},\"cls\":{Q(c.Def.cls)},\"trade\":{Q(c.Def.trade)},"
+                + $"\"slug\":{Q(c.Def.garment)},\"col\":{Q(c.Def.col)},\"place\":{Q(c.Place)},"
+                + $"\"wx\":{c.Wx},\"wy\":{c.Wy},\"x\":{ix[c.Idx]},\"y\":{iy[c.Idx]}}}");
+    }
+    sb.Append("],\n\"bonds\":[");
+    for (int i = 0; i < W.Ties.Count; i++)
+    {
+        var t = W.Ties[i];
+        sb.Append((i > 0 ? "," : "") + $"{{\"a\":{t.A},\"b\":{t.B},\"shy\":{(t.R.shy ? "true" : "false")},"
+                + $"\"title\":{Q(t.R.title)}}}");
+    }
+    // 사건은 배열의 배열로 적는다. 열 이름을 매 줄 되풀이하면 파일이 몇 배로 커진다.
+    sb.Append("],\n\"cols\":[\"turn\",\"k\",\"a\",\"t\",\"x\",\"y\",\"n\",\"s\"],\n\"log\":[");
+    for (int i = 0; i < W.Log.Count; i++)
+    {
+        var e = W.Log[i];
+        sb.Append((i > 0 ? "," : "") + $"\n[{turns[i]},{(int)e.K},{e.A},{e.T},{e.X},{e.Y},{e.N},{Q(e.S)}]");
+    }
+    sb.Append("\n],\n\"kinds\":[");
+    var kn = Enum.GetNames(typeof(Gv));
+    for (int i = 0; i < kn.Length; i++) sb.Append((i > 0 ? "," : "") + Q(kn[i]));
+    sb.Append("]\n}\n");
+
+    var outp = Path.Combine(root, "viewer/garden.json");
+    File.WriteAllText(outp, sb.ToString());
+    Console.WriteLine($"viewer/garden.json — 시드 {ws} · 걸음 {wt} · 잔상 {W.Cast.Count} · "
+                    + $"일터 {T.stations.Length} · 사건 {W.Log.Count}건 · "
+                    + $"{new FileInfo(outp).Length:N0} bytes");
+    return;
+}
+
 int ticks = args.Length > 1 ? int.Parse(args[1]) : 200;
 ulong seed = args.Length > 2 ? ulong.Parse(args[2]) : 42UL;
 
