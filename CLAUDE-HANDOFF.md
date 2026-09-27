@@ -300,3 +300,28 @@ python3 tools/serve.py                                     # 0.0.0.0:8000
 
 **이것이 통과한 것은 「계산과 재생 규칙이 맞다」는 뜻이다. 「유니티에서 돈다」는 뜻이 아니다** —
 `Irem.Game` 의 C# 은 여기서 컴파일된 적이 없다.
+
+### 집 밖(인터넷)에서 여는 법
+
+`tools/serve.py` 는 **저장소 뿌리 전체**를 내준다 — `.git` 까지 들어 있다. 그것을 그대로
+바깥에 붙이면 저장소를 통째로 공개하는 것이다. 바깥 문에는 **뜰에 필요한 76개 파일만**
+따로 모아서 내준다.
+
+```bash
+# 1) 뜰만 담은 뿌리를 짓는다 (몸 15 · 소품 14 · 타일 45 · 37.3MB)
+#    만드는 법은 아래 '뜰만 담기' 그대로. viewer/garden.html 은 ../ 로 찾으므로
+#    저장소와 같은 층 구조를 지켜야 한다:
+#      viewer/garden.{html,json} · chars/out/cast/*.glb
+#      pipeline3d/out/props/*.glb · unity/Assets/Resources/Irem/Tiles/*.png
+python3 /tmp/tul_serve.py 8080        # 127.0.0.1 에만 묶고, 목록 보여주기를 막는다
+
+# 2) 나가는 방향 터널. 들어오는 포트를 하나도 열지 않는다 — 끄면 그 자리에서 닫힌다.
+docker run -d --name tul-tunnel --network host cloudflare/cloudflared:latest \
+  tunnel --no-autoupdate --url http://127.0.0.1:8080
+docker logs tul-tunnel 2>&1 | grep -o 'https://.*trycloudflare.com'   # 주소가 여기 나온다
+docker rm -f tul-tunnel               # 닫는다
+```
+
+주소를 아는 사람은 누구나 들어온다 — 암호가 없다. 잠깐 보여 줄 때만 열고 닫아라.
+※ `tul_serve.py` 를 쓸 때 사유 문구를 한글로 적지 마라. HTTP 상태줄은 latin-1 만 담는다
+(`send_error(403, "Forbidden", "목록은 내주지 않는다")` — 사유는 ASCII, 말은 본문에).
