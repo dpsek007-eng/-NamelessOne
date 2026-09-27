@@ -304,24 +304,59 @@ python3 tools/serve.py                                     # 0.0.0.0:8000
 ### 집 밖(인터넷)에서 여는 법
 
 `tools/serve.py` 는 **저장소 뿌리 전체**를 내준다 — `.git` 까지 들어 있다. 그것을 그대로
-바깥에 붙이면 저장소를 통째로 공개하는 것이다. 바깥 문에는 **뜰에 필요한 76개 파일만**
-따로 모아서 내준다.
+바깥에 붙이면 저장소를 통째로 공개하는 것이다. 바깥 문에는 `tools/serve_public.py` 를 쓴다:
+**내줄 것만 `/tmp/tul-web` 에 따로 담고**, 목록 보여주기를 막고, `127.0.0.1` 에만 묶는다.
 
 ```bash
-# 1) 뜰만 담은 뿌리를 짓는다 (몸 15 · 소품 14 · 타일 45 · 37.3MB)
-#    만드는 법은 아래 '뜰만 담기' 그대로. viewer/garden.html 은 ../ 로 찾으므로
-#    저장소와 같은 층 구조를 지켜야 한다:
-#      viewer/garden.{html,json} · chars/out/cast/*.glb
-#      pipeline3d/out/props/*.glb · unity/Assets/Resources/Irem/Tiles/*.png
-python3 /tmp/tul_serve.py 8080        # 127.0.0.1 에만 묶고, 목록 보여주기를 막는다
+python3 tools/serve_public.py 8080    # 담고 → 내준다 (담는 목록은 garden.json 이 말해 준다)
 
-# 2) 나가는 방향 터널. 들어오는 포트를 하나도 열지 않는다 — 끄면 그 자리에서 닫힌다.
+# 나가는 방향 터널. 들어오는 포트를 하나도 열지 않는다 — 끄면 그 자리에서 닫힌다.
 docker run -d --name tul-tunnel --network host cloudflare/cloudflared:latest \
   tunnel --no-autoupdate --url http://127.0.0.1:8080
 docker logs tul-tunnel 2>&1 | grep -o 'https://.*trycloudflare.com'   # 주소가 여기 나온다
 docker rm -f tul-tunnel               # 닫는다
 ```
 
+실측 (2026-09-28): 담은 것 **77개 · 37.3MB** (뜰 페이지 2 · 몸 GLB 15 · 소품 GLB 14 ·
+타일 PNG 45 · 첫 페이지 1). `/` 200 · `/viewer/garden.html` 200 · `/viewer/` **403** ·
+터널 주소로도 200. `unity/build/web` 이 있으면 `/unity/` 로 같이 붙고, 없으면 첫 페이지가
+「아직 굽지 않았다」고 적는다.
+
 주소를 아는 사람은 누구나 들어온다 — 암호가 없다. 잠깐 보여 줄 때만 열고 닫아라.
-※ `tul_serve.py` 를 쓸 때 사유 문구를 한글로 적지 마라. HTTP 상태줄은 latin-1 만 담는다
+※ 사유 문구를 한글로 적지 마라. HTTP 상태줄은 latin-1 만 담는다
 (`send_error(403, "Forbidden", "목록은 내주지 않는다")` — 사유는 ASCII, 말은 본문에).
+※ `.wasm` 은 `application/wasm` 으로 내준다. `octet-stream` 으로 주면 브라우저가 흘려
+넣기(streaming)로 못 읽는다 — 유니티 로더가 되돌아가기는 하지만 굳이 느리게 갈 일이 없다.
+
+### 유니티가 도는 것을 웹에서 보는 법 (진짜 유니티)
+
+위의 three.js 재생은 **사건 목록을 되돌리는 것**이다. 유니티 런타임 자체를 브라우저에서
+돌리려면 **WebGL 빌드**를 구워야 한다. 중계(Render Streaming)가 아니다 — 보는 사람의
+브라우저가 직접 유니티를 돌린다. 그래서 GPU 도 서버에 필요 없고 사람이 늘어도 서버는 같다.
+
+**이 서버에서는 굽지 못한다.** 유니티가 없고, 도커 이미지(`unityci/editor:6000.5.10f1-webgl-3.2.2`,
+17.4GB, 받아 둠)로 배치 모드를 돌려도 면허를 켜야 하는데 **수동(오프라인) 활성화는 Personal
+좌석에 막혀 있다** — `license.unity3d.com/manual` 이 「Enterprise · Industry 좌석만 가능하다」고
+답한다 (2026-09-28 실측). 온라인 활성화 손잡이는 `tools/unity_docker.sh` 에 있다.
+
+그래서 **유니티 허브가 있는 PC 에서 굽고 서버로 보낸다.** 서버가 면허를 잡지 않는다.
+
+```bash
+# ── 유니티 허브가 있는 PC 에서 ──
+git pull
+#  허브 → 설치 → 6000.5.10f1 톱니 → 모듈 추가 → WebGL Build Support   (없으면 굽기가 실패한다)
+#  허브에서 unity/ 를 열고
+#    [이렘/자체 점검]   ← 여기서 C# 이 처음 컴파일된다. 실패하면 로그를 그대로 가져온다
+#    [이렘/웹으로 굽기] ← unity/build/web 에 나온다 (Irem.Editor/IremBuild.cs)
+scp -r unity/build/web naviserver03@192.168.0.208:/media/hdd8/justin/my_project/TOP/unity/build/
+
+# ── 서버에서 ──
+python3 tools/serve_public.py 8080    # /unity/ 로 붙는다. 첫 페이지에 줄이 하나 늘어난다
+```
+
+굽는 쪽에서 정한 것 둘, 이유가 있다 (`Irem.Editor/IremBuild.cs` 머리말):
+**뜰 신 하나만 담는다** — `IremBoot` 가 활성 신의 **이름**으로 갈래를 고르므로
+(`"뜰"` → `ShowGarden`) 담는 신이 곧 보이는 화면이다.
+**압축을 끈다** — 그냥 정적 서버가 `Content-Encoding` 없이 내줄 수 있어야 한다.
+
+`unity/build/` 는 `.gitignore` 에 있다. 구운 것은 저장소에 넣지 않는다.

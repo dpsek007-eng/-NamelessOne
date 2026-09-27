@@ -110,6 +110,8 @@ python3 tools/serve.py                     # 브라우저로 본다 (헤드리�
 #   /viewer/            — 잔상 쉰다섯 벌을 돌려 본다
 #   /viewer/garden.html — 뜰이 돌아가는 것을 본다. 계산은 Irem.Sim/Garden.cs 가 끝냈고 이 쪽은 재생만 한다.
 #                         ?to=420&stop=1 로 그 걸음에서 멈춰 세울 수 있다 (화면을 찍을 때 쓴다)
+python3 tools/serve_public.py 8080         # 집 밖에 낼 때 (저장소 말고 뜰에 필요한 것만 담아 내준다)
+#   유니티를 구워 둔 게 있으면 /unity/ 로 같이 붙는다. 굽는 법은 CLAUDE-HANDOFF.md 13절
 python3 tools/shot.py http://127.0.0.1:8000/viewer/#one /tmp/a.png --wait 100   # 화면을 찍는다 (움직이는 탭은 크롬 --screenshot 으로 안 찍힌다)
 blender -b --python chars/src/make_demo.py -- --out chars/out/cast   # 쉰다섯 벌 (CPU, 약 8분)
 python3 tools/silhouette_diff.py           # 실루엣이 정말 갈리는가 (실측)
@@ -130,4 +132,5 @@ python3 tools/focus_stack.py --boxes --pick # 얼굴 상자 · 종마다 대표 
 - ⬜ 3막·4막 층 사양 (61~100층) — 대본은 `docs/16` 에 있다
 - ✅ 뜰을 브라우저에서 본다 (`viewer/garden.html` — 유니티 없이, 3D 몸·동작 그대로)
 - ⬜ Unity 구현 — 3D 뜰·전투 층 코드는 있으나 **유니티가 이 서버에 없어 미검증**
-  (`CLAUDE-HANDOFF.md` 13절)
+  (`CLAUDE-HANDOFF.md` 13절). 유니티 자체를 브라우저에서 돌리는 WebGL 굽기 손잡이는
+  있다 (`[이렘/웹으로 굽기]`) — 서버는 면허를 못 켜므로 허브가 있는 PC 에서 굽는다
