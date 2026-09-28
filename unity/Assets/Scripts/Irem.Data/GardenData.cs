@@ -56,6 +56,26 @@ namespace Irem.Data
     {
         public string name, prop, desc;
         public int x, y;
+        // 여기서부터가 「무엇이 서 있는가」다. tools/places.py 가 적고
+        // 브라우저(viewer/garden.html)와 Ground3D 가 똑같이 세운다.
+        public float z0;          // 밑바닥 높이
+        public float[] face;      // 일하는 사람이 보는 쪽 [dx, dy] — 칸 단위
+        public float[] work;      // 연장이 놓이는 자리 [x, y, z] — 일터 칸에서 본 상대 좌표
+        public PartDef[] parts;
+    }
+
+    /// 구조물의 덩이 하나. 넷뿐이다 — box · cyl · roof · pyr.
+    ///   box  p = 바닥 한가운데, s = [가로x, 세로y, 높이z]
+    ///   cyl  p = 밑동 한가운데, s = [반지름, 높이], n = 몇 각
+    ///   roof 박공지붕. a = "x" 면 용마루가 동서로 눕는다
+    ///   pyr  사각뿔
+    /// k 는 재질 자리: 0 돌 · 1 나무 · 2 쇠붙이·불빛
+    [Serializable]
+    public class PartDef
+    {
+        public string t, a;
+        public int k, n;
+        public float[] p, s;
     }
 
     /// 인연 규칙 하나. 다섯 종류를 한 꼴로 편다.

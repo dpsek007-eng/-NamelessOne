@@ -6,7 +6,8 @@ using System.Collections.Generic;
 namespace Irem.Data
 {
     [Serializable] public class ClipDef  { public string name; public int from, n, fps; public bool loop; }
-    [Serializable] public class TerrDef  { public string ch, name; public int mv; public float dmg; public bool block; public float def; }
+    // h 는 그 칸의 바닥 높이(m). 뜰에서만 쓴다 — 층 표에는 없으므로 0 으로 들어온다.
+    [Serializable] public class TerrDef  { public string ch, name; public int mv; public float dmg; public bool block; public float def; public float h; }
     [Serializable] public class CondDef  { public string t, v; public int n; }
     [Serializable] public class RouteDef { public string id; public float pw; public CondDef[] cond; }
 

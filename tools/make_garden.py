@@ -8,14 +8,16 @@
    층 지도(data/maps.json)와 같은 문자를 쓴다. 타일 그림을 그대로 쓸 수 있어야 한다.
    다만 뜰에는 시간이 흐르지 않으므로 깎이는 지형(균열·불)을 쓰지 않는다.
 """
-import json, collections
+import json, collections, sys, os
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import places as PL
 
 W, H = 28, 18
 
 # 뜰. 서쪽(왼쪽) 한 곳만 열려 있다 — 성문이다.
 #         0         1         2
 #         0123456789012345678901234567
-MAP = [
+BASE = [
     "############################",   # 0
     "#..........................#",   # 1
     "#.:.......^^^........#####.#",   # 2   ^^^ 종탑 언덕 · #### 기록관
@@ -37,12 +39,16 @@ MAP = [
 ]
 
 # 뜰에서 쓰는 지형만. 값은 data/maps.json 의 것과 같다.
+# h 는 그 칸의 바닥 높이(m). 한 칸이 1m 다.
+# 실측으로 들어온 값이 아니라 여기서 정하는 값이다 — 다만 정하는 곳은 여기 하나다.
+# 이것이 없어서 담도 언덕도 우물물도 바닥에 그린 무늬였다(viewer/garden.html:215,
+# Ground3D.cs:94 는 모든 꼭짓점을 y=0 으로 찍는다).
 TERRAIN = {
-    ".": {"n": "평지",   "mv": 1, "block": False, "desc": "그냥 땅"},
-    ":": {"n": "잔해",   "mv": 2, "block": False, "desc": "아직 복원되지 않은 터. 넘느라 두 배로 느리다"},
-    "#": {"n": "막힘",   "mv": 0, "block": True,  "desc": "담과 건물 벽"},
-    "^": {"n": "높은 곳", "mv": 2, "block": False, "desc": "종탑 언덕과 망루"},
-    "w": {"n": "물",     "mv": 3, "block": False, "desc": "우물물. 건너지 않는다"},
+    ".": {"n": "평지",   "mv": 1, "block": False, "h":  0.00, "desc": "그냥 땅"},
+    ":": {"n": "잔해",   "mv": 2, "block": False, "h":  0.10, "desc": "아직 복원되지 않은 터. 넘느라 두 배로 느리다"},
+    "#": {"n": "막힘",   "mv": 0, "block": True,  "h":  1.30, "desc": "담과 건물 벽"},
+    "^": {"n": "높은 곳", "mv": 2, "block": False, "h":  0.35, "desc": "종탑 언덕과 망루"},
+    "w": {"n": "물",     "mv": 3, "block": False, "h": -0.14, "desc": "우물물. 건너지 않는다"},
 }
 
 # 일터 열네 곳. 이름은 tools/trades.py 의 place 와 같아야 한다 —
@@ -69,7 +75,42 @@ STATIONS = [
 IDLE_SPOT = dict(x=13, y=9)
 
 
-def check():
+def stamp():
+    """구조물이 차지하는 칸을 지도에 찍는다.
+
+       지도와 건물을 따로 적어 두면 사람이 벽을 뚫고 지나간다. 그래서 건물 쪽
+       (tools/places.py)에 적힌 칸을 여기서 지도에 찍고, 찍은 지도로 길을 검사한다.
+       손으로 두 벌 맞추지 않는다 — 이 파일 머리말이 정한 그대로다."""
+    g = [list(r) for r in BASE]
+    put = []
+    for st in STATIONS:
+        pl = PL.PLACES.get(st["name"])
+        if not pl: continue
+        for dx, dy in pl["foot"]:
+            x, y = st["x"] + dx, st["y"] + dy
+            if not (0 <= x < W and 0 <= y < H):
+                raise SystemExit(f"[틀림] {st['name']} 의 칸 ({x},{y}) 이 뜰 밖이다")
+            if (x, y) == (st["x"], st["y"]):
+                raise SystemExit(f"[틀림] {st['name']} 이 제가 설 칸을 덮었다")
+            if g[y][x] != "#": put.append((st["name"], x, y, g[y][x]))
+            g[y][x] = "#"
+    return ["".join(r) for r in g], put
+
+
+def builds(MAP):
+    """일터마다 「무엇이 서 있는가」를 붙인다. 브라우저와 유니티가 이것만 보고 세운다."""
+    out = []
+    for st in STATIONS:
+        pl = PL.PLACES.get(st["name"])
+        if not pl:
+            out.append(None); continue
+        out.append(dict(
+            z0=pl["z0"], face=list(pl["face"]), work=list(pl["work"]),
+            foot=[list(c) for c in pl["foot"]], parts=pl["parts"]))
+    return out
+
+
+def check(MAP):
     bad = []
     for y, r in enumerate(MAP):
         if len(r) != W: bad.append(f"{y}줄이 {len(r)}칸이다 ({W}칸이어야 한다)")
@@ -108,7 +149,8 @@ def check():
 
 
 def main():
-    bad = check()
+    MAP, put = stamp()
+    bad = check(MAP)
     for b in bad: print("[틀림]", b)
     if bad: raise SystemExit(1)
 
@@ -127,6 +169,9 @@ def main():
             print(f"[틀림] {c['id']} 의 생업 {g} → 일터 {p} 가 뜰에 없다"); raise SystemExit(1)
         cnt[p] += 1
 
+    B = builds(MAP)
+    for st, b in zip(STATIONS, B):
+        if b: st["build"] = b
     out = {
         "설명": "뜰 지도. 18줄 × 28칸. 서쪽 한 곳만 열려 있다. tools/make_garden.py 가 짓는다.",
         "크기": {"w": W, "h": H},
@@ -139,8 +184,12 @@ def main():
         json.dump(out, fp, ensure_ascii=False, indent=1)
         fp.write("\n")
     free = sum(r.count(".") + r.count(":") + r.count("^") + r.count("w") for r in MAP)
+    npart = sum(len(b["parts"]) for b in B if b)
     print(f"뜰 {W}×{H} = {W*H}칸, 딛을 수 있는 칸 {free}, 일터 {len(STATIONS)}곳, 일터 없는 잔상 {len(homeless)}")
+    print(f"  구조물 {sum(1 for b in B if b)}채 · 덩이 {npart}개 · 새로 막은 칸 {len(put)}")
+    for n, x, y, was in put: print(f"    {n} 이 ({x},{y}) 를 덮었다 — 전에는 {was!r}")
     print("  일터별 인원:", ", ".join(f"{k} {v}" for k, v in cnt.most_common()))
+    for r in MAP: print("   ", r)
 
 
 if __name__ == "__main__":

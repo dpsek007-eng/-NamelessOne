@@ -115,7 +115,9 @@ namespace Irem.Game
             var nm = UIKit.Label(rt, s.name, 12, Pal.Faint, TextAlignmentOptions.Center, true);
             UIKit.Stretch(nm.rectTransform);
             nm.outlineWidth = 0.2f; nm.outlineColor = new Color32(0, 0, 0, 220);
-            _marks.Add((GardenDirector.CellPos(s.x, s.y), rt));
+            // 이름표는 그 채의 꼭대기 위에 뜬다. 칸 한가운데에 두면 8m 짜리 종탑이
+            // 제 이름표를 가린다.
+            _marks.Add((Dir.MarkAt(s), rt));
         }
 
         // ── 잔상 이름표 ──

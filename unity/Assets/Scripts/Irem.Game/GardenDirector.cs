@@ -3,7 +3,7 @@
 //
 // 세 가지가 전투와 다르다.
 //
-// 1. 3D 다. 칸 하나가 1m 이고 CellPos(x,y) = (x, 0, -y) 다. 스프라이트가 아니라
+// 1. 3D 다. 칸 하나가 1m 이고 CellPos(x,y) = (x, 그 칸의 높이, -y) 다. 스프라이트가 아니라
 //    몸 FBX 를 세우고(CastLoad) ShadeView3D 가 동작을 섞는다. 그리는 순서가 없다 —
 //    깊이가 가려 준다.
 //
@@ -40,6 +40,10 @@ namespace Irem.Game
         const float NearDist = 9f;              // 한 사람을 따라갈 때의 거리
 
         readonly Dictionary<int, ShadeView3D> _views = new();
+        readonly Dictionary<char, float> _th = new();      // 지형 문자 → 바닥 높이(m)
+        readonly Dictionary<string, Vector3> _work = new();// 일터 이름 → 연장이 놓인 자리
+        readonly Dictionary<string, float> _top = new();   // 일터 이름 → 그 채의 꼭대기
+        float _tall;                                       // 가장 높은 구조물의 꼭대기
         GardenHud _hud;
         Camera _cam;
         Vector3 _home;
@@ -67,14 +71,28 @@ namespace Irem.Game
         /// 같은 사람을 다시 누르면 놓는다
         public void Follow(int idx) => _follow = _follow == idx ? -1 : idx;
 
+        /// 그 칸의 바닥 높이(m). 지형 표에서 온다 — 여기서 정하지 않는다.
+        /// 이것이 없어서 담도 언덕도 우물물도 바닥에 그린 무늬였다.
+        public float HAt(int x, int y) => _th.TryGetValue(At(x, y), out var v) ? v : 0f;
+
         /// 칸 하나가 1m. 땅 만드는 법과 같은 자리를 써야 하므로 Ground3D 것을 부른다.
-        public static Vector3 CellPos(int x, int y) => Ground3D.Cell(x, y);
+        public Vector3 CellPos(int x, int y) => Ground3D.Cell(x, y, HAt(x, y));
+
+        /// 그 일터 이름표를 띄울 자리. 구조물 꼭대기보다 조금 위다.
+        public Vector3 MarkAt(StationDef s) =>
+            new Vector3(s.x, (_top.TryGetValue(s.name, out var t) ? t : s.z0) + 0.55f, -s.y);
+
+        /// 그 일터에서 연장이 놓인 자리. 일하는 사람이 이쪽을 보고 휘두른다.
+        public bool WorkAt(string place, out Vector3 p) => _work.TryGetValue(place, out p);
 
         Vector3 Center => new Vector3((T.w - 1) / 2f, 0, -(T.h - 1) / 2f);
 
         public void Begin(GardenTables t, Garden g, Camera cam)
         {
             T = t; G = g; _cam = cam;
+            _th.Clear();
+            foreach (var d in T.terrain ?? new TerrDef[0])
+                if (!string.IsNullOrEmpty(d.ch)) _th[d.ch[0]] = d.h;
             BuildGround();
             BuildStations();
             SpawnCast();
@@ -94,32 +112,57 @@ namespace Irem.Game
         }
 
         /// 땅은 Ground3D 가 깐다 — 전투 층도 같은 것을 쓴다.
-        void BuildGround() => Ground3D.Build(transform, T.w, T.h, At, TileVariants);
+        void BuildGround() => Ground3D.Build(transform, T.w, T.h, At, TileVariants, "땅", HAt);
 
         // ── 일터 ─────────────────────────────────────────────────────
-        /// 일터 열넷에 소품을 세운다. 건물을 새로 모델링하지 않는다 —
-        /// pipeline3d 가 구운 FBX 를 그대로 쓴다.
+        /// 일터 열넷에 「서 있는 것」을 세운다.
         ///
-        /// 소품이 어느 쪽을 보고 구워졌는지는 유니티에서 열어 봐야 안다.
-        /// 그래서 지금은 전부 뜰 가운데를 보게 돌려 둔다. 열어 보고 어긋나면 그때 잰다.
+        /// 전에는 소품 FBX 하나만 칸 한가운데에 놓았다. 그런데 그 소품은 건물이 아니라
+        /// 연장이다 — 실측 0.08~1.15m 짜리 유품이고, 등대는 8cm 다(tools/make_garden.py:56 도
+        /// 「건물이 아니다」라고 적어 두었다). 그래서 뜰에는 서 있는 것이 없었고,
+        /// 일하는 사람은 허공에 헛손질을 했다.
+        ///
+        /// 이제 구조물은 tools/places.py 가 적은 덩이 목록에서 나오고(Village),
+        /// 소품은 그 구조물의 작업대 위, 손이 지나는 자리에 제 크기대로 얹힌다.
         void BuildStations()
         {
             var root = new GameObject("일터").transform;
             root.SetParent(transform, false);
+            _work.Clear(); _top.Clear(); _tall = 0f;
             if (T.stations == null) return;
 
             foreach (var s in T.stations)
             {
+                float top = Village.Build(root, s, CastLoad.Silhouette);
+                _top[s.name] = top;
+                if (top > _tall) _tall = top;
+
+                var wp = Village.WorkAt(s);
+                _work[s.name] = wp;
+
                 var fbx = CastLoad.Prop(s.prop);
-                if (fbx == null) continue;        // 소품이 없으면 이름표만 남는다(GardenHud)
+                if (fbx == null) continue;        // 소품이 없으면 구조물과 이름표만 남는다
                 var go = Instantiate(fbx, root);
-                go.name = s.name;
-                var p = CellPos(s.x, s.y);
-                go.transform.position = p;
-                var d = Center - p; d.y = 0;
-                if (d.sqrMagnitude > 0.01f) go.transform.rotation = Quaternion.LookRotation(d);
+                go.name = s.name + ":연장";
+                go.transform.position = wp;
+                go.transform.rotation = Village.FaceBack(s);
+                go.transform.localScale = Vector3.one * ToolScale(go);
                 Stone(go);
             }
+        }
+
+        /// 연장의 크기. 숫자를 정해 두지 않는다 — 그 FBX 의 실제 크기에서 나온다.
+        /// 소품 마흔일곱이 0.08m 부터 1.15m 까지 제각각이라 그대로 두면 하나는 티끌이고
+        /// 하나는 사람만 하다. 손에 들 만한 크기 하나로 맞춘다.
+        const float ToolSize = 0.42f;
+        static float ToolScale(GameObject go)
+        {
+            var rs = go.GetComponentsInChildren<Renderer>(true);
+            if (rs.Length == 0) return 1f;
+            var b = rs[0].bounds;
+            for (int i = 1; i < rs.Length; i++) b.Encapsulate(rs[i].bounds);
+            float m = Mathf.Max(b.size.x, Mathf.Max(b.size.y, b.size.z));
+            return m > 1e-4f ? ToolSize / m : 1f;
         }
 
         /// 소품도 잔상과 같은 실루엣으로 칠한다. 다만 발밑 흐려짐은 끈다 —
@@ -185,7 +228,10 @@ namespace Irem.Game
             float vr = Mathf.Tan(_cam.fieldOfView * 0.5f * Mathf.Deg2Rad);
             float hr = vr * Mathf.Max(0.5f, _cam.aspect);
             float dw = (T.w * 0.5f + 1.5f) / Mathf.Max(0.05f, hr);
-            float dh = (T.h * 0.5f * Mathf.Cos(Pitch * Mathf.Deg2Rad) + 1.5f) / Mathf.Max(0.05f, vr);
+            // 구조물이 8m 넘게 선다(종탑·등대). 땅만 재면 꼭대기가 잘린다.
+            float dh = (T.h * 0.5f * Mathf.Cos(Pitch * Mathf.Deg2Rad)
+                      + _tall * 0.5f * Mathf.Sin(Pitch * Mathf.Deg2Rad) + 1.5f)
+                     / Mathf.Max(0.05f, vr);
             return Mathf.Max(dw, dh);
         }
 
@@ -263,12 +309,18 @@ namespace Irem.Game
                     break;
 
                 case Gv.Work:
+                {
                     // 손이 하던 일을 한다. 「휘두름」이 그 몸짓이다 —
                     // 종을 치고 쇠를 두드리고 빵을 넣는 것이 다 그 하나의 동작이다.
                     WorkSteps++;
+                    var v = V(e.A);
+                    if (v == null) break;
+                    // 휘두르기 전에 연장 쪽으로 돈다. 이것이 없으면 허공을 친다.
+                    if (e.S != null && _work.TryGetValue(e.S, out var wp)) v.FaceTo(wp);
                     // 밀어붙이지 않는다 — 휘두르는 중이면 그냥 둔다(ShadeView3D.Play).
-                    V(e.A)?.Play("attack");
+                    v.Play("attack");
                     break;
+                }
 
                 case Gv.Rest:
                 case Gv.Stand:

@@ -146,7 +146,8 @@ STRIDE = """(() => {
 })()"""
 
 
-async def probe(ws_url, url, wait, shots, gap, stance=False, feet=False, stride=False):
+async def probe(ws_url, url, wait, shots, gap, stance=False, feet=False,
+                stride=False, work=False):
     n = 0
     async with connect(ws_url, max_size=None, open_timeout=60) as ws:
         async def call(method, **params):
@@ -167,6 +168,7 @@ async def probe(ws_url, url, wait, shots, gap, stance=False, feet=False, stride=
             r = await call("Runtime.evaluate",
                            expression=(STRIDE if stride else
                                        FEET if feet else
+                                       WORK if work else
                                        STANCE if stance else JS),
                            returnByValue=True, awaitPromise=True)
             if os.environ.get("PROBE_RAW"):
@@ -180,6 +182,32 @@ async def probe(ws_url, url, wait, shots, gap, stance=False, feet=False, stride=
         return rows
 
 
+# 휘두르는 사람이 무엇을 보고 휘두르는가. 「허공에다가 헛손질한다」를 눈으로 적지 않으려고 낸다.
+# 잴 것은 둘뿐이다 — 연장까지의 거리(m)와, 몸이 보는 쪽과 연장 쪽 사이의 각(도).
+WORK = """(() => {
+  const W = window.IREM.work();
+  const out = [];
+  for (const [idx, v] of window.IREM.views) {
+    if (v.name !== 'attack') continue;
+    const w = W.get(v.def.place);
+    const row = { idx, name: v.def.name, place: v.def.place || '' };
+    if (!w) { row.miss = true; out.push(row); continue; }
+    const p = v.root.position;
+    const dx = w.x - p.x, dz = w.z - p.z;
+    row.dist = +Math.hypot(dx, dz).toFixed(3);
+    row.up   = +(w.y - p.y).toFixed(3);
+    // 몸의 앞쪽. faceTo 가 돌려 놓은 그 각이다.
+    // 몸이 보는 쪽 = 사원수를 (0,0,1) 에 먹인 것. THREE 는 모듈 안이라 여기서 못 부른다.
+    const q = v.root.quaternion;
+    const fx = 2 * (q.x * q.z + q.w * q.y), fz = 1 - 2 * (q.x * q.x + q.y * q.y);
+    let a = Math.atan2(dx, dz) - Math.atan2(fx, fz);
+    a = Math.abs(((a + Math.PI) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI) - Math.PI);
+    row.off = +(a * 180 / Math.PI).toFixed(1);
+    out.push(row);
+  }
+  return JSON.stringify(out);
+})()"""
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("url")
@@ -192,6 +220,8 @@ def main():
                     help="디딘 발이 땅을 잡는가 — 발 이동량 / 몸 이동량")
     ap.add_argument("--stance", action="store_true",
                     help="동작이 아니라 자세를 잰다 — 뼈 각도와 굵기 (data/shades.json)")
+    ap.add_argument("--work", action="store_true",
+                    help="휘두르는 사람이 연장을 보고 있는가 — 거리(m)와 빗나간 각(도)")
     a = ap.parse_args()
 
     port, prof = free_port(), tempfile.mkdtemp(prefix="probe-")
@@ -200,7 +230,8 @@ def main():
                          stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     try:
         rows = asyncio.run(probe(targets(port, 60), a.url, a.wait, a.shots, a.gap,
-                                 stance=a.stance, feet=a.feet, stride=a.stride))
+                                 stance=a.stance, feet=a.feet, stride=a.stride,
+                                 work=a.work))
     finally:
         p.terminate()
         try: p.wait(timeout=10)
@@ -213,6 +244,8 @@ def main():
         return report_feet(rows)
     if a.stance:
         return report_stance(rows)
+    if a.work:
+        return report_work(rows)
 
     for i, r in enumerate(rows):
         if not r: print(f"[{i}] 아무것도 못 읽었다 (window.IREM 이 없다)"); continue
@@ -228,6 +261,33 @@ def main():
                   f"똑같은 자리에 선 사람 {same}명")
     print("\n※ 「똑같은 자리에 선 사람」이 0명이면 같은 동작이라도 저마다 다른 곳을 지나고 있다.\n"
           "   그 수가 사람 수만큼 나오면 스물셋이 아니라 같은 태엽 스물셋이다.")
+
+
+def report_work(rows):
+    """휘두르는 사람과 연장 사이. 재는 것은 둘 — 거리와 빗나간 각.
+
+       각이 90도를 넘으면 등을 돌리고 휘두르는 것이고, 연장이 아예 없으면 miss 다.
+       「허공에다가 헛손질한다」는 말이 여기서 숫자가 된다."""
+    seen, miss = {}, set()
+    for r in rows or []:
+        for x in r or []:
+            if x.get("miss"): miss.add(x["name"]); continue
+            seen.setdefault(x["name"], []).append(x)
+    if not seen and not miss:
+        return print("휘두르는 사람이 한 명도 없었다. --wait 를 늘리거나 ?to= 로 걸음을 밀어라.")
+    print(f"── 휘두르는 사람 {len(seen)}명 ──")
+    offs, ds = [], []
+    for n, xs in sorted(seen.items()):
+        d = sum(x["dist"] for x in xs) / len(xs)
+        o = sum(x["off"] for x in xs) / len(xs)
+        u = sum(x["up"] for x in xs) / len(xs)
+        offs.append(o); ds.append(d)
+        print(f"  {n:14s} {xs[0]['place']:4s} 연장까지 {d:.2f}m · 높이 {u:+.2f}m · 빗나간 각 {o:5.1f}도")
+    for n in sorted(miss): print(f"  {n:14s} — 연장이 없다")
+    if offs:
+        print(f"\n빗나간 각 {min(offs):.1f}~{max(offs):.1f}도 (가운데 {sorted(offs)[len(offs)//2]:.1f}) · "
+              f"거리 {min(ds):.2f}~{max(ds):.2f}m")
+        print("각이 0 에 가까우면 연장을 보고 휘두르는 것이고, 90 을 넘으면 등지고 휘두르는 것이다.")
 
 
 def report_stride(rows):

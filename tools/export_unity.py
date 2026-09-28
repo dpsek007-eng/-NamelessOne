@@ -91,11 +91,22 @@ def garden(proto_chars):
     T = {
         'w': G['크기']['w'], 'h': G['크기']['h'], 'map': G['지도'],
         'terrain': [{'ch': ch, 'name': t['n'], 'mv': t.get('mv', 1),
-                     'dmg': 0.0, 'block': bool(t.get('block')), 'def': 0.0}
+                     'dmg': 0.0, 'block': bool(t.get('block')), 'def': 0.0,
+                     # 바닥 높이. 이것이 없으면 담도 언덕도 바닥에 그린 무늬로 남는다.
+                     'h': float(t.get('h', 0.0))}
                     for ch, t in G['지형'].items()],
         'agents': agents,
+        # 구조물은 모양이 아니라 덩이 목록으로 간다. 브라우저와 유니티가 같은 목록을
+        # 세운다 — 모양을 두 벌 적으면 둘이 갈라진다(docs/10 계산 한 벌 원칙).
         'stations': [{'name': s['name'], 'prop': s['prop'], 'desc': s.get('desc', ''),
-                      'x': s['x'], 'y': s['y']} for s in G['일터']],
+                      'x': s['x'], 'y': s['y'],
+                      'z0': (s.get('build') or {}).get('z0', 0.0),
+                      'face': (s.get('build') or {}).get('face', [0, -1]),
+                      'work': (s.get('build') or {}).get('work', [0.0, 0.0, 1.0]),
+                      'parts': [{'t': q['t'], 'k': q.get('k', 0), 'n': q.get('n', 0),
+                                 'a': q.get('a', ''), 'p': q['p'], 's': q['s']}
+                                for q in (s.get('build') or {}).get('parts', [])]}
+                     for s in G['일터']],
         'bonds': [{'id': r['id'], 'kind': r['kind'], 'title': r['title'],
                    'story': r['story'], 'reward': r.get('reward', ''),
                    'note': r.get('note', ''),

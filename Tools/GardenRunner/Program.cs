@@ -5,6 +5,7 @@
 //
 // 같은 시드를 두 번 돌려 diff 가 0 이어야 한다. 0 이 아니면 뜰이 재현되지 않는 것이고,
 // 그러면 방치 계산도 전승도 성립하지 않는다(docs/10).
+using System;
 using System.Globalization;
 using System.Text.Json;
 using Irem.Data;
@@ -80,6 +81,19 @@ if (mode == "web")
     string Q(string x) => JsonSerializer.Serialize(x ?? "");
     // 소수점은 로캘을 타지 않게 적는다. 쉼표가 찍히면 JSON 이 깨진다.
     string N(float v) => v.ToString("0.###", CultureInfo.InvariantCulture);
+    string A(float[] v) => v == null ? "" : string.Join(",", Array.ConvertAll(v, N));
+    string Parts(Irem.Data.PartDef[] ps)
+    {
+        if (ps == null) return "";
+        var b = new System.Text.StringBuilder();
+        for (int j = 0; j < ps.Length; j++)
+        {
+            var q = ps[j];
+            b.Append((j > 0 ? "," : "") + $"{{\"t\":{Q(q.t)},\"k\":{q.k},\"n\":{q.n},"
+                   + $"\"a\":{Q(q.a)},\"p\":[{A(q.p)}],\"s\":[{A(q.s)}]}}");
+        }
+        return b.ToString();
+    }
     sb.Append("{\n");
     sb.Append($"\"note\":\"Tools/GardenRunner -- web {wt} {ws} 가 쓴다. 손으로 고치지 마라.\",\n");
     sb.Append($"\"seed\":{ws},\"ticks\":{wt},\"w\":{T.w},\"h\":{T.h},\n");
@@ -90,7 +104,17 @@ if (mode == "web")
     {
         var st = T.stations[i];
         sb.Append((i > 0 ? "," : "") + $"{{\"name\":{Q(st.name)},\"prop\":{Q(st.prop)},"
-                + $"\"desc\":{Q(st.desc)},\"x\":{st.x},\"y\":{st.y}}}");
+                + $"\"desc\":{Q(st.desc)},\"x\":{st.x},\"y\":{st.y},"
+                + $"\"z0\":{N(st.z0)},\"face\":[{A(st.face)}],\"work\":[{A(st.work)}],"
+                + $"\"parts\":[{Parts(st.parts)}]}}");
+    }
+    // 지형 높이. 이것이 브라우저로 안 넘어가면 담이 다시 바닥 무늬가 된다.
+    sb.Append("],\n\"terrain\":[");
+    for (int i = 0; i < (T.terrain?.Length ?? 0); i++)
+    {
+        var t = T.terrain[i];
+        sb.Append((i > 0 ? "," : "") + $"{{\"ch\":{Q(t.ch)},\"h\":{N(t.h)},"
+                + $"\"block\":{(t.block ? "true" : "false")}}}");
     }
     sb.Append("],\n\"cast\":[");
     for (int i = 0; i < W.Cast.Count; i++)
