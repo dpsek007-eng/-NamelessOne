@@ -273,6 +273,9 @@ function paint(root, hex, fadeOn) {
 const loader = new GLTFLoader();
 const CLIP = {idle:'숨', walk:'걷기', attack:'휘두름', look:'돌아본다'};  // GLB 안의 이름
 const views = new Map();            // idx → 잔상 하나
+/* 밖에서 재는 구멍. 화면을 눈으로 보고 「달라 보인다」고 적지 않으려고 낸다 —
+   tools/probe.py 가 이것으로 스물셋의 동작·위상·박자를 그대로 읽어 온다. */
+window.IREM = { views, cast: () => CAST };
 const glbs = new Map();
 async function glb(url) {
   if (!glbs.has(url)) glbs.set(url, loader.loadAsync(url));
@@ -305,24 +308,44 @@ class Shade {
       const a = gltf.animations.find(x => x.name === ko);
       if (a) this.clips[en] = a;
     }
-    this.act = null; this.name = ''; this.hold = 0;
+    this.act = null; this.name = ''; this.hold = 0; this.rest = 0;
+    /* 몸의 박자. 계산하는 쪽이 소금에서 낸 값이고(GardenSetup) 유니티도 같은 값을
+       쓴다 — 여기서 따로 굴리면 같은 뜰이 두 가지로 움직인다. */
+    this.phase = def.phase ?? 0;
+    this.tempo = def.tempo ?? 1;
+    this.breath = def.breath ?? 0;
     this.yaw = 0; this.yawWant = 0;
     this.from = root.position.clone(); this.to = root.position.clone();
     this.left = 0; this.dur = 1;
     this.play('idle', true);
   }
+  /* 하던 동작을 다시 걸지 않는다.
+     되풀이하면 첫 프레임으로 되돌아간다. 사건은 걸음마다 「일한다」를 말하는데
+     (실측: 한 걸음에 스물, 한 사람은 599걸음을 내리 일한다) 휘두름은 2.0초짜리다.
+     그러니 0.34초마다 처음으로 튀었다 — 스물이 같은 프레임에서 함께. 팔을 휘두르는
+     사람 스물이 아니라 같은 태엽 스물이다. 그것이 징그러웠던 이유다. */
   play(clip, force = false) {
     if (this.hold > 0 && !force) return;
     const a = this.clips[clip]; if (!a) return;
     const loop = (clip === 'idle' || clip === 'walk');
-    if (this.name === clip && loop) return;
+    if (this.name === clip && (loop || this.hold > 0)) {
+      // 걷기는 걸음마다 다시 불린다. 다리를 처음으로 되돌리지 않고 시간만 늘린다 —
+      // 안 그러면 한 걸음이 끝나는 자리에서 숨으로 떨어져 다리가 끊긴다.
+      if (clip === 'walk') this.hold = 0.34;
+      return;
+    }
     const nx = this.mixer.clipAction(a);
     nx.setLoop(loop ? THREE.LoopRepeat : THREE.LoopOnce, Infinity);
     nx.clampWhenFinished = true;
     if (this.act && this.act !== nx) this.act.fadeOut(0.25);      // ShadeView3D.Fade
     nx.reset().setEffectiveWeight(1).fadeIn(this.act ? 0.25 : 0).play();
+    nx.setEffectiveTimeScale(this.tempo);
+    // 도는 동작은 저마다 다른 곳에서 시작한다. 안 그러면 스물셋이 한 숨을 쉰다.
+    if (loop) nx.time = this.phase * a.duration;
     this.act = nx; this.name = clip;
-    this.hold = loop ? 0 : a.duration;
+    this.hold = loop ? 0 : a.duration / this.tempo;
+    // 한 번 휘두르고 나면 숨을 돌린다. 사람마다 다른 참이라 다시 겹치지 않는다.
+    this.rest = clip === 'attack' ? this.breath : 0;
     if (clip === 'walk') this.hold = 0.34;                        // ShadeView.Play 와 같은 값
   }
   moveRig(p, seconds) {
@@ -349,7 +372,12 @@ class Shade {
     }
     if (this.hold > 0) {
       this.hold -= dt;
-      if (this.hold <= 0) { this.hold = 0; this.play('idle', true); }
+      // 동작이 끝나면 숨으로 돌아가고, 숨 돌리는 참만큼은 다음 일을 받지 않는다.
+      if (this.hold <= 0) {
+        const r = this.rest; this.rest = 0; this.hold = 0;
+        this.play('idle', true);
+        this.hold = r;
+      }
     }
     // 돌아서는 것은 좌우 반전이 아니라 Y축 회전이다 — 3D 라서 그렇다
     let d = this.yawWant - this.yaw;
@@ -476,7 +504,8 @@ function step(e) {
   switch (k) {
     case K.Turn:  shownTurn = e[col.n]; break;
     case K.Walk:  V(a)?.moveRig(cell(e[col.x], e[col.y]), STEP*0.85); break;
-    case K.Work:  workSteps++; V(a)?.play('attack', true); break;     // 「휘두름」이 일하는 몸짓이다
+    // 「휘두름」이 일하는 몸짓이다. 밀어붙이지 않는다 — 휘두르는 중이면 그냥 둔다.
+    case K.Work:  workSteps++; V(a)?.play('attack'); break;
     case K.Rest:
     case K.Stand: V(a)?.play('idle'); break;                          // 앉는 동작이 없다
     case K.Meet: {

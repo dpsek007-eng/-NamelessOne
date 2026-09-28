@@ -148,6 +148,7 @@ namespace Irem.Game
                                new Color(0, 0, 0, 0.42f), 0.66f, 0.02f);
 
                 var v = go.GetComponent<ShadeView3D>();
+                v.Breathe(s.Phase, s.Tempo, s.Breath);   // 저마다 다른 박자로 숨을 쉰다
                 v.Warp(CellPos(s.X, s.Y));
                 v.FaceTo(Center);
                 _views[s.Idx] = v;
@@ -259,7 +260,8 @@ namespace Irem.Game
                     // 손이 하던 일을 한다. 「휘두름」이 그 몸짓이다 —
                     // 종을 치고 쇠를 두드리고 빵을 넣는 것이 다 그 하나의 동작이다.
                     WorkSteps++;
-                    V(e.A)?.Play("attack", true);
+                    // 밀어붙이지 않는다 — 휘두르는 중이면 그냥 둔다(ShadeView3D.Play).
+                    V(e.A)?.Play("attack");
                     break;
 
                 case Gv.Rest:

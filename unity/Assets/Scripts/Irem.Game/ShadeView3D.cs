@@ -33,7 +33,13 @@ namespace Irem.Game
         string _name = "idle";
         float _fade = 1f;                     // 1 = 새 동작으로 다 넘어갔다
         float _hold;                          // 한 번만 하는 동작이 끝날 때까지
+        float _rest;                          // 그 동작이 끝난 뒤 숨 돌리는 참
         bool _dead;
+
+        // 몸의 박자. GardenShade 가 소금에서 낸 값을 받아 쓴다(GardenSetup).
+        // 여기서 따로 굴리지 않는다 — 브라우저 쪽도 같은 값을 받으므로,
+        // 공식이 두 벌이 되면 같은 뜰이 두 가지로 움직인다(docs/10 계산 한 벌).
+        float _phase = 0f, _tempo = 1f, _breath = 0f;
 
         Vector3 _target;
         float _moveLeft;
@@ -44,6 +50,18 @@ namespace Irem.Game
         public string Clip => _name;
         public bool Facing { get; private set; } = true;
         public Vector3 Pos => transform.position;
+
+        /// 저마다 다른 박자를 준다. Bind 뒤에, 첫 동작을 걸기 전에 부른다.
+        /// 이것이 없으면 스물셋이 같은 프레임에서 같은 속도로 숨을 쉰다.
+        public void Breathe(float phase, float tempo, float breath)
+        {
+            _phase = phase; _tempo = Mathf.Max(0.1f, tempo); _breath = Mathf.Max(0f, breath);
+            if (_to.IsValid())
+            {
+                _to.SetSpeed(_tempo);
+                if (Loops(_name)) _to.SetTime(_phase * _to.GetAnimationClip().length);
+            }
+        }
 
         /// 몸을 세운 뒤 한 번 부른다. clips 는 동작 FBX 에서 읽은 것 (CastLoad).
         public void Bind(IEnumerable<AnimationClip> clips)
@@ -78,7 +96,17 @@ namespace Irem.Game
             if (_dead) return;
             if (!_clips.ContainsKey(clip)) return;       // 없는 동작은 없는 대로 둔다
             if (_hold > 0 && !force) return;
-            if (_name == clip && Loops(clip)) return;    // 도는 동작을 다시 걸면 처음으로 튄다
+            // 하던 동작을 다시 걸지 않는다. 되풀이하면 첫 프레임으로 되돌아간다.
+            // 사건은 걸음마다 「일한다」를 말하는데(실측: 한 걸음에 스물, 한 사람은
+            // 599걸음을 내리 일한다) 휘두름은 2.0초짜리다. 그러니 0.34초마다 처음으로
+            // 튀었다 — 스물이 같은 프레임에서 함께. 팔을 휘두르는 사람 스물이 아니라
+            // 같은 태엽 스물이다.
+            if (_name == clip && (Loops(clip) || _hold > 0))
+            {
+                // 걷기는 걸음마다 다시 불린다. 다리를 되돌리지 않고 시간만 늘린다.
+                if (clip == "walk") _hold = 0.34f;
+                return;
+            }
             Begin(clip, false);
         }
 
@@ -142,13 +170,18 @@ namespace Irem.Game
             }
             _to = AnimationClipPlayable.Create(_graph, c);
             _to.SetApplyFootIK(false);
+            _to.SetSpeed(_tempo);
+            // 도는 동작은 저마다 다른 곳에서 시작한다. 안 그러면 스물셋이 한 숨을 쉰다.
+            if (Loops(clip)) _to.SetTime(_phase * c.length);
             _mix.ConnectInput(1, _to, 0);
             _mix.SetInputWeight(0, first ? 0f : 1f);
             _mix.SetInputWeight(1, first ? 1f : 0f);
 
             _name = clip;
             _fade = first ? 1f : 0f;
-            _hold = Loops(clip) ? 0f : Mathf.Max(0.05f, c.length);
+            _hold = Loops(clip) ? 0f : Mathf.Max(0.05f, c.length) / _tempo;
+            // 한 번 휘두르고 나면 숨을 돌린다. 사람마다 다른 참이라 다시 겹치지 않는다.
+            _rest = clip == "attack" ? _breath : 0f;
             if (clip == "walk") _hold = 0.34f;           // 2D 와 같은 값 (ShadeView.Play)
             if (clip == "fall") _dead = true;
         }
@@ -179,7 +212,13 @@ namespace Irem.Game
             if (_hold > 0)
             {
                 _hold -= dt;
-                if (_hold <= 0 && !_dead) { _hold = 0; Begin("idle", false); }
+                // 동작이 끝나면 숨으로 돌아가고, 숨 돌리는 참만큼은 다음 일을 받지 않는다.
+                if (_hold <= 0 && !_dead)
+                {
+                    float r = _rest; _hold = 0;
+                    Begin("idle", false);
+                    _hold = r;
+                }
             }
 
             if (_flash > 0)

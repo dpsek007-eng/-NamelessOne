@@ -13,6 +13,15 @@ import argparse, asyncio, base64, json, os, shutil, socket, subprocess, sys, tem
 from websockets.asyncio.client import connect
 
 
+# 이 기계는 서버다 — 화면도 GPU 도 쓰지 않는다. 그림은 swiftshader 가 CPU 로 그린다.
+# 깃발을 두 벌 적지 않는다(tools/probe.py 도 이것을 가져다 쓴다).
+CHROME = [
+    "google-chrome", "--headless=new", "--disable-gpu",
+    "--enable-unsafe-swiftshader", "--use-gl=swiftshader", "--no-sandbox",
+    "--disable-dev-shm-usage",
+]
+
+
 def free_port():
     s = socket.socket(); s.bind(("127.0.0.1", 0)); p = s.getsockname()[1]; s.close()
     return p
@@ -70,11 +79,8 @@ def main():
 
     port = free_port()
     prof = tempfile.mkdtemp(prefix="shot-")
-    ch = subprocess.Popen([
-        "google-chrome", "--headless=new", "--disable-gpu",
-        "--enable-unsafe-swiftshader", "--use-gl=swiftshader", "--no-sandbox",
-        "--disable-dev-shm-usage", f"--user-data-dir={prof}",
-        f"--remote-debugging-port={port}",
+    ch = subprocess.Popen(CHROME + [
+        f"--user-data-dir={prof}", f"--remote-debugging-port={port}",
         f"--window-size={a.width},{a.height}", "about:blank",
     ], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     try:

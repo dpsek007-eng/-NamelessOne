@@ -5,6 +5,7 @@
 //
 // 같은 시드를 두 번 돌려 diff 가 0 이어야 한다. 0 이 아니면 뜰이 재현되지 않는 것이고,
 // 그러면 방치 계산도 전승도 성립하지 않는다(docs/10).
+using System.Globalization;
 using System.Text.Json;
 using Irem.Data;
 using Irem.Sim;
@@ -77,6 +78,8 @@ if (mode == "web")
 
     var sb = new System.Text.StringBuilder();
     string Q(string x) => JsonSerializer.Serialize(x ?? "");
+    // 소수점은 로캘을 타지 않게 적는다. 쉼표가 찍히면 JSON 이 깨진다.
+    string N(float v) => v.ToString("0.###", CultureInfo.InvariantCulture);
     sb.Append("{\n");
     sb.Append($"\"note\":\"Tools/GardenRunner -- web {wt} {ws} 가 쓴다. 손으로 고치지 마라.\",\n");
     sb.Append($"\"seed\":{ws},\"ticks\":{wt},\"w\":{T.w},\"h\":{T.h},\n");
@@ -96,7 +99,9 @@ if (mode == "web")
         sb.Append((i > 0 ? "," : "") + $"{{\"idx\":{c.Idx},\"id\":{Q(c.Id)},\"name\":{Q(c.Name)},"
                 + $"\"role\":{Q(c.Def.role)},\"cls\":{Q(c.Def.cls)},\"trade\":{Q(c.Def.trade)},"
                 + $"\"slug\":{Q(c.Def.garment)},\"col\":{Q(c.Def.col)},\"place\":{Q(c.Place)},"
-                + $"\"wx\":{c.Wx},\"wy\":{c.Wy},\"x\":{ix[c.Idx]},\"y\":{iy[c.Idx]}}}");
+                + $"\"wx\":{c.Wx},\"wy\":{c.Wy},\"x\":{ix[c.Idx]},\"y\":{iy[c.Idx]},"
+                // 몸의 박자. 계산하는 쪽(GardenSetup)이 낸 값을 그대로 내보낸다.
+                + $"\"phase\":{N(c.Phase)},\"tempo\":{N(c.Tempo)},\"breath\":{N(c.Breath)}}}");
     }
     sb.Append("],\n\"bonds\":[");
     for (int i = 0; i < W.Ties.Count; i++)

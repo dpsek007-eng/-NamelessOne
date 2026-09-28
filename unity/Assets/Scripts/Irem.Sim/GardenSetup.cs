@@ -45,9 +45,18 @@ namespace Irem.Sim
                     Heart = Heart.From(a.Weights()),
                     Mv = Setup.MoveOf(a.role),
                     Sight = Setup.SightOf(a.role),
-                    Salt = (int)(new Rng(seed ^ (ulong)(G.Cast.Count + 1)).Next() & 0x7fffffff),
+                    // 소금은 섞은 뒤에 뽑는다. Rng 는 씨의 맨 아래 비트를 1 로 세우므로
+                    // (Rng.cs: _s = seed | 1) `seed ^ (i+1)` 은 두 사람씩 같은 씨가 됐다.
+                    // 실측: 스물셋의 소금이 열한 쌍으로 겹쳐, 두 사람이 같은 걸음에
+                    // 같은 자리의 대사를 골랐다. 큰 홀수를 곱해 윗비트까지 벌린다.
+                    Salt = (int)(new Rng(seed + 0x9E3779B97F4A7C15UL * (ulong)(G.Cast.Count + 1))
+                                 .Next() & 0x7fffffff),
                     Place = st != null ? st.name : "",
                 };
+                // 박자는 소금에서만 낸다. 시드가 같으면 같은 사람이 같은 박자로 움직인다.
+                s.Phase  = (s.Salt % 997) / 997f;                      // 0 ~ 1
+                s.Tempo  = 0.86f + (s.Salt / 997 % 29) * 0.01f;        // 0.86 ~ 1.14
+                s.Breath = 0.15f + (s.Salt / 29 % 41) * 0.03f;         // 0.15 ~ 1.35초
                 int wx, wy;
                 if (st != null) Free(g, used, st.x, st.y, s.Mv, out wx, out wy);
                 else            Free(g, used, T.idleX, T.idleY, s.Mv, out wx, out wy);

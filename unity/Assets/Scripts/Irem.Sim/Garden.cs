@@ -35,6 +35,18 @@ namespace Irem.Sim
         public string Place = "";   // 일터 이름, 없으면 ""
         public int Mv = 2, Sight = 6;
         public int Salt;            // 대사를 고르는 소금. 시드에서 나오므로 재현된다
+
+        // ── 몸이 저마다 달리 움직이는 몫 ──
+        // 사건은 「이 걸음에 일한다」까지만 말한다. 그 몸이 어떤 박자로 움직이는가는
+        // 보여주는 쪽 일이지만, 숫자는 여기서 한 번만 낸다 — 유니티와 브라우저가
+        // 저마다 제 공식을 쓰면 같은 뜰이 두 가지로 움직인다(docs/10 계산 한 벌).
+        //
+        // 이것이 없으면 스물셋이 같은 프레임에서 같은 속도로 숨을 쉰다. 실측:
+        // 한 걸음에 스물이 동시에 휘두름을 처음 프레임으로 되돌렸다. 사람이 아니라
+        // 같은 태엽 스물세 개다.
+        public float Phase;         // 동작을 어디서부터 시작하는가 (0~1, 클립 길이의 비율)
+        public float Tempo = 1f;    // 그 사람의 박자 (0.86~1.14배)
+        public float Breath;        // 한 번 휘두르고 숨 돌리는 참 (초)
         public int SaidAt = -9999;  // 마지막으로 입을 연 걸음
         public Doing Said = Doing.Stand;   // 그때 하던 것 — 바뀌는 자리가 말이 나올 자리다
         public int MetWho = -1, MetAt = -9999;     // 지금 이어지는 만남
