@@ -118,6 +118,10 @@ namespace Irem.Game
             var sil = Silhouette;
             IremChar.Skin(go, sil);
 
+            // 자세는 옷을 입히기 **전에** 잡는다. IremChar.Wear 가 옷 뼈를 몸 뼈로
+            // 갈아 끼우면 이름이 같은 뼈가 둘이 되어, 이름으로 찾는 길이 흐려진다.
+            var stand = Stance(go, a.stance);
+
             // 옷. 없으면 몸만 세운다 — 옷이 없다고 사람을 빼지 않는다.
             var gFbx = Garment(a.garment);
             if (gFbx != null)
@@ -136,7 +140,74 @@ namespace Irem.Game
 
             var v = go.AddComponent<ShadeView3D>();
             v.Bind(Clips);
+            v.Stance(stand);
             return go;
+        }
+
+        /// 자세 한 사람 몫을 뼈에 걸 수 있는 꼴로 옮긴다. 두 가지를 여기서 한다.
+        ///
+        /// 하나, 축을 옮긴다. data/shades.json 의 rot 은 블렌더 아마추어 축이다
+        /// (x 앞뒤 · y 좌우 · z 위). FBX 를 axis_up="Y", axis_forward="-Z" 로 내보냈으므로
+        /// 유니티에서는 블렌더의 y 와 z 가 자리를 바꾼다 — (x, y, z) -> (x, z, y).
+        /// 손잡이가 오른손에서 왼손으로 바뀌면서 각도의 부호가 한 번 뒤집히고,
+        /// 유니티의 사원수 규약이 다시 한 번 뒤집어 제자리로 온다. 그래서 각도는 그대로 쓴다.
+        /// **이 부호는 이 서버에서 확인할 수 없다** — 유니티가 없다. 에디터에서 세렌의
+        /// 등이 앞으로 굽지 않고 뒤로 젖혀지면 부호가 하나 뒤집힌 것이고,
+        /// 고칠 자리는 이 함수 한 곳뿐이다.
+        ///
+        /// 둘, 아마추어 축을 뼈 축으로 옮긴다. 쉼자세의 회전을 뒤집어 축에 먹인다.
+        /// 지금 이 시점이 쉼자세다 — Bind 가 아직 안 불렸고, 불렸더라도 Playables 는
+        /// 동작 갱신 때까지 뼈를 건드리지 않는다. 브라우저 쪽이 boneInverses 로
+        /// 같은 일을 한다 (viewer/garden.html stance()).
+        public static ShadeView3D.Stand[] Stance(GameObject go, StanceBone[] bones)
+        {
+            if (bones == null || bones.Length == 0) return null;
+
+            // 몸의 스킨 메시가 쥔 뼈 목록이 곧 아마추어다. 이름으로 계층을 뒤지지 않는다.
+            var smr = go.GetComponentInChildren<SkinnedMeshRenderer>();
+            if (smr == null || smr.bones == null)
+            {
+                Debug.LogError($"[이렘] {go.name}: 스킨 메시가 없다. 자세를 못 얹는다.");
+                return null;
+            }
+            var root = go.transform;
+            // 블렌더 축 -> 유니티 축. 순서는 shades.json 의 rot 차례와 같다.
+            var ax = new[] { Vector3.right, Vector3.forward, Vector3.up };
+
+            var out_ = new List<ShadeView3D.Stand>();
+            foreach (var b in bones)
+            {
+                if (b == null || string.IsNullOrEmpty(b.bone)) continue;
+                var t = System.Array.Find(smr.bones, x => x != null && x.name == b.bone);
+                if (t == null)
+                {
+                    Debug.LogWarning($"[이렘] {go.name}: 그런 뼈가 없다 — {b.bone}");
+                    continue;
+                }
+                var st = new ShadeView3D.Stand { bone = t };
+                if (b.rot != null && b.rot.Length == 3
+                    && (b.rot[0] != 0f || b.rot[1] != 0f || b.rot[2] != 0f))
+                {
+                    var rest = Quaternion.Inverse(root.rotation) * t.rotation;
+                    var toLocal = Quaternion.Inverse(rest);
+                    var q = Quaternion.identity;
+                    for (int k = 0; k < 3; k++)
+                    {
+                        if (b.rot[k] == 0f) continue;
+                        q *= Quaternion.AngleAxis(b.rot[k], toLocal * ax[k]);
+                    }
+                    st.q = q; st.hasQ = true;
+                }
+                if (b.scale != null && b.scale.Length == 3)
+                {
+                    // 굵기는 축을 옮기지 않는다. primary_bone_axis="Y" 라 뼈가 제 Y 로
+                    // 뻗어 있고, 그 규약이 FBX 를 건너서도 그대로다.
+                    st.scale = new Vector3(b.scale[0], b.scale[1], b.scale[2]);
+                    st.hasScale = true;
+                }
+                if (st.hasQ || st.hasScale) out_.Add(st);
+            }
+            return out_.Count > 0 ? out_.ToArray() : null;
         }
 
         /// characters.json 의 key_color("#RRGGBB"). 읽을 수 없으면 기본 강조색을 쓴다.

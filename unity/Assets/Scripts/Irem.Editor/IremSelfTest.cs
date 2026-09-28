@@ -142,6 +142,22 @@ namespace Irem.Editor
                         int views = probe.GetComponentsInChildren<ShadeView3D>(true).Length;
                         Check(views == g.Cast.Count,
                               $"뜰 조립 — 잔상 {views}/{g.Cast.Count}, 스킨 메시 {bodies}, 뼈 {bones}");
+
+                        // 자세가 실제로 뼈에 닿았는가. 브라우저 쪽은 실측했다 —
+                        // 적힌 열여덟 값이 소수점까지 그대로 나왔다(tools/probe.py --stance).
+                        // 유니티 쪽은 여기가 유일하게 재는 자리다.
+                        int wantStance = G.agents.Count(x => x.stance != null && x.stance.Length > 0);
+                        int wantBones  = G.agents.Sum(x => x.stance?.Length ?? 0);
+                        int gotStance = 0, gotBones = 0;
+                        foreach (var sv in probe.GetComponentsInChildren<ShadeView3D>(true))
+                        {
+                            int n = sv.StanceBones;
+                            if (n > 0) { gotStance++; gotBones += n; }
+                        }
+                        Check(gotStance == wantStance && gotBones == wantBones,
+                              $"자세 — 얹힌 사람 {gotStance}/{wantStance}, 뼈 {gotBones}/{wantBones}");
+                        // 부호는 여기서 못 잰다. 세렌의 등이 앞으로 굽는지 뒤로 젖혀지는지는
+                        // 눈으로 봐야 한다 — 고칠 자리는 CastLoad.Stance 한 곳이다.
                         for (int i = 0; i < 100; i++) dir.PlayStep();
                         Check(dir.ShownTurn > 0,
                               $"뜰 재생 100걸음 — {dir.ShownTurn}걸음째, 일한 걸음 {dir.WorkSteps}, "

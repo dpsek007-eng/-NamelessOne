@@ -36,8 +36,22 @@ def stage():
     with open(os.path.join(REPO, "viewer/garden.json"), encoding="utf-8") as f:
         G = json.load(f)
 
+    # 그 사람만의 몸·자세. 없으면 페이지가 조용히 역할 몸으로 돌아간다 —
+    # 조용한 것이 문제라 여기서 챙긴다. 근거(src)까지 같이 나가지만
+    # 그 글은 이미 저장소에 공개돼 있는 캐릭터 설정이다.
+    SH = {}
+    if os.path.exists(os.path.join(REPO, "data/shades.json")):
+        put("data/shades.json")
+        with open(os.path.join(REPO, "data/shades.json"), encoding="utf-8") as f:
+            SH = json.load(f)["shades"]
+
+    # 몸집을 덮어쓴 사람은 제 GLB 를 쓴다 (viewer/garden.html bodyOf 와 같은 규칙).
+    def body_of(c):
+        e = SH.get(c["id"]) or {}
+        return c["id"] if e.get("macro") else c["slug"]
+
     miss = []
-    for rel in ([f"chars/out/cast/{s}.glb" for s in {c["slug"] for c in G["cast"]}]
+    for rel in ([f"chars/out/cast/{s}.glb" for s in {body_of(c) for c in G["cast"]}]
               + [f"pipeline3d/out/props/{s}.glb" for s in {s["prop"] for s in G["stations"]}]):
         put(rel) if os.path.exists(os.path.join(REPO, rel)) else miss.append(rel)
     for f in os.listdir(os.path.join(REPO, TILES)):

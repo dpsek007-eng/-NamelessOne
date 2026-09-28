@@ -28,18 +28,24 @@ from bl_ext.blender_org.mpfb.services.humanservice import HumanService
 
 
 # ---------------------------------------------------------------- 몸 만들기
-def build_body(role):
-    """make_bodies 와 같은 순서. 다만 헬퍼를 남긴 채로 굽는다."""
+def build_body(role, macro=None, slug=None):
+    """make_bodies 와 같은 순서. 다만 헬퍼를 남긴 채로 굽는다.
+
+    macro 를 주면 역할 기본값 대신 그것으로 만든다. 전승 23명이 역할 다섯 벌을
+    각자 덮어쓰는 자리다 (`bodies.py` 머리주석 · `data/shades.json`).
+    slug 는 이름표다 — 안 주면 역할 슬러그를 쓴다.
+    """
     MB.wipe()
+    tag = slug or BODY_SLUG[role]
     bm = HumanService.create_human(
         mask_helpers=True, detailed_helpers=True, extra_vertex_groups=True,
         feet_on_ground=True,
-        macro_detail_dict={**BODIES[role], "race": dict(RACE)})
+        macro_detail_dict={**(macro or BODIES[role]), "race": dict(RACE)})
     arm = HumanService.add_builtin_rig(bm, RIG, import_weights=True)
     HumanService.refit(bm)
     MB.bake_shape(bm, keep_helpers=True)
-    bm.name = bm.data.name = f"body_{BODY_SLUG[role]}"
-    arm.name = arm.data.name = f"rig_{BODY_SLUG[role]}"
+    bm.name = bm.data.name = f"body_{tag}"
+    arm.name = arm.data.name = f"rig_{tag}"
     return bm, arm
 
 

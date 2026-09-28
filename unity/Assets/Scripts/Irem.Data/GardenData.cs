@@ -20,6 +20,7 @@ namespace Irem.Data
         public string deed;                 // 뜰에서 하는 일 한 줄 (characters.json garden.desc)
         public int r, floor;
         public string[] wKeys; public float[] wVals;     // 성향의 무게 — Mind.From 이 읽는다
+        public StanceBone[] stance;         // 그 사람만의 자세 (data/shades.json)
 
         public Dictionary<string, double> Weights()
         {
@@ -28,6 +29,24 @@ namespace Irem.Data
             for (int i = 0; i < wKeys.Length && i < wVals.Length; i++) d[wKeys[i]] = wVals[i];
             return d;
         }
+    }
+
+    /// 그 사람의 자세 한 뼈. data/shades.json 의 bones 한 줄이 그대로 온다.
+    ///
+    /// 왜 자세가 몸에 안 구워져 있는가: 동작 네 벌이 뼈를 전부 절대값으로 찍는다
+    /// (chars/src/make_demo.py base_pose — 「NLA 누수를 막는다」). 쉼자세를 굽어
+    /// 놓아도 클립이 첫 프레임에 덮어쓴다. 그래서 자세는 클립이 끝난 **뒤에**
+    /// 얹는 층이다 (ShadeView3D.LateUpdate · viewer/garden.html 의 mixer.update 뒤).
+    ///
+    /// rot 은 아마추어 축 기준 도(degree)다. 셋 다 블렌더 축으로 적혀 있고
+    /// (x 앞뒤굽힘 · y 좌우기울임 · z 비틀림), 유니티 축으로 옮기는 자리는
+    /// CastLoad.Stance 한 곳뿐이다.
+    [Serializable]
+    public class StanceBone
+    {
+        public string bone;
+        public float[] rot;                 // 3개. 없으면 회전을 안 건다
+        public float[] scale;               // 3개. 없으면 굵기를 안 건다
     }
 
     /// 일터 한 곳. name 은 tools/trades.py 의 place 와 같아야 한다 —

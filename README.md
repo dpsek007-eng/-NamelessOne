@@ -78,7 +78,17 @@ Tools/   .NET 콘솔 3개 — 유니티 없이 재는 자리 (도커 dotnet)
 말은 사건이다    600걸음에 375줄 · 말 없는 걸음 337/600   ← 처음엔 13,108줄이었다. 전광판을 뜰로 되돌렸다
 몸의 박자       23명이 저마다 다른 위상 23/23 · 휘두름 주기 2.00~3.59초 ← 전에는 위상 하나, 0.34초마다 함께 튀었다
 소금이 겹쳤다    23명의 소금이 11쌍으로 겹쳐 있었다 (Rng 가 씨의 맨 아래 비트를 1 로 세운다)
+개성은 세 갈래   몸 4명 · 자세 13명 · 비대칭 2명 · 옷·소품 4명   ← 23명 글을 세어 나눈 것. 몸만 고쳐도 4명뿐이다
+아이 몸을 구웠다  키 1.7861→1.2059m (-32.5%) · 부피 57.61→21.18L (-63.2%) · 부피/키³ 10.11→12.08
+자세가 뼈에 닿았다 네 사람 뼈 18개 — 적힌 값과 낸 값이 18/18 소수점까지 같다 (자세 없는 사람은 0개)
 ```
+
+**몸집(macro)은 구워야 하고 자세(bones)는 안 구워도 된다.** 동작 네 벌이 뼈를 전부
+절대값으로 찍으므로(`make_demo.py base_pose` — NLA 누수를 막으려고 그렇게 했다)
+쉼자세를 굽어 놓아도 클립이 첫 프레임에 덮어쓴다. 그래서 자세는 클립이 끝난 **뒤에**
+얹는 층이다 — 브라우저는 `mixer.update` 뒤(`viewer/garden.html`), 유니티는
+`LateUpdate`(`ShadeView3D`). 적는 곳은 `data/shades.json` 한 벌이고,
+근거(`src`)가 없는 몸은 `chars/src/shades.py` 가 받지 않는다.
 
 시뮬레이터 실행:
 
@@ -117,7 +127,12 @@ python3 tools/serve_public.py 8080         # 집 밖에 낼 때 (저장소 말�
 #   유니티를 구워 둔 게 있으면 /unity/ 로 같이 붙는다. 굽는 법은 CLAUDE-HANDOFF.md 13절
 python3 tools/shot.py http://127.0.0.1:8000/viewer/#one /tmp/a.png --wait 100   # 화면을 찍는다 (움직이는 탭은 크롬 --screenshot 으로 안 찍힌다)
 python3 tools/probe.py http://127.0.0.1:8080/viewer/garden.html --wait 55        # 몸 스물셋을 잰다 (어떤 동작을 클립 어디쯤에서 하고 있는가)
+python3 tools/probe.py http://127.0.0.1:8000/viewer/garden.html --wait 70 --stance  # 자세가 정말 뼈에 닿았나 (적힌 값 대 낸 값)
+python3 chars/src/shades.py                # 그 사람만의 몸·자세를 검사한다 (근거 없는 몸은 받지 않는다)
 blender -b --python chars/src/make_demo.py -- --out chars/out/cast   # 쉰다섯 벌 (CPU, 약 8분)
+blender -b --python chars/src/make_demo.py -- --shades all --out chars/out/cast   # 그 사람 몸으로 (GLB, 브라우저용)
+blender -b --python chars/src/make_bodies.py -- --shades             # 그 사람 몸으로 (FBX, 유니티용)
+blender -b --python chars/src/body_diff.py -- seek_clerk counting_child   # 두 몸이 정말 다른가 (키·부피·어깨)
 python3 tools/silhouette_diff.py           # 실루엣이 정말 갈리는가 (실측)
 python3 tools/face_diff.py --clip          # 얼굴이 역할을 나르는가 (실측)
 python3 tools/focus_stack.py --all         # 초상 → ★1~★6 여섯 단계로 굽는다

@@ -41,6 +41,19 @@ namespace Irem.Game
         // 공식이 두 벌이 되면 같은 뜰이 두 가지로 움직인다(docs/10 계산 한 벌).
         float _phase = 0f, _tempo = 1f, _breath = 0f;
 
+        // 그 사람만의 자세. 클립이 뼈를 다 쓴 뒤에 얹는 층이다 (CastLoad.Stance 가 만든다).
+        Stand[] _stand;
+
+        /// 한 뼈에 얹을 몫. 회전은 이미 뼈 축으로 옮겨 놓은 사원수다 —
+        /// 축을 옮기는 계산은 CastLoad 에서 한 번만 하고 여기서는 곱하기만 한다.
+        public struct Stand
+        {
+            public Transform bone;
+            public Quaternion q;            // 안 걸면 hasQ = false
+            public Vector3 scale;
+            public bool hasQ, hasScale;
+        }
+
         Vector3 _target;
         float _moveLeft;
         float _yaw = 0f, _yawWant = 0f;
@@ -62,6 +75,12 @@ namespace Irem.Game
                 if (Loops(_name)) _to.SetTime(_phase * _to.GetAnimationClip().length);
             }
         }
+
+        /// 자세를 건다. Bind 뒤에 부른다. 목록이 비면 아무것도 안 얹는다.
+        public void Stance(Stand[] stand) => _stand = stand;
+
+        /// 자세가 걸린 뼈 수. 재려고 낸다 (IremSelfTest).
+        public int StanceBones => _stand?.Length ?? 0;
 
         /// 몸을 세운 뒤 한 번 부른다. clips 는 동작 FBX 에서 읽은 것 (CastLoad).
         public void Bind(IEnumerable<AnimationClip> clips)
@@ -226,6 +245,25 @@ namespace Irem.Game
                 _flash -= dt;
                 if (_flash <= 0) { if (_char != null) _char.Repaint(); }
                 else Tint(Color.Lerp(Color.white, _paint, Mathf.Clamp01(_flash / 0.18f)));
+            }
+        }
+
+        /// 자세를 여기서 얹는다 — Update 가 아니라 LateUpdate 다.
+        ///
+        /// 유니티의 한 프레임 순서는 Update -> 동작 갱신(Playables 평가) -> LateUpdate 다.
+        /// Update 에서 얹으면 바로 뒤의 평가가 뼈를 그대로 덮어쓴다. 동작 네 벌이
+        /// 뼈를 전부 절대값으로 찍기 때문에(make_demo.py base_pose) 덮어쓰기가 남지
+        /// 않는다. 브라우저 쪽도 같은 이유로 mixer.update 뒤에 얹는다
+        /// (viewer/garden.html Shade.update).
+        void LateUpdate()
+        {
+            if (_stand == null) return;
+            for (int i = 0; i < _stand.Length; i++)
+            {
+                var st = _stand[i];
+                if (st.bone == null) continue;
+                if (st.hasQ) st.bone.localRotation *= st.q;
+                if (st.hasScale) st.bone.localScale = st.scale;
             }
         }
 

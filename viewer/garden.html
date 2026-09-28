@@ -125,6 +125,17 @@ G.cols.forEach((n,i) => C[n] = i);
 const CAST = G.cast, NST = G.stations;
 const REPO = '../';                 // viewer/ 에서 저장소 뿌리로
 
+/* 전승 스물셋이 역할 다섯 벌을 저마다 덮어쓰는 값 (data/shades.json · chars/src/shades.py).
+   두 층이다 — 몸집(macro)은 블렌더가 미리 구웠고 여기서는 그 사람 GLB 를 고르기만 한다.
+   자세와 비대칭(bones)은 굽지 않는다. 클립이 계산된 **뒤에** 뼈에 얹는다.
+   구워 넣을 수 없는 이유는 make_demo.py:base_pose() 주석에 있다 — NLA 누수를 막으려고
+   네 동작이 전부 같은 뼈 집합을 0 까지 찍는다. 쉼자세에 굽은 등을 넣어도 클립이 펴 버린다. */
+const SHADES = await fetch(REPO + 'data/shades.json?v=' + Date.now())
+  .then(r => r.ok ? r.json() : null).then(d => d ? d.shades : {}).catch(() => ({}));
+/* 몸집을 덮어쓴 사람은 자기 GLB 가 따로 있다. 나머지는 역할·계층 쉰다섯 벌을 그대로 쓴다. */
+const bodyOf = c => (SHADES[c.id] && Object.keys(SHADES[c.id].macro || {}).length)
+  ? c.id : c.slug;
+
 document.getElementById('ncast').textContent = CAST.length;
 document.getElementById('nst').textContent = NST.length;
 document.getElementById('head').innerHTML =
@@ -317,6 +328,7 @@ class Shade {
     this.yaw = 0; this.yawWant = 0;
     this.from = root.position.clone(); this.to = root.position.clone();
     this.left = 0; this.dur = 1;
+    this.stance = stance(root, SHADES[def.id]);
     this.play('idle', true);
   }
   /* 하던 동작을 다시 걸지 않는다.
@@ -386,7 +398,56 @@ class Shade {
     this.yaw += d * (1 - Math.exp(-dt*11));                        // ShadeView3D.TurnSpeed
     this.root.rotation.y = this.yaw;
     this.mixer.update(dt);
+    /* 그 사람의 자세를 여기서 얹는다 — 클립이 뼈를 다 쓴 **뒤에**.
+       먼저 얹으면 다음 mixer.update 가 그대로 덮어쓴다. */
+    for (const e of this.stance) {
+      if (e.q) e.bone.quaternion.multiply(e.q);
+      if (e.scale) e.bone.scale.copy(e.scale);
+    }
   }
+}
+
+/* 한 사람의 자세를 뼈에 얹을 수 있는 꼴로 바꿔 둔다. 한 번만 계산한다.
+
+   각도는 클립과 같은 규약으로 적혀 있다 — 아마추어 축의 도 단위다
+   (make_demo.py:89 X,Y,Z). 뼈마다 어느 쪽이 앞인지가 다르므로 그 축을 뼈
+   자기 축으로 옮겨야 한다. 블렌더 쪽 qrot() 이 bone.matrix_local 로 하는
+   일이고, 여기서는 같은 것을 스킨의 역바인드행렬에서 꺼낸다 —
+   boneInverses[i] 를 뒤집으면 그 뼈의 쉼자세 행렬이다.
+
+   굵기는 뼈 방향이 Y 라서 (primary_bone_axis) X·Z 만 올리면 굵어진다.
+   클립은 굵기를 건드리지 않으니 덮어쓸 걱정이 없지만, 매 틀에 다시 적어 둔다 —
+   나중에 굵기를 키우는 동작이 들어와도 자세가 조용히 사라지지 않게. */
+function stance(root, entry) {
+  const ops = entry && entry.bones;
+  if (!ops) return [];
+  let sk = null;
+  root.traverse(o => { if (!sk && o.isSkinnedMesh) sk = o.skeleton; });
+  if (!sk) return [];
+  const out = [];
+  const AX = [new THREE.Vector3(1,0,0), new THREE.Vector3(0,1,0), new THREE.Vector3(0,0,1)];
+  for (const [name, op] of Object.entries(ops)) {
+    const i = sk.bones.findIndex(b => b.name === name);
+    if (i < 0) { console.warn('자세: 그런 뼈가 없다', name); continue; }
+    const e = { bone: sk.bones[i] };
+    if (op.rot && op.rot.some(v => v !== 0)) {
+      // 쉼자세 행렬의 회전 부분. 이것의 역이 아마추어 축 -> 뼈 축이다.
+      const rest = new THREE.Matrix3().setFromMatrix4(
+        sk.boneInverses[i].clone().invert()).invert();
+      const q = new THREE.Quaternion();
+      op.rot.forEach((deg, k) => {
+        if (!deg) return;
+        const ax = AX[k].clone().applyMatrix3(rest);
+        if (ax.lengthSq() < 1e-18) return;
+        q.multiply(new THREE.Quaternion().setFromAxisAngle(
+          ax.normalize(), deg * Math.PI / 180));
+      });
+      e.q = q;
+    }
+    if (op.scale) e.scale = new THREE.Vector3().fromArray(op.scale);
+    if (e.q || e.scale) out.push(e);
+  }
+  return out;
 }
 
 /* 다 한꺼번에 받는다. 하나씩 기다리면 스물셋을 세우는 데 그만큼 곱절이 걸린다.
@@ -394,7 +455,7 @@ class Shade {
 async function fetchAll() {
   const urls = [...new Set([
     ...NST.map(s => REPO + 'pipeline3d/out/props/' + s.prop + '.glb'),
-    ...CAST.map(c => REPO + 'chars/out/cast/' + c.slug + '.glb'),
+    ...CAST.map(c => REPO + 'chars/out/cast/' + bodyOf(c) + '.glb'),
   ])];
   let done = 0;
   say(`몸과 소품 ${urls.length}종을 받는 중…`);
@@ -419,7 +480,7 @@ async function buildStations() {
 
 async function buildCast() {
   for (const c of CAST) {
-    let g; try { g = await glb(REPO + 'chars/out/cast/' + c.slug + '.glb'); }
+    let g; try { g = await glb(REPO + 'chars/out/cast/' + bodyOf(c) + '.glb'); }
     catch (e) { missBody++; continue; }
     const root = skClone(g.scene);      // 스킨 메시는 뼈까지 같이 복제해야 한다
     paint(root, c.col, 1);

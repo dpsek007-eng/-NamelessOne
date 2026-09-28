@@ -13,6 +13,7 @@ import bpy
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from bodies import BODIES, SLUG, RIG, RACE
+import shades as SH
 
 # 확장으로 깔면 모듈 경로가 bl_ext.<저장소>.<이름> 이다. 그냥 mpfb 가 아니다.
 from bl_ext.blender_org.mpfb.services.humanservice import HumanService
@@ -113,17 +114,42 @@ def main(argv):
     ap = argparse.ArgumentParser()
     ap.add_argument("--out", default="chars/out/bodies")
     ap.add_argument("--only", default=None)
+    ap.add_argument("--shades", action="store_true",
+                    help="역할 다섯 벌 대신 data/shades.json 의 사람들을 굽는다")
     args = ap.parse_args(argv)
 
     os.makedirs(args.out, exist_ok=True)
     report = []
 
-    for role, macro in BODIES.items():
+    # 구울 것을 먼저 세운다. 역할 다섯 벌이 기본이고, --shades 면 몸집을
+    # 덮어쓴 사람만 제 이름으로 굽는다. 자세뿐인 사람은 구울 것이 없다 —
+    # 역할 몸을 그대로 쓰고 자세는 뼈에 얹힌다 (ShadeView3D.LateUpdate).
+    if args.shades:
+        # 역할은 뜰이 이미 정한 것을 그대로 쓴다. 여기서 다시 고르면 GLB 와
+        # FBX 가 서로 다른 몸이 된다 (make_demo.bake_shades 와 같은 자리).
+        gp = os.path.join(SH.ROOT, "viewer", "garden.json")
+        if not os.path.exists(gp):
+            raise SystemExit(f"{gp} 가 없다 — GardenRunner web 모드로 먼저 구워야 역할을 안다")
+        with open(gp, encoding="utf-8") as fp:
+            cast = {c["id"]: c["role"] for c in json.load(fp)["cast"]}
+        jobs = []
+        for cid, e in sorted(SH.load().items()):
+            if not SH.needs_bake(e):
+                print(f"  건너뜀 {cid} — 매크로가 없다. 자세뿐이라 몸은 그대로 쓴다", flush=True)
+                continue
+            if cid not in cast:
+                raise SystemExit(f"뜰에 없는 사람이다: {cid}")
+            jobs.append((cast[cid], cid, SH.macro_for(BODIES[cast[cid]], e)))
+        if not jobs:
+            raise SystemExit("[make_bodies] data/shades.json 에 몸집을 덮어쓴 사람이 없다")
+    else:
+        jobs = [(role, SLUG[role], macro) for role, macro in BODIES.items()]
+
+    for role, slug, macro in jobs:
         if args.only and role not in args.only.split(",") \
-           and SLUG[role] not in args.only.split(","):
+           and slug not in args.only.split(","):
             continue
         wipe()
-        slug = SLUG[role]
 
         bm = HumanService.create_human(
             mask_helpers=True,
@@ -181,7 +207,7 @@ def main(argv):
     # 다섯이 정말 같은 뼈 이름을 쓰는지 확인한다. 하나라도 다르면
     # 유니티에서 애니메이션 한 벌을 나눠 쓸 수 없다. 뼈 위치는 체형마다
     # 달라도 되고 그건 아바타 리타기팅이 흡수한다 — 이름이 관건이다.
-    if len(report) > 1:
+    if len(report) > 1 and not args.shades:
         base = report[0]["bone_names"]
         for row in report[1:]:
             if row["bone_names"] != base:
@@ -190,7 +216,9 @@ def main(argv):
                     f"뼈 이름이 다르다: {row['slug']} — "
                     f"없는 것 {sorted(a-b)} / 더 있는 것 {sorted(b-a)}")
         print(f"[make_bodies] 뼈 이름 {len(base)}개가 {len(report)}종 모두 같다", flush=True)
-    with open(os.path.join(args.out, "report.json"), "w", encoding="utf-8") as fp:
+    # 다섯 벌 표를 덮어쓰지 않는다. 그 숫자가 README 에 인용돼 있다.
+    name = "report_shades.json" if args.shades else "report.json"
+    with open(os.path.join(args.out, name), "w", encoding="utf-8") as fp:
         json.dump(report, fp, ensure_ascii=False, indent=2)
     print(f"[make_bodies] {len(report)}종 → {args.out}", flush=True)
 

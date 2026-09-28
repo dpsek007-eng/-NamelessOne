@@ -7,6 +7,7 @@
 import json, os, re, shutil, sys
 sys.path.insert(0, 'tools')
 import art, rig, trades, bonds
+sys.path.insert(0, 'chars/src')
 
 ROOT   = 'unity/Assets/Resources/Irem'
 SHADES = ROOT + '/Shades'
@@ -24,6 +25,14 @@ CLASS = {'왕실': 'royal', '귀족': 'noble', '술사': 'mage', '성직': 'cler
          '하인': 'servant', '유랑': 'vagrant'}
 # 역할도 생업도 없는 잔상(이름 없는 자). 이름도 일도 없다는 설정과 맞는 것을 고른다.
 NOBODY_BODY, NOBODY_CLASS = 'flee', 'vagrant'
+
+# 그 사람만의 몸·자세. 없으면 빈 사전이다 — 이 파일은 있어도 되고 없어도 된다.
+try:
+    import shades as SHADES_SRC
+    SHADE = SHADES_SRC.load()
+except Exception as e:                       # 없으면 없는 대로 간다
+    print(f"자세 — data/shades.json 을 못 읽었다({e}). 스물셋이 역할 몸 그대로 선다.")
+    SHADE = {}
 
 
 def proto_data():
@@ -60,8 +69,14 @@ def garden(proto_chars):
         agents.append({
             'id': c['id'], 'name': c['name'], 'role': c['role'], 'era': c['era'],
             'cls': cl, 'trade': trade, 'place': pl,
-            'body':    BODY.get(c['role'],  NOBODY_BODY),
+            # 몸집을 덮어쓴 사람은 자기 FBX 가 따로 있다 (chars/out/bodies/{id}.fbx).
+            # 자세만 다른 사람은 역할 몸을 그대로 쓴다 — 구울 것이 없다.
+            'body':    (c['id'] if (SHADE.get(c['id'], {}).get('macro'))
+                        else BODY.get(c['role'], NOBODY_BODY)),
             'garment': f"{BODY.get(c['role'], NOBODY_BODY)}_{CLASS.get(cl, NOBODY_CLASS)}",
+            'stance': [dict(bone=n, **{k: list(v) for k, v in op.items()})
+                       for n, op in sorted((SHADE.get(c['id'], {})
+                                            .get('bones') or {}).items())],
             'col': (c.get('visual') or {}).get('key_color', p.get('col', '#888888')),
             'tag': c.get('tagline', ''),
             'idleLine': c['garden'].get('idle_line', ''),
@@ -101,6 +116,11 @@ def garden(proto_chars):
         json.dump(T, fp, ensure_ascii=False, separators=(',', ':'))
     kb = os.path.getsize(ROOT + '/garden.json') / 1024
     nb = len([1 for a in agents if not a['wKeys']])
+    st = [a for a in agents if a['stance']]
+    bd = [a for a in agents if a['body'] == a['id']]
+    print(f"자세 — 얹힌 사람 {len(st)}명 (뼈 {sum(len(a['stance']) for a in st)}개) · "
+          f"제 몸을 따로 구운 사람 {len(bd)}명"
+          + (f" — {', '.join(a['id'] for a in bd)}" if bd else ""))
     print(f"뜰 — 표 {kb:.0f}KB (잔상 {len(agents)}, 일터 {len(T['stations'])}, "
           f"인연 규칙 {len(T['bonds'])}, "
           f"대사 {sum(len(r['lines']) for r in T['lines'])}줄({len(T['lines'])}뱅크), 성향 없는 잔상 {nb})")

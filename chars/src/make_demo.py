@@ -28,6 +28,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import make_bodies as MB
 import make_garments as MG
 import garments as G
+import shades as SH
 from bodies import SLUG as BODY_SLUG, BODIES
 
 
@@ -288,8 +289,12 @@ def export_anim(objs, path_noext):
     )
 
 
-def one(role, cls, out, frames=None):
+def one(role, cls, out, frames=None, shade=None, name=None):
     """한 사람 — 몸·옷·리그·동작 네 벌을 GLB 한 장으로.
+
+    shade 를 주면 역할 매크로 대신 그 사람 것으로 몸을 만든다
+    (`data/shades.json` · `shades.py`). name 은 낼 파일 이름이고, 안 주면
+    여태처럼 `{역할}_{계층}` 이다 — 그래야 쉰다섯 벌이 그대로 남는다.
 
     쉰다섯을 한 번에 돌 때도 이 함수를 그냥 되부른다. 매 바퀴 MB.wipe() 가
     장면을 비우지만 액션은 사용자가 0 이 되어도 블렌더가 한 바퀴 더 들고
@@ -303,7 +308,11 @@ def one(role, cls, out, frames=None):
     os.makedirs(args.out, exist_ok=True)
 
     sp = G.spec(args.cls)
-    bm, arm = MG.build_body(args.role)
+    tag = name or f"{BODY_SLUG[args.role]}_{sp['slug']}"
+    macro = SH.macro_for(BODIES[args.role], shade) if shade else None
+    bm, arm = MG.build_body(args.role, macro=macro, slug=tag)
+    # 옷은 이 몸에서 직접 재서 깎는다 (landmarks). 아이 몸에 어른 옷이
+    # 붙지 않는 것은 그래서다 — 체형이 바뀌면 옷 치수도 따라 바뀐다.
     L = MG.landmarks(bm, arm)
 
     # 옷을 먼저 깎는다. 케이지(helper-*)가 아직 몸에 붙어 있어야 한다.
@@ -328,7 +337,7 @@ def one(role, cls, out, frames=None):
     bpy.context.view_layer.objects.active = bm
     for m in [m for m in bm.modifiers if m.type == "MASK"]:
         bpy.ops.object.modifier_apply(modifier=m.name)
-    bm.name = bm.data.name = f"body_{BODY_SLUG[args.role]}"
+    bm.name = bm.data.name = f"body_{tag}"
     skin = bpy.data.materials.new("skin")
     skin.diffuse_color = (0.68, 0.55, 0.47, 1.0)
     bm.data.materials.clear()
@@ -350,10 +359,10 @@ def one(role, cls, out, frames=None):
         pb.location = (0, 0, 0)
     bpy.context.view_layer.update()
 
-    name = f"{BODY_SLUG[args.role]}_{sp['slug']}"
-    export_anim([bm, gar, arm], os.path.join(args.out, name))
+    export_anim([bm, gar, arm], os.path.join(args.out, tag))
 
-    report = dict(role=args.role, cls=args.cls, slug=name,
+    report = dict(role=args.role, cls=args.cls, slug=tag,
+                  macro=macro,
                   bones=len(arm.data.bones),
                   face_bones=[b.name for b in arm.data.bones
                               if any(k in b.name for k in ("jaw", "eye", "brow", "lip"))],
@@ -361,12 +370,12 @@ def one(role, cls, out, frames=None):
                   garment_tris=MG.solidify_check(gar)[2],
                   height_m=round(L["height"], 4),
                   clips=[dict(name=n, frames=f) for n, f in made])
-    print(f"[make_demo] {name}  뼈 {report['bones']}  "
+    print(f"[make_demo] {tag}  뼈 {report['bones']}  "
           f"얼굴뼈 {len(report['face_bones'])}  동작 {len(made)}벌  "
           f"몸 {report['body_tris']:,} 옷 {report['garment_tris']:,}", flush=True)
 
     if args.frames:
-        shoot_frames(arm, bm, gar, L, args.frames, name)
+        shoot_frames(arm, bm, gar, L, args.frames, tag)
     return report
 
 
@@ -381,7 +390,13 @@ def main(argv):
                     help="확인용 PNG 를 낼 곳. 주면 동작마다 몇 장 뽑는다")
     ap.add_argument("--skip-done", action="store_true",
                     help="이미 GLB 가 있으면 건너뛴다. 밤새 돌다 끊겼을 때 이어 돌리려고")
+    ap.add_argument("--shades", default=None,
+                    help="전승 사람을 굽는다. 쉼표로 id, 또는 all. "
+                         "역할 다섯 벌 대신 data/shades.json 의 그 사람 매크로로 몸을 만든다")
     args = ap.parse_args(argv)
+
+    if args.shades:
+        return bake_shades(args)
 
     roles = ([args.role] if args.role else
              (args.roles.split(",") if args.roles else list(BODIES)))
@@ -416,6 +431,53 @@ def main(argv):
         with open(os.path.join(args.out, "report.json"), "w", encoding="utf-8") as f:
             json.dump(show, f, ensure_ascii=False, indent=2)
     print(f"[make_demo] 표에 {len(rows)}벌", flush=True)
+
+
+def bake_shades(args):
+    """전승 사람을 굽는다 — 역할 다섯 벌이 아니라 그 사람 몸으로.
+
+    자세만 다른 사람은 여기 오지 않는다. 자세는 굽는 것이 아니라 클립 위에
+    얹는 층이라 GLB 가 그대로여도 된다 (`shades.py` 머리주석).
+    """
+    shades = SH.load()
+    want = list(shades) if args.shades == "all" else args.shades.split(",")
+
+    # 역할·계층은 뜰이 이미 정해 놓은 것을 그대로 쓴다. 여기서 다시 고르면
+    # 시뮬레이션이 세운 사람과 다른 몸이 나온다.
+    gp = os.path.join(SH.ROOT, "viewer", "garden.json")
+    if not os.path.exists(gp):
+        raise SystemExit(f"{gp} 가 없다 — GardenRunner web 모드로 먼저 구워야 역할·계층을 안다")
+    with open(gp, encoding="utf-8") as fp:
+        cast = {c["id"]: c for c in json.load(fp)["cast"]}
+
+    os.makedirs(args.out, exist_ok=True)
+    ip = os.path.join(args.out, "index.json")
+    rows = []
+    if os.path.exists(ip):
+        with open(ip, encoding="utf-8") as f:
+            rows = json.load(f).get("rows", [])
+    have = {r["slug"]: r for r in rows}
+
+    done = []
+    for cid in want:
+        e = shades.get(cid)
+        if e is None:
+            raise SystemExit(f"data/shades.json 에 없는 사람이다: {cid}")
+        if not SH.needs_bake(e):
+            print(f"  건너뜀 {cid} — 매크로가 없다. 자세뿐이라 몸은 그대로 쓴다", flush=True)
+            continue
+        c = cast.get(cid)
+        if c is None:
+            raise SystemExit(f"뜰에 없는 사람이다: {cid}")
+        if args.skip_done and os.path.exists(os.path.join(args.out, cid + ".glb")):
+            print(f"  건너뜀 {cid} — 이미 있다", flush=True)
+            continue
+        have[cid] = one(c["role"], c["cls"], args.out, args.frames, shade=e, name=cid)
+        done.append(cid)
+        rows = [have[k] for k in sorted(have)]
+        with open(ip, "w", encoding="utf-8") as f:
+            json.dump(dict(rows=rows), f, ensure_ascii=False, indent=1)
+    print(f"[make_demo] 전승 {len(done)}명 → {args.out}: {', '.join(done) or '없다'}", flush=True)
 
 
 def shoot_frames(arm, bm, gar, L, out, name):
