@@ -35,6 +35,10 @@ namespace Irem.Sim
         public string Place = "";   // 일터 이름, 없으면 ""
         public int Mv = 2, Sight = 6;
         public int Salt;            // 대사를 고르는 소금. 시드에서 나오므로 재현된다
+        public int SaidAt = -9999;  // 마지막으로 입을 연 걸음
+        public Doing Said = Doing.Stand;   // 그때 하던 것 — 바뀌는 자리가 말이 나올 자리다
+        public int MetWho = -1, MetAt = -9999;     // 지금 이어지는 만남
+        public int AwayFrom = -1, AwayAt = -9999;  // 지금 이어지는 피함
 
         public bool Homeless => string.IsNullOrEmpty(Place);
         public bool AtWork => X == Wx && Y == Wy && !Homeless;
@@ -68,6 +72,21 @@ namespace Irem.Sim
         /// 며칠(실시간)이 지나면 수문장이 먼저 말을 건다 — 그 「며칠」을 걸음으로 옮긴 값.
         /// 잰 값이 아니라 정한 값이다. 바꾸면 인연이 열리는 때가 바뀐다.
         public const int ThawSteps = 40;
+
+        // ── 말은 사건이라야 한다 ──
+        //
+        // 처음에는 일·쉼·서성임이 있을 때마다 그대로 말하게 두었다. 되풀이되는 일이
+        // 걸음마다 한 번씩 오므로, 스물셋이 걸음마다 입을 열었다(실측: 600걸음에
+        // 13,108줄 — 한 사람이 같은 문장을 128번 되풀이했다). 그건 뜰이 아니라 전광판이다.
+        //
+        // 그래서 입을 열 자리를 둘로 줄인다:
+        //   · 하던 것이 바뀐 걸음 — 일터에 막 닿았다, 손을 놓고 쉰다, 걷기 시작했다
+        //   · 같은 것을 오래 하다가 문득 — 사람마다 어긋난 주기로 흩어 놓는다
+        // 만남·피함·인연은 그 자체가 사건이므로 그대로 말한다. 다만 누구든
+        // 연달아 떠들지는 않는다.
+        public const int MuteSteps  = 12;   // 한 사람이 두 번 말하는 사이 최소 걸음
+        public const int MusePeriod = 47;   // 이어가는 중에 문득 혼잣말하는 주기.
+                                            // 소수로 둔다 — 23명이 같은 걸음에 몰리지 않는다
 
         public Garden(GardenTables t, Grid g, ulong seed)
         {
@@ -213,17 +232,18 @@ namespace Irem.Sim
                 case Doing.Work:
                     h.Worked++;
                     Push(Gv.Work, s.Idx, x: s.X, y: s.Y, n: h.Worked, s: s.Place);
-                    Say(s, "work");
+                    Mutter(s, "work", Doing.Work);
                     break;
 
                 case Doing.Rest:
                     h.Rested++;
                     Push(Gv.Rest, s.Idx, x: s.X, y: s.Y, n: h.Rested);
-                    Say(s, "rest");
+                    Mutter(s, "rest", Doing.Rest);
                     break;
 
                 case Doing.Walk:
                     Walk(s, u.X, u.Y);
+                    s.Said = Doing.Walk;
                     if (s.AtWork) Push(Gv.Work, s.Idx, x: s.X, y: s.Y, n: h.Worked, s: s.Place);
                     break;
 
@@ -233,8 +253,14 @@ namespace Irem.Sim
 
                 case Doing.Avoid:
                     Away(s, u.Who);
-                    Push(Gv.Avoid, s.Idx, u.Who, s.X, s.Y);
-                    Say(s, "avoid");
+                    // 피하는 동안은 걸음마다 발이 움직이지만, 사건은 「피하기 시작한 걸음」
+                    // 하나다. 이어지는 것을 걸음마다 적으면 한 번 돌아선 일이 마흔다섯 번이 된다.
+                    if (s.AwayFrom != u.Who || Turn - s.AwayAt > 1)
+                    {
+                        Push(Gv.Avoid, s.Idx, u.Who, s.X, s.Y);
+                        SayNow(s, "avoid");
+                    }
+                    s.AwayFrom = u.Who; s.AwayAt = Turn;
                     break;
 
                 case Doing.Roam:
@@ -247,10 +273,29 @@ namespace Irem.Sim
             }
         }
 
-        void Say(GardenShade s, string bank)
+        /// 사건이라 말한다 — 만났다, 피했다. 최소 간격만 지킨다.
+        void SayNow(GardenShade s, string bank)
+        {
+            if (Turn - s.SaidAt < MuteSteps) return;
+            Emit(s, bank);
+        }
+
+        /// 되풀이되는 일 중의 혼잣말. 하던 것이 바뀐 걸음이거나, 오래 하다 문득일 때만.
+        void Mutter(GardenShade s, string bank, Doing now)
+        {
+            bool changed = s.Said != now;
+            bool muse = (Turn + s.Salt) % MusePeriod == 0;
+            s.Said = now;
+            if (!changed && !muse) return;
+            if (Turn - s.SaidAt < MuteSteps) return;
+            Emit(s, bank);
+        }
+
+        void Emit(GardenShade s, string bank)
         {
             var line = Heart.Pick(T.Bank(s.Id, bank), s.Salt + Turn);
             if (line.Length == 0) return;          // 구운 대사가 없으면 없는 대로 둔다
+            s.SaidAt = Turn;
             Push(Gv.Say, s.Idx, x: s.X, y: s.Y, s: line);
         }
 
@@ -317,11 +362,16 @@ namespace Irem.Sim
                 // 상대 옆까지 간다. 상대 칸은 이미 사람이 서 있으므로 그 옆을 목표로 잡는다.
                 var (tx, ty) = Beside(o, s);
                 Walk(s, tx, ty);
-                Say(s, "pass");
+                Mutter(s, "pass", Doing.Walk);
                 return;
             }
-            Push(Gv.Meet, s.Idx, who, s.X, s.Y, s: why);
-            Say(s, "meet");
+            // 만남도 마찬가지다 — 나란히 선 걸음마다가 아니라 다가선 그 걸음이 사건이다.
+            if (s.MetWho != who || Turn - s.MetAt > 1)
+            {
+                Push(Gv.Meet, s.Idx, who, s.X, s.Y, s: why);
+                SayNow(s, "meet");
+            }
+            s.MetWho = who; s.MetAt = Turn;
             s.Heart.Long(who, false);
             o.Heart.Long(s.Idx, false);
 
@@ -372,13 +422,13 @@ namespace Irem.Sim
             // 실측(걸음 200, 시드 42): 성문에서 시작한 「이름 없는 자」는 대기 자리에서
             // 열네 칸 떨어져 있어 아래 세 칸 조건이 모든 방향을 막았고, 200걸음을 성문에 굳었다.
             // 멀면 우선 그 자리로 간다. 일터가 아니니 일하지는 않는다 — 생업이 없다.
-            if (Math.Abs(s.X - s.Wx) + Math.Abs(s.Y - s.Wy) > 3) { Walk(s, s.Wx, s.Wy); Say(s, "alone"); return; }
+            if (Math.Abs(s.X - s.Wx) + Math.Abs(s.Y - s.Wy) > 3) { Walk(s, s.Wx, s.Wy); Mutter(s, "alone", Doing.Walk); return; }
             int k = _r.I(4);
             int x = s.X + DX[k], y = s.Y + DY[k];
             if (G.Passable(x, y) && !Taken(x, y, s.Idx)
                 && Math.Abs(x - s.Wx) + Math.Abs(y - s.Wy) <= 3) { s.X = x; s.Y = y; }
             Push(Gv.Walk, s.Idx, x: s.X, y: s.Y);
-            Say(s, "alone");
+            Mutter(s, "alone", Doing.Roam);
         }
     }
 }

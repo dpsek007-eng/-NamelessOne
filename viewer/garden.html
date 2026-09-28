@@ -540,8 +540,10 @@ btnSil.onclick = () => {
   }
 }
 
-/* 말풍선을 닫는다. 한 걸음에 스물셋이 저마다 말하므로(사건의 절반이 Say 다)
-   켜 두면 글자가 뜰을 덮는다. 유니티에도 없는 단추다 — 여기서만 닫는다. */
+/* 말풍선을 닫는다. 유니티에도 없는 단추다 — 여기서만 닫는다.
+   처음에는 이 단추가 필요했다. 스물셋이 걸음마다 입을 열어 글자가 뜰을 덮었기 때문이다.
+   그건 보여주기의 문제가 아니라 Garden.cs 가 말할 자리를 안 고른 것이었다(그쪽을 고쳤다).
+   단추는 남긴다 — 말을 빼고 몸만 보고 싶을 때가 있다. */
 const btnTalk = document.getElementById('talk');
 let talk = true;
 btnTalk.onclick = () => { talk = !talk; btnTalk.classList.toggle('on', talk); };
