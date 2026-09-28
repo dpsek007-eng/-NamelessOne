@@ -32,6 +32,12 @@ namespace Irem.Game
         /// 아니라 달리기다. 실측(브라우저, tools/probe.py --stride): 걸음폭 0.786~0.882m 에
         /// 한 바퀴 1.375초라 다리는 1.14~1.28 m/s 를 낸다. 그 가운데에 맞춘 값이다.
         public float StepSeconds = 0.82f;
+
+        /// 한 칸을 건너는 데 쓰는 몫. 1 이면 다음 걸음이 올 때까지 쉬지 않고 건넌다.
+        /// 0.85 였다. 그러면 0.82초 중 0.70초만 몸이 가고 0.12초는 제자리에 선 채
+        /// 다리만 돌았다 — 매 칸 15%. 걸음이 칸마다 한 번씩 걸렸다.
+        /// viewer/garden.html 의 WALK_FRAC 과 같은 값이어야 한다.
+        public const float WalkFrac = 1f;
         public int TileVariants = 5;
 
         /// 내려보는 각. 정한 값이다 — 잰 값이 아니다. 낮추면 뜰이 넓어 보이고
@@ -305,7 +311,7 @@ namespace Irem.Game
                     break;
 
                 case Gv.Walk:
-                    V(e.A)?.MoveRig(CellPos(e.X, e.Y), StepSeconds * 0.85f);
+                    V(e.A)?.MoveRig(CellPos(e.X, e.Y), StepSeconds * WalkFrac);
                     break;
 
                 case Gv.Work:

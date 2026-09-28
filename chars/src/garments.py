@@ -57,6 +57,28 @@ SLEEVE = {"long": 1.00, "hood": 1.00, "cape": 0.92,
 SKIRT = {"long": True, "hood": True, "cape": True,
          "coat": False, "rag": False, "armor": False, "tunic": False}
 
+# 머리카락이 뒤로 흘러내리는 길이. 머리높이(머리중심→정수리, 실측 수호 15.4cm ·
+# 헌신 14.6cm) 대비 비율로 적는다 — 몸마다 머리가 다르므로 센티미터로 적으면
+# 큰 몸에서는 짧고 작은 몸에서는 목을 덮는다.
+#
+# 이 값들은 잰 것이 아니라 고른 것이다. 근거는 실루엣 하나다 —
+# 앞머리선(FRINGE)은 다섯 몸 모두 같으므로, 옆에서 봤을 때 계층이 갈리는 것은
+# 뒤로 흐르는 길이뿐이다. 그래서 위아래로 넓게 벌려 두었다.
+# 병졸 0.10 은 투구 밑으로 밀어 넣은 머리, 유랑 0.85 는 몇 해 동안 자른 적이 없는 머리다.
+# 성직 0.25 가 술사 0.45 보다 짧은 것은 둘 다 두건을 쓰기 때문이다 —
+# 두건 밑으로 보이는 것은 목덜미 한 뼘뿐이고, 그 한 뼘에서 둘이 갈려야 한다.
+HAIR = {"왕실": 0.75, "귀족": 0.70, "술사": 0.45, "성직": 0.25,
+        "관리": 0.30, "상인": 0.35, "장인": 0.20, "농어민": 0.30,
+        "병졸": 0.10, "하인": 0.45, "유랑": 0.85}
+
+# 앞머리선. 머리높이의 이만큼 위부터 덮는다. 코끝이 머리중심과 같은 높이(실측 +0.3cm)
+# 이므로 0.30 이면 눈썹 위에 앉는다. 이마를 덮으면 얼굴이 사라진다.
+FRINGE = 0.30
+
+# 살갗에서 띄우는 양(m). 머리카락은 천이 아니라서 PUFF 를 쓰지 않는다 —
+# 두건의 4.2~7.5cm 로 밀면 머리가 두 배가 된다.
+LIFT = 0.011
+
 HOOD = {"hood": True}          # 술사 · 성직
 CAPE = {"cape": True}          # 귀족
 
@@ -105,7 +127,7 @@ def spec(cls):
         hem=HEM[robe], sleeve=SLEEVE[robe], skirt=SKIRT[robe],
         hood=HOOD.get(robe, False), cape=CAPE.get(robe, False),
         drape=DRAPE.get(robe, 0.0), pauldron=PAULDRON.get(robe, 0.0),
-        bare=BARE.get(robe, False),
+        bare=BARE.get(robe, False), hair=HAIR[cls],
         puff=PUFF[cls], thick=THICK[cls], accent=ACCENT[cls],
         ragged=(cls == RAGGED),
     )

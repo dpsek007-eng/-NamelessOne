@@ -236,6 +236,126 @@ def add_hood(bm_obj, sp, L):
     return hood
 
 
+def add_hair(bm_obj, sp, L):
+    """머리카락 — 열한 계층 전부. 두피를 떠서 띄우고 뒤로 흘린다.
+
+    두건과 같은 수법인데 자르는 선이 다르다. 두건은 머리를 **덮으려고**
+    쇄골까지 내려가고 얼굴만 뚫는다. 머리카락은 **앞이 높고 뒤가 낮다** —
+    이마는 드러나고 목덜미는 덮인다. 그래서 밑선을 상수로 두지 않고
+    앞뒤(y)에 따라 기울인다. y 를 경계로 둘로 자르면 귀 옆에 계단이 생긴다.
+
+    왜 넣었나: 다섯 몸이 전부 민머리였다. 옷은 열한 벌로 갈리는데 머리는
+    하나도 안 갈려서, 멀리서 보면 같은 인형이 옷만 갈아입은 것으로 보였다.
+
+    미는 양(G.LIFT 1.1cm)이 두건(4.2~7.5cm)보다 훨씬 작은 것은 재어 본 결과다 —
+    두건 값으로 밀면 머리 반지름이 수호 12.6cm 에서 19cm 가 된다.
+    """
+    me = bm_obj.data.copy()
+    hair = bpy.data.objects.new(f"hair_{sp['slug']}", me)
+    bpy.context.collection.objects.link(hair)
+    for g in bm_obj.vertex_groups:
+        hair.vertex_groups.new(name=g.name)
+    gi = {g.name: g.index for g in hair.vertex_groups}
+    hc = Vector(L["head"])
+
+    b = bmesh.new()
+    b.from_mesh(me)
+    dl = b.verts.layers.deform.active
+    skin = [v for v in b.verts if v[dl].get(gi["body"], 0.0) > 0.5]
+    if not skin:
+        b.free(); bpy.data.objects.remove(hair); return None
+
+    # 머리 크기를 이 몸에서 직접 잰다. 계층 표에 센티미터를 적어 두면
+    # 1.47m 몸과 1.85m 몸에서 다른 물건이 된다.
+    head = [v for v in skin if v.co.z > hc.z]
+    crown = max(v.co.z for v in head)
+    hh = crown - hc.z                       # 머리높이 (실측 수호 15.4cm)
+    y1 = max(v.co.y for v in head)          # 뒤통수 쪽
+    rad = max((Vector((v.co.x, v.co.y, 0.0))
+               - Vector((hc.x, hc.y, 0.0))).length for v in head)
+
+    z_front = hc.z + G.FRINGE * hh          # 앞머리선 — 눈썹 위
+    z_back = hc.z - sp["hair"] * hh         # 뒤로 흘러내리는 끝
+
+    # 밑선에서 메시를 **실제로 자른다.** 자르지 않고 골라내기만 하면 케이지 격자가
+    # 밑선에 맞아 있지 않아 끝이 톱니처럼 뜯긴다 — paint() 가 강조 띠에서 이미 겪고
+    # 같은 방법으로 푼 문제다(그 주석 참고). 앞머리는 계단으로, 목덜미는 손가락
+    # 여섯 개짜리 층계로 나왔다(렌더로 확인).
+    #
+    # 자르려면 밑선이 평면이어야 한다. 그래서 뒤쪽 기울기에서 smoothstep 을 뺐다 —
+    # 매끄러운 곡선은 평면이 아니라 자를 수가 없고, 자르지 못하면 톱니가 남는다.
+    # 곡선 한 번 대신 평면 두 장으로 꺾는다:
+    #   앞(y < 머리중심): z = z_front            — 수평
+    #   뒤(y >= 머리중심): z = z_front + m(y-hc.y) — 기울어짐
+    # 두 장이 y=hc.y 선에서 만나므로 경계가 이어진다. 꺾인 자리는 귀 바로 위,
+    # 머리가 가장 넓은 곳이다 — 원래 가르마가 앉는 자리다.
+    #
+    # 기울기를 **머리 깊이(y1-hc.y)가 아니라 머리 반지름의 절반**에 걸고, 거기서부터는
+    # z_back 에 **수평으로 눕힌다**(평면 석 장). 처음엔 머리 깊이에 걸었는데,
+    # 뒤에서 렌더를 보니 긴 머리(왕실 0.75 · 유랑 0.85)가 **두 덩이로 갈라져** 어깨에
+    # 얹혀 있었다 — 등골을 따라 가운데가 뻥 뚫렸다. 까닭은 첫 번째 결함과 같은 종류다:
+    # 밑선이 y 하나로 정해지는데 몸 표면에서 y 가 단조롭지 않다. 목덜미 한가운데는
+    # 머리중심과 y 가 거의 같아서 밑선이 아직 앞머리선 높이에 있고(잘린다),
+    # 견갑골은 y 가 커서 살아남는다. 그래서 가운데만 사라졌다.
+    # 반지름 절반(약 6.3cm)이면 귀 뒤에서 이미 z_back 에 닿으므로 목덜미가 살아남는다.
+    ramp = min(0.5 * rad, max(1e-6, y1 - hc.y))
+    m_slope = (z_back - z_front) / ramp
+    for co, no in ((Vector((0.0, 0.0, z_front)), Vector((0.0, 0.0, 1.0))),
+                   (Vector((0.0, hc.y, z_front)),
+                    Vector((0.0, -m_slope, 1.0)).normalized()),
+                   (Vector((0.0, 0.0, z_back)), Vector((0.0, 0.0, 1.0)))):
+        bmesh.ops.bisect_plane(
+            b, geom=list(b.verts) + list(b.edges) + list(b.faces),
+            plane_co=co, plane_no=no, dist=1e-5)
+    skin = [v for v in b.verts if v[dl].get(gi["body"], 0.0) > 0.5]
+
+    keep = set()
+    for v in skin:
+        # 어깨·팔을 뺀다. 머리통보다 굵은 것은 머리가 아니다 —
+        # **다만 내려갈수록 넉넉해진다.** 처음엔 어디서나 rad*1.15 로 끊었더니
+        # 긴 머리(귀족 0.70 위)가 목덜미에서 실오라기처럼 가늘어져 **쥐꼬리**가 됐다.
+        # 옆에서 렌더를 보고 알았다. 까닭은 간단하다 — 머리통 아래는 목이라
+        # 머리통 굵기로 자르면 목 굵기만 남는다. 긴 머리는 목에 매달리는 게 아니라
+        # 등에 얹히므로, 밑으로 갈수록 허용 반지름을 키운다(끝에서 1.70배).
+        down = 0.0 if v.co.z >= hc.z else \
+            max(0.0, min(1.0, (hc.z - v.co.z) / max(1e-6, hc.z - z_back)))
+        if (Vector((v.co.x, v.co.y, 0.0)) - Vector((hc.x, hc.y, 0.0))).length \
+                > rad * (1.15 + 0.55 * down):
+            continue
+        # 밑선은 **뒤통수 쪽으로만** 내려간다. 앞쪽은 앞머리선에서 평평하게 끊는다.
+        #
+        # 처음엔 코끝(y0)에서 뒤통수(y1)까지 한 번에 기울였다. 얼굴이 통째로
+        # 덮였다 — 코는 y 로 튀어나와 있지만 눈·뺨·입은 그만큼 안 나와서,
+        # 「앞일수록 높다」는 규칙이 얼굴 한가운데를 뒤통수처럼 취급했다.
+        # 렌더를 보고서야 알았다(코와 입술이 머리카락이 되어 있었다).
+        # 그래서 기준을 코끝이 아니라 **머리중심**으로 옮긴다. 머리중심보다
+        # 앞은 전부 t=0 이라 앞머리선 한 장으로 끊기고, 경계에서 t=0 이므로
+        # 앞뒤가 이어진다 — 관자놀이에 단이 지지 않는다.
+        lo = max(z_back, z_front + m_slope * max(0.0, v.co.y - hc.y))
+        if v.co.z < lo - 1e-6:
+            continue
+        keep.add(v)
+    bmesh.ops.delete(b, geom=[v for v in b.verts if v not in keep],
+                     context="VERTS")
+    if not b.verts:
+        b.free(); bpy.data.objects.remove(hair); return None
+
+    b.normal_update()
+    for v in b.verts:
+        out = v.co - hc
+        out = out.normalized() if out.length > 1e-6 else v.normal.copy()
+        # 정수리는 법선대로, 목덜미는 바깥으로. 목덜미에서 법선만 쓰면
+        # 머리카락이 목 안쪽으로 말려 들어간다.
+        down = max(0.0, min(1.0, (hc.z - v.co.z) / max(1e-6, hc.z - z_back)))
+        v.co += (v.normal * (1.0 - 0.6 * down) + out * (0.6 * down)) * G.LIFT
+    bmesh.ops.solidify(b, geom=list(b.faces), thickness=-G.LIFT * 0.55)
+    b.to_mesh(me)
+    b.free()
+    for p in me.polygons:
+        p.use_smooth = True
+    return hair
+
+
 def add_cape(bm_obj, sp, L):
     """망토 — 귀족. 등 쪽 케이지를 떠서 뒤로 흘린다."""
     me = bm_obj.data.copy()
@@ -331,6 +451,47 @@ def paint(ob, sp, L, mat_cloth, mat_accent):
             p.material_index = 1
             n += 1
     return n
+
+
+def assemble(bm_obj, arm, sp, L, name):
+    """옷 한 벌을 조립한다 — 깎고 · 덧대고 · 칠하고 · 머리카락을 얹어 합친다.
+
+    이 함수가 있는 이유는 하나다. 전에는 make_garments 의 55벌 루프와
+    make_demo 의 한 벌 굽기가 **같은 순서를 따로 적고 있었다.** 그래서
+    머리카락을 넣었을 때 55벌에는 붙고 데모/전승 GLB 에는 안 붙었다.
+    이 저장소가 이미 두 번 당한 일이다(뷰어 STEP 과 probe 의 베낀 상수).
+    순서를 고칠 일이 생기면 여기 한 곳만 고친다.
+    """
+    cloth = bpy.data.materials.new("cloth")
+    accent = bpy.data.materials.new("accent")
+    # 머리카락은 천이 아니다 — 계층 색도 강조 띠도 받으면 안 된다.
+    # 그래서 paint() 의 두 칸이 아니라 제 칸을 가진다. 이름으로 갈린다:
+    # 뷰어는 재질 **이름**으로 색을 고르고(viewer/garden.html litMat),
+    # 유니티는 칸 수만 세어 실루엣 재질로 덮는다(IremChar.Paint).
+    # 그래서 칸이 둘에서 셋이 되어도 양쪽 다 고칠 데가 없다.
+    hairmat = bpy.data.materials.new("hair")
+
+    parts = [carve(bm_obj, arm, sp, L)]
+    if sp["hood"]:
+        h = add_hood(bm_obj, sp, L)
+        if h:
+            parts.append(h)
+    if sp["cape"]:
+        c = add_cape(bm_obj, sp, L)
+        if c:
+            parts.append(c)
+    for p in parts:
+        paint(p, sp, L, cloth, accent)
+    # 칠한 **뒤에** 붙인다. paint() 에 넣으면 머리에 강조 띠가 걸린다.
+    hr = add_hair(bm_obj, sp, L)
+    if hr:
+        hr.data.materials.append(hairmat)
+        parts.append(hr)
+    # 몇 조각을 합쳤는지는 부른 쪽이 report 에 적는다. 셋는 자리가 여기뿐이므로
+    # 조각을 물건에 적어서 돌려준다 — 밖에서 다시 세면 또 두 벌이 된다.
+    ob = join(parts, name)
+    ob["parts"] = len(parts)
+    return ob
 
 
 def join(objs, name):
@@ -441,23 +602,8 @@ def main(argv):
             bm, arm = build_body(role)
             L = landmarks(bm, arm)
 
-            cloth = bpy.data.materials.new("cloth")
-            accent = bpy.data.materials.new("accent")
-
-            parts = [carve(bm, arm, sp, L)]
-            if sp["hood"]:
-                h = add_hood(bm, sp, L)
-                if h:
-                    parts.append(h)
-            if sp["cape"]:
-                c = add_cape(bm, sp, L)
-                if c:
-                    parts.append(c)
-
             name = f"{bslug}_{sp['slug']}"
-            for p in parts:
-                paint(p, sp, L, cloth, accent)
-            ob = join(parts, f"garment_{name}")
+            ob = assemble(bm, arm, sp, L, f"garment_{name}")
             acc_faces = sum(1 for p in ob.data.polygons if p.material_index == 1)
             bind(ob, arm)
 
@@ -472,7 +618,7 @@ def main(argv):
                                robe=sp["robe"], hem=sp["hem"],
                                verts=v, faces=f, tris=tris,
                                accent_faces=acc_faces,
-                               parts=len(parts)))
+                               parts=int(ob["parts"])))
             print(f"  {name:20s} {cls:4s} {sp['robe']:6s} "
                   f"정점 {v:5,}  삼각 {tris:6,}  강조면 {acc_faces:4d}", flush=True)
 

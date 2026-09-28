@@ -149,7 +149,7 @@ namespace Irem.Game
             }
             _target = p;
             _moveLeft = Mathf.Max(0.02f, seconds);
-            // 실제로 땅이 지나가는 속도다. 한 칸을 StepSeconds 가 아니라 그 0.85 에
+            // 실제로 땅이 지나가는 속도다. 한 칸을 StepSeconds 의 WalkFrac 몫에
             // 건너가고 남는 참은 서 있으므로, 걷는 동안은 이쪽이 빠르다.
             _speed = d.magnitude / _moveLeft;
             Play("walk", true);

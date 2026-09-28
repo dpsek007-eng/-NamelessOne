@@ -150,6 +150,11 @@ const FOV   = 42;                   // GardenDirector.FrameCamera
    GardenDirector.StepSeconds 와 같은 값이어야 한다. */
 let STEP    = 0.82;                 // GardenDirector.StepSeconds
 const STEP0 = 0.82;
+/* 한 칸을 건너는 데 쓰는 몫. 1 이면 다음 걸음이 올 때까지 쉬지 않고 건넌다.
+   0.85 였다. 그러면 0.82초 중 0.70초만 몸이 가고 0.12초는 제자리에 선 채
+   다리만 돌았다 — 매 칸 15%, 1.2초에 한 번씩 걸리는 것처럼 보인다.
+   그것이 「걸음도 이상하고」의 남은 몫이었다. 걸음은 칸마다 끊기지 않는다. */
+const WALK_FRAC = 1.0;
 const canvas = document.getElementById('c');
 const rend = new THREE.WebGLRenderer({canvas, antialias:true});
 rend.setPixelRatio(Math.min(devicePixelRatio, 2));
@@ -317,8 +322,8 @@ const STONE = 0x1b1917;             // GardenDirector.StoneCol — 건물은 흐
 sc.add(new THREE.HemisphereLight(0xbfc8d6, 0x1a1c20, 1.6));
 const key = new THREE.DirectionalLight(0xfff2d8, 1.4); key.position.set(2,3,4); sc.add(key);
 
-/* GLB 안에는 재질 자리가 셋 있다 — skin · cloth · accent (실측: 메시 2개에
-   프리미티브 3개, body 는 skin 하나, garment 는 cloth 와 accent 둘).
+/* GLB 안에는 재질 자리가 넷 있다 — skin · cloth · accent · hair (실측: 메시 2개에
+   프리미티브 4개, body 는 skin 하나, garment 는 cloth · accent · hair 셋).
    구울 때 색은 안 실렸다 — 세 자리가 전부 0.8 회색이다. 그래서 색은 여기서
    자리마다 준다. 한 색으로 덮으면 옷이 사라지고 맨몸 하나만 남았다.
    살갗 색은 만들어낸 값이 아니라 make_demo.py:342 가 블렌더에 적은 그 값이다. */
@@ -329,6 +334,11 @@ function litMat(slot, hex) {
       {color: SKIN.clone().lerp(c, 0.12), roughness:.75, metalness:0});
   if (slot === 'accent') return new THREE.MeshStandardMaterial(
       {color: c.clone().lerp(new THREE.Color(1,1,1), 0.45), roughness:.45, metalness:.05});
+  /* 머리카락 — 그 사람 색을 거의 안 받는다. 천처럼 색을 주면 스물셋이
+     제 머리색을 갖게 되고, 그러면 머리카락이 계층이 아니라 이름을 말한다.
+     0.10 만 섞는 것은 스물셋이 나란히 섰을 때 아주 조금 갈리라고 남긴 몫이다. */
+  if (slot === 'hair')   return new THREE.MeshStandardMaterial(
+      {color: new THREE.Color(0.055,0.045,0.040).lerp(c, 0.10), roughness:.88, metalness:0});
   return new THREE.MeshStandardMaterial(                       // cloth — 그 사람의 색
       {color: c.clone().multiplyScalar(0.85), roughness:.92, metalness:0});
 }
@@ -350,7 +360,10 @@ const CLIP = {idle:'숨', walk:'걷기', attack:'휘두름', look:'돌아본다'
 const views = new Map();            // idx → 잔상 하나
 /* 밖에서 재는 구멍. 화면을 눈으로 보고 「달라 보인다」고 적지 않으려고 낸다 —
    tools/probe.py 가 이것으로 스물셋의 동작·위상·박자를 그대로 읽어 온다. */
-window.IREM = { views, cast: () => CAST, work: () => stWork };   /* tools/probe.py --work 가 읽는다 */
+window.IREM = { views, cast: () => CAST, work: () => stWork,
+  /* 걸음 시간과 「한 칸을 건너는 데 실제로 쓰는 몫」. tools/probe.py --stride 가 읽는다 —
+     저쪽에 숫자를 베껴 두면 여기를 고칠 때마다 저쪽이 조용히 옛말을 한다(실제로 그랬다). */
+  step: () => STEP, walkFrac: () => WALK_FRAC };
 const glbs = new Map();
 async function glb(url) {
   if (!glbs.has(url)) glbs.set(url, loader.loadAsync(url));
@@ -471,7 +484,7 @@ class Shade {
   moveRig(p, seconds) {
     this.from.copy(this.root.position); this.to.copy(p);
     this.dur = Math.max(0.02, seconds); this.left = this.dur;
-    // 실제로 땅이 지나가는 속도다. 한 칸을 STEP 초가 아니라 STEP*0.85 에 건너가고
+    // 실제로 땅이 지나가는 속도다. 한 칸을 STEP 초가 아니라 STEP*WALK_FRAC 에 건너가고
     // 남는 참은 서 있으므로, 걷는 동안은 이쪽이 빠르다. 다리는 이 값에 맞춘다.
     this.speed = this.to.distanceTo(this.from) / this.dur;
     this.faceTo(p);
@@ -766,7 +779,7 @@ function step(e) {
   const V = j => views.get(j);
   switch (k) {
     case K.Turn:  shownTurn = e[col.n]; break;
-    case K.Walk:  V(a)?.moveRig(cell(e[col.x], e[col.y]), STEP*0.85); break;
+    case K.Walk:  V(a)?.moveRig(cell(e[col.x], e[col.y]), STEP*WALK_FRAC); break;
     // 「휘두름」이 일하는 몸짓이다. 밀어붙이지 않는다 — 휘두르는 중이면 그냥 둔다.
     // 전에는 뜰 한가운데를 보고 선 채로 휘둘렀다 — 허공을 두들겼다.
     // 이제 제 연장 쪽으로 돌아선다. 손이 지나는 자리에 그것이 있다.

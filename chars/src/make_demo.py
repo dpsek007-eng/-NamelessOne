@@ -101,6 +101,18 @@ X, Y, Z = (1, 0, 0), (0, 1, 0), (0, 0, 1)
 FINGERS = [f"{f}_{s}_{lr}" for lr in ("l", "r")
            for f in ("index", "middle", "ring", "pinky") for s in ("01", "02", "03")]
 
+# 엄지는 네 손가락과 **다른 축으로 돈다.** 여기 빠져 있어서 리그의 손뼈 30개 중
+# 엄지 6개가 한 번도 키인되지 않았다 — 이 파일이 스스로 적은 규칙
+# (「안 쓰는 뼈도 0으로 찍는다」)을 엄지만 어기고 있었다.
+#
+# 축은 상상하지 않고 쟀다(guard.fbx 리그, 쉴 때 엄지끝→검지뿌리 8.0cm):
+#     Z축 +20도(왼손) → 3.4cm    Z축 +30도 → 2.4cm
+#     Y축 -20도(왼손) → 4.8cm    ← 네 손가락이 쓰는 축. 엄지는 이쪽으로 안 모인다
+# 엄지는 아마추어 Z 로 돌 때 손바닥 쪽으로 맞세워진다(opposition). 좌우가 거울이다.
+# 24도가 아니라 20도인 것은, 네 손가락 24도와 같이 걸었을 때 엄지끝과 검지끝이
+# 5.8cm 로 떨어져 서로 파고들지 않기 때문이다.
+THUMBS = [f"thumb_{s}_{lr}" for lr in ("l", "r") for s in ("01", "02", "03")]
+
 
 def base_pose():
     """모든 동작이 이 자세 위에 얹힌다.
@@ -127,6 +139,8 @@ def base_pose():
     }
     for b in FINGERS:
         p[b] = [(Y, 24.0 if b.endswith("_r") else -24.0)]
+    for b in THUMBS:
+        p[b] = [(Z, -20.0 if b.endswith("_r") else 20.0)]
     return p
 
 
@@ -316,20 +330,10 @@ def one(role, cls, out, frames=None, shade=None, name=None):
     L = MG.landmarks(bm, arm)
 
     # 옷을 먼저 깎는다. 케이지(helper-*)가 아직 몸에 붙어 있어야 한다.
-    cloth = bpy.data.materials.new("cloth")
-    accent = bpy.data.materials.new("accent")
-    parts = [MG.carve(bm, arm, sp, L)]
-    if sp["hood"]:
-        h = MG.add_hood(bm, sp, L)
-        if h:
-            parts.append(h)
-    if sp["cape"]:
-        c = MG.add_cape(bm, sp, L)
-        if c:
-            parts.append(c)
-    for p in parts:
-        MG.paint(p, sp, L, cloth, accent)
-    gar = MG.join(parts, f"garment_{BODY_SLUG[args.role]}_{sp['slug']}")
+    # 순서는 MG.assemble 한 곳에만 적혀 있다 — 여기에 다시 적어 두었더니
+    # make_garments 의 55벌에만 머리카락이 붙고 이쪽 GLB 에는 안 붙었다.
+    gar = MG.assemble(bm, arm, sp, L,
+                      f"garment_{BODY_SLUG[args.role]}_{sp['slug']}")
     MG.bind(gar, arm)
 
     # 이제 몸에서 케이지를 떼어낸다. 안 떼면 옷 만들 때 쓴 상자가

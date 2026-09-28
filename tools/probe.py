@@ -136,9 +136,18 @@ STRIDE = """(() => {
     }
     const rng = [hi[0]-lo[0], hi[1]-lo[1], hi[2]-lo[2]];
     let ax = 0; for (let k = 1; k < 3; k++) if (rng[k] > rng[ax]) ax = k;
+    // 뜰이 실제로 내는 속도와, 뷰어가 그 속도에 맞추려고 거는 배율.
+    // 여기서 숫자를 베끼지 않고 페이지에서 읽는다 — 베껴 두었더니 STEP 을 0.34 에서
+    // 0.82 로 고친 뒤에도 이 도구만 옛말을 했다.
+    const step = window.IREM.step(), frac = window.IREM.walkFrac();
+    const ground = 1 / (step * frac);
+    v.speed = ground;                       // walkScale() 이 읽는 값
+    const scale = v.walkScale();
+    v.speed = 0;
     out.push({ id: v.def.id, name: v.def.name, dur: +dur.toFixed(3),
                axis: 'xyz'[ax], swing: +rng[ax].toFixed(4),
-               lift: +rng[1].toFixed(4),
+               lift: +rng[1].toFixed(4), step: step, frac: frac,
+               ground: +ground.toFixed(3), scale: +scale.toFixed(3),
                rng: rng.map(x => +x.toFixed(4)) });
     if (out.length >= 3) break;
   }
@@ -291,23 +300,30 @@ def report_work(rows):
 
 
 def report_stride(rows):
-    """걸음폭. 뜰이 한 칸 1m 를 STEP 초에 지나가므로 다리도 그만큼 내야 한다."""
-    STEP, CELL = 0.34, 1.0                      # viewer/garden.html · GardenDirector
+    """걸음폭. 뜰이 한 칸 1m 를 STEP*몫 초에 지나가므로 다리도 그만큼 내야 한다.
+
+       STEP 을 여기 적어 두지 않는다. 페이지에서 읽는다(window.IREM.step)."""
+    seen = set()
     for i, r in enumerate(rows):
         if not r:
             print(f"[{i}] 아무것도 못 읽었다")
             continue
         for x in r:
+            if x["name"] in seen: continue      # 세 번 찍어도 같은 값이면 한 번만 적는다
+            seen.add(x["name"])
             # 한 바퀴에 두 걸음이다. 발이 몸 기준으로 오간 길이가 한 걸음 몫이고,
             # 그 두 배가 한 바퀴 동안 지나가야 하는 땅이다.
-            leg = 2 * x["swing"] / x["dur"]
-            body = CELL / STEP
+            leg  = 2 * x["swing"] / x["dur"]
+            body = x["ground"]
+            sped = leg * x["scale"]             # 뷰어가 배율을 건 뒤의 다리 속도
             print(f"      {x['name']:12s} 한 바퀴 {x['dur']:.3f}초 · "
                   f"발이 오간 길이 {x['swing']:.3f}m({x['axis']}축) · 발 든 높이 {x['lift']:.3f}m")
-            print(f"      {'':12s} 다리가 내는 속도 {leg:.2f} m/s  ↔  뜰이 옮기는 속도 "
-                  f"{body:.2f} m/s   → {body/leg:.2f}배 빠르다")
+            print(f"      {'':12s} 제 박자로는 {leg:.2f} m/s · "
+                  f"뜰이 옮기는 속도 {body:.2f} m/s (STEP {x['step']}×{x['frac']})")
+            print(f"      {'':12s} 뷰어가 배율 {x['scale']:.3f} 을 걸어 "
+                  f"{sped:.2f} m/s → 뜰과 {abs(sped/body - 1)*100:.1f}% 차이")
     print("\n※ 다리가 내는 속도보다 뜰이 빠르면 그 차이만큼 발이 땅에서 미끄러진다.\n"
-          "   같으면 디딘 발이 땅에 붙어 있다.")
+          "   걷기는 제 박자가 아니라 땅의 속도를 따른다(walkScale). 그래서 배율 뒤의 값을 본다.")
 
 
 def report_feet(rows):
