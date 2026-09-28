@@ -58,7 +58,95 @@ STANCE = """(() => {
 })()"""
 
 
-async def probe(ws_url, url, wait, shots, gap, stance=False):
+# 발이 땅을 잡는가. 걷는 동안 디딘 발은 세계 좌표에서 **멈춰 있어야** 한다.
+# 몸만 나아가고 발이 같이 끌려가면 그게 미끄러지는 것이고, 사람이 아니라
+# 미끄러지는 인형으로 보인다. 한 프레임씩 재서 디딘 발(그 프레임에 덜 움직인 쪽)의
+# 이동량을 몸의 이동량으로 나눈다. 0 이면 땅을 잡았고 1 이면 통째로 끌려간 것이다.
+FEET = """(() => new Promise(res => {
+  const V = [...window.IREM.views.values()];
+  const pick = v => {
+    let sk = null;
+    v.root.traverse(o => { if (!sk && o.isSkinnedMesh) sk = o.skeleton; });
+    if (!sk) return null;
+    const f = n => sk.bones.find(b => b.name === n);
+    const l = f('foot_l'), r = f('foot_r');
+    return (l && r) ? { v, l, r } : null;
+  };
+  const who = V.map(pick).filter(Boolean);
+  const acc = who.map(() => ({ foot: 0, body: 0, walk: 0, n: 0 }));
+  const pos = o => { o.updateWorldMatrix(true, false);
+                     const e = o.matrixWorld.elements;
+                     return [e[12], e[14]]; };
+  let prev = who.map(w => [pos(w.l), pos(w.r), pos(w.v.root)]);
+  let n = 0;
+  const N = %d;
+  const tick = () => {
+    const cur = who.map(w => [pos(w.l), pos(w.r), pos(w.v.root)]);
+    for (let i = 0; i < who.length; i++) {
+      const d = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1]);
+      const dl = d(cur[i][0], prev[i][0]), dr = d(cur[i][1], prev[i][1]);
+      const db = d(cur[i][2], prev[i][2]);
+      const a2 = acc[i];
+      a2.n++;
+      if (who[i].v.name === 'walk') a2.walk++;
+      if (db > 1e-5) { a2.foot += Math.min(dl, dr); a2.body += db; }
+    }
+    prev = cur;
+    if (++n < N) requestAnimationFrame(tick);
+    else res(JSON.stringify(who.map((w, i) => ({
+      id: w.v.def.id, name: w.v.def.name, clip: w.v.name,
+      frames: acc[i].n, walkFrames: acc[i].walk,
+      body: +acc[i].body.toFixed(4), foot: +acc[i].foot.toFixed(4),
+      slip: acc[i].body > 1e-4 ? +(acc[i].foot / acc[i].body).toFixed(3) : -1,
+    }))));
+  };
+  requestAnimationFrame(tick);
+}))()""" % 240
+
+
+# 걸음폭 — 프레임이 느려도 같은 값이 나오게 잰다.
+# 화면 새로 고침(rAF)에 기대지 않고 동작 시계를 직접 고정 간격으로 밀면서
+# 발이 몸 기준으로 앞뒤로 얼마나 오가는지 본다. 그 오간 길이가 한 걸음이고,
+# 한 바퀴(왼발-오른발)면 그 두 배만큼 땅을 지나가야 맞다.
+STRIDE = """(() => {
+  const V = [...window.IREM.views.values()];
+  const out = [];
+  for (const v of V) {
+    let sk = null;
+    v.root.traverse(o => { if (!sk && o.isSkinnedMesh) sk = o.skeleton; });
+    if (!sk) continue;
+    const foot = sk.bones.find(b => b.name === 'foot_l');
+    if (!foot) continue;
+    v.play('walk', true);
+    v.mixer.update(0);
+    const a = v.act && v.act.getClip();
+    if (!a) continue;
+    const dur = a.duration, N = 240, dt = dur / N;
+    const tmp = v.root.position.clone();
+    const lo = [1e9, 1e9, 1e9], hi = [-1e9, -1e9, -1e9];
+    for (let i = 0; i <= N; i++) {
+      v.mixer.update(i ? dt : 0);
+      foot.updateWorldMatrix(true, false);
+      const e = foot.matrixWorld.elements;
+      tmp.set(e[12], e[13], e[14]);
+      v.root.worldToLocal(tmp);
+      const c = [tmp.x, tmp.y, tmp.z];
+      for (let k = 0; k < 3; k++) { if (c[k] < lo[k]) lo[k] = c[k];
+                                    if (c[k] > hi[k]) hi[k] = c[k]; }
+    }
+    const rng = [hi[0]-lo[0], hi[1]-lo[1], hi[2]-lo[2]];
+    let ax = 0; for (let k = 1; k < 3; k++) if (rng[k] > rng[ax]) ax = k;
+    out.push({ id: v.def.id, name: v.def.name, dur: +dur.toFixed(3),
+               axis: 'xyz'[ax], swing: +rng[ax].toFixed(4),
+               lift: +rng[1].toFixed(4),
+               rng: rng.map(x => +x.toFixed(4)) });
+    if (out.length >= 3) break;
+  }
+  return JSON.stringify(out);
+})()"""
+
+
+async def probe(ws_url, url, wait, shots, gap, stance=False, feet=False, stride=False):
     n = 0
     async with connect(ws_url, max_size=None, open_timeout=60) as ws:
         async def call(method, **params):
@@ -77,8 +165,18 @@ async def probe(ws_url, url, wait, shots, gap, stance=False):
         for i in range(shots):
             if i: await asyncio.sleep(gap)
             r = await call("Runtime.evaluate",
-                           expression=STANCE if stance else JS, returnByValue=True)
-            rows.append(json.loads(r["result"]["value"]))
+                           expression=(STRIDE if stride else
+                                       FEET if feet else
+                                       STANCE if stance else JS),
+                           returnByValue=True, awaitPromise=True)
+            if os.environ.get("PROBE_RAW"):
+                print("RAW:", json.dumps(r, ensure_ascii=False)[:1200])
+            if "exceptionDetails" in r:
+                print("브라우저가 던졌다:", json.dumps(r["exceptionDetails"],
+                                                  ensure_ascii=False)[:600])
+                rows.append(None); continue
+            v = r.get("result", {}).get("value")
+            rows.append(json.loads(v) if isinstance(v, str) else v)
         return rows
 
 
@@ -88,6 +186,10 @@ def main():
     ap.add_argument("--wait", type=float, default=60.0, help="재기 전에 기다리는 실제 초")
     ap.add_argument("--shots", type=int, default=3, help="몇 번 재는가")
     ap.add_argument("--gap", type=float, default=1.0, help="잴 때마다 두는 사이 (초)")
+    ap.add_argument("--stride", action="store_true",
+                    help="걸음폭 — 발이 몸 기준으로 오가는 길이 (프레임과 무관)")
+    ap.add_argument("--feet", action="store_true",
+                    help="디딘 발이 땅을 잡는가 — 발 이동량 / 몸 이동량")
     ap.add_argument("--stance", action="store_true",
                     help="동작이 아니라 자세를 잰다 — 뼈 각도와 굵기 (data/shades.json)")
     a = ap.parse_args()
@@ -98,13 +200,17 @@ def main():
                          stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     try:
         rows = asyncio.run(probe(targets(port, 60), a.url, a.wait, a.shots, a.gap,
-                                 stance=a.stance))
+                                 stance=a.stance, feet=a.feet, stride=a.stride))
     finally:
         p.terminate()
         try: p.wait(timeout=10)
         except subprocess.TimeoutExpired: p.kill()
         shutil.rmtree(prof, ignore_errors=True)
 
+    if a.stride:
+        return report_stride(rows)
+    if a.feet:
+        return report_feet(rows)
     if a.stance:
         return report_stance(rows)
 
@@ -122,6 +228,48 @@ def main():
                   f"똑같은 자리에 선 사람 {same}명")
     print("\n※ 「똑같은 자리에 선 사람」이 0명이면 같은 동작이라도 저마다 다른 곳을 지나고 있다.\n"
           "   그 수가 사람 수만큼 나오면 스물셋이 아니라 같은 태엽 스물셋이다.")
+
+
+def report_stride(rows):
+    """걸음폭. 뜰이 한 칸 1m 를 STEP 초에 지나가므로 다리도 그만큼 내야 한다."""
+    STEP, CELL = 0.34, 1.0                      # viewer/garden.html · GardenDirector
+    for i, r in enumerate(rows):
+        if not r:
+            print(f"[{i}] 아무것도 못 읽었다")
+            continue
+        for x in r:
+            # 한 바퀴에 두 걸음이다. 발이 몸 기준으로 오간 길이가 한 걸음 몫이고,
+            # 그 두 배가 한 바퀴 동안 지나가야 하는 땅이다.
+            leg = 2 * x["swing"] / x["dur"]
+            body = CELL / STEP
+            print(f"      {x['name']:12s} 한 바퀴 {x['dur']:.3f}초 · "
+                  f"발이 오간 길이 {x['swing']:.3f}m({x['axis']}축) · 발 든 높이 {x['lift']:.3f}m")
+            print(f"      {'':12s} 다리가 내는 속도 {leg:.2f} m/s  ↔  뜰이 옮기는 속도 "
+                  f"{body:.2f} m/s   → {body/leg:.2f}배 빠르다")
+    print("\n※ 다리가 내는 속도보다 뜰이 빠르면 그 차이만큼 발이 땅에서 미끄러진다.\n"
+          "   같으면 디딘 발이 땅에 붙어 있다.")
+
+
+def report_feet(rows):
+    """디딘 발이 땅을 잡는가. 1 이면 통째로 끌려갔다."""
+    for i, r in enumerate(rows):
+        if not r:
+            print(f"[{i}] 아무것도 못 읽었다 (window.IREM 이 없다)")
+            continue
+        mv = [x for x in r if x["slip"] >= 0]
+        if not mv:
+            print(f"[{i}] 그 동안 움직인 사람이 없다")
+            continue
+        mv.sort(key=lambda x: -x["slip"])
+        avg = sum(x["slip"] for x in mv) / len(mv)
+        print(f"[{i}] 움직인 사람 {len(mv)}/{len(r)}명 · 미끄럼 중앙값 "
+              f"{sorted(x['slip'] for x in mv)[len(mv)//2]:.3f} · 평균 {avg:.3f}")
+        for x in mv[:6]:
+            print(f"      {x['name']:12s} {x['clip']:6s} "
+                  f"몸 {x['body']:.3f}m · 디딘 발 {x['foot']:.3f}m · 미끄럼 {x['slip']:.3f}"
+                  f"  (걷기 프레임 {x['walkFrames']}/{x['frames']})")
+    print("\n※ 디딘 발은 세계 좌표에서 멈춰 있어야 한다. 0 이면 땅을 잡았고,\n"
+          "   1 이면 몸이 간 만큼 발도 그대로 끌려갔다 — 미끄러지는 인형이다.")
 
 
 def _qw(rot):

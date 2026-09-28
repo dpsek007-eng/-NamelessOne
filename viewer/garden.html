@@ -15,7 +15,7 @@
     · 타일 고르는 법     → ArtLoad.TileName 과 같은 식 (abs(x*7+y*13+ch) % 5)
     · 땅 메시 감는 법    → Ground3D.Slab 과 같은 순서
     · 실루엣 칠하는 법   → Art/Chars/Silhouette.shader 의 식을 GLSL 로 옮겼다
-    · 동작 섞는 법       → ShadeView3D (0.25초 크로스페이드, walk 는 0.34초 유지)
+    · 동작 섞는 법       → ShadeView3D (0.25초 크로스페이드, walk 는 한 걸음(STEP) 유지)
     · 재생 규칙          → GardenDirector.Step (한 박자에 한 걸음)
   식을 옮긴 곳은 옆에 원본 파일을 적어 두었다. 숫자가 갈리면 그 줄을 보라.
 
@@ -82,7 +82,7 @@
     <button id="play">멈춤</button>
     <button id="speed">1배</button>
     <button id="wide" class="on">전체</button>
-    <button id="silh" class="on">실루엣</button>
+    <button id="silh">실루엣</button>
     <button id="talk" class="on">말</button>
     <span class="sub"><span id="turn">0</span> 걸음째</span>
   </div>
@@ -145,7 +145,11 @@ document.getElementById('head').innerHTML =
 /* ── 무대 ────────────────────────────────────────────────────────── */
 const PITCH = 35;                   // GardenDirector.Pitch
 const FOV   = 42;                   // GardenDirector.FrameCamera
-let STEP    = 0.34;                 // GardenDirector.StepSeconds
+/* 한 칸(1m)을 지나는 시간. 0.34초면 2.94 m/s 인데 그건 걷기가 아니라 달리기다.
+   실측한 다리 속도가 1.14~1.28 m/s 여서 그 가운데에 맞춘다 (1/0.82 = 1.22 m/s).
+   GardenDirector.StepSeconds 와 같은 값이어야 한다. */
+let STEP    = 0.82;                 // GardenDirector.StepSeconds
+const STEP0 = 0.82;
 const canvas = document.getElementById('c');
 const rend = new THREE.WebGLRenderer({canvas, antialias:true});
 rend.setPixelRatio(Math.min(devicePixelRatio, 2));
@@ -270,13 +274,30 @@ const STONE = 0x1b1917;             // GardenDirector.StoneCol — 건물은 흐
 sc.add(new THREE.HemisphereLight(0xbfc8d6, 0x1a1c20, 1.6));
 const key = new THREE.DirectionalLight(0xfff2d8, 1.4); key.position.set(2,3,4); sc.add(key);
 
+/* GLB 안에는 재질 자리가 셋 있다 — skin · cloth · accent (실측: 메시 2개에
+   프리미티브 3개, body 는 skin 하나, garment 는 cloth 와 accent 둘).
+   구울 때 색은 안 실렸다 — 세 자리가 전부 0.8 회색이다. 그래서 색은 여기서
+   자리마다 준다. 한 색으로 덮으면 옷이 사라지고 맨몸 하나만 남았다.
+   살갗 색은 만들어낸 값이 아니라 make_demo.py:342 가 블렌더에 적은 그 값이다. */
+const SKIN = new THREE.Color(0.68, 0.55, 0.47);
+function litMat(slot, hex) {
+  const c = new THREE.Color(hex);
+  if (slot === 'skin')   return new THREE.MeshStandardMaterial(
+      {color: SKIN.clone().lerp(c, 0.12), roughness:.75, metalness:0});
+  if (slot === 'accent') return new THREE.MeshStandardMaterial(
+      {color: c.clone().lerp(new THREE.Color(1,1,1), 0.45), roughness:.45, metalness:.05});
+  return new THREE.MeshStandardMaterial(                       // cloth — 그 사람의 색
+      {color: c.clone().multiplyScalar(0.85), roughness:.92, metalness:0});
+}
 function paint(root, hex, fadeOn) {
   root.traverse(n => {
     if (!n.isMesh) return;
     n.frustumCulled = false;        // 팔을 들면 상자가 화면 밖으로 나가 사라진다
-    n.userData.sil  = silMat(hex, fadeOn);
-    n.userData.lit  = new THREE.MeshStandardMaterial({color:hex, roughness:.8, metalness:.02});
-    n.material = n.userData.sil;
+    n.userData.sil = silMat(hex, fadeOn);
+    n.userData.lit = Array.isArray(n.material)
+      ? n.material.map(m => litMat(m && m.name, hex))
+      : litMat(n.material && n.material.name, hex);
+    n.material = n.userData.lit;
   });
 }
 
@@ -327,9 +348,49 @@ class Shade {
     this.breath = def.breath ?? 0;
     this.yaw = 0; this.yawWant = 0;
     this.from = root.position.clone(); this.to = root.position.clone();
-    this.left = 0; this.dur = 1;
+    this.left = 0; this.dur = 1; this.speed = 0;
     this.stance = stance(root, SHADES[def.id]);
+    this.stride = this.measureStride();
     this.play('idle', true);
+  }
+  /* 걸음폭을 잰다 — 발이 몸을 기준으로 앞뒤로 오간 길이다.
+     한 바퀴(왼발 한 번·오른발 한 번)에 그 두 배만큼 땅이 지나가야 디딘 발이
+     제자리에 선다. 실측: 0.786~0.882m, 한 바퀴 1.375초 → 다리는 1.14~1.28 m/s 를
+     낸다. 그런데 뜰은 한 칸(1m)을 0.34초에 옮겼다 — 2.94 m/s 다. 두 배 반을
+     끌려간 셈이고, 그래서 다리는 걷는 시늉만 하고 몸은 미끄러졌다.
+     다리 길이가 사람마다 다르므로 이 값도 사람마다 다르다. 그 차이가 그대로
+     걸음의 박자 차이가 된다 — 다리가 짧으면 종종거린다. */
+  measureStride() {
+    const a = this.clips.walk; if (!a) return 0;
+    let foot = null;
+    this.root.traverse(o => {
+      if (foot || !o.isSkinnedMesh) return;
+      foot = o.skeleton.bones.find(b => b.name === 'foot_l') || null;
+    });
+    if (!foot) return 0;
+    const act = this.mixer.clipAction(a); act.reset().play();
+    const v = new THREE.Vector3();
+    let lo = Infinity, hi = -Infinity;
+    const N = 48, dt = a.duration / N;
+    for (let i = 0; i <= N; i++) {
+      this.mixer.update(i ? dt : 0);
+      foot.updateWorldMatrix(true, false);
+      v.setFromMatrixPosition(foot.matrixWorld);
+      this.root.worldToLocal(v);
+      if (v.z < lo) lo = v.z;
+      if (v.z > hi) hi = v.z;
+    }
+    this.mixer.stopAllAction();
+    this.act = null; this.name = '';
+    return hi - lo;
+  }
+  /* 지금 땅이 지나가는 속도에 다리를 맞춘다. 빠르게 보기(2배·4배)를 누르면
+     땅이 그만큼 빨라지므로 다리도 같이 빨라져야 한다 — 그래서 STEP 을 그때그때 읽는다. */
+  walkScale() {
+    const a = this.clips.walk;
+    if (!a || !(this.stride > 0.05)) return this.tempo;
+    const ground = this.speed > 0.01 ? this.speed : 1 / STEP;
+    return ground * a.duration / (2 * this.stride);
   }
   /* 하던 동작을 다시 걸지 않는다.
      되풀이하면 첫 프레임으로 되돌아간다. 사건은 걸음마다 「일한다」를 말하는데
@@ -343,7 +404,10 @@ class Shade {
     if (this.name === clip && (loop || this.hold > 0)) {
       // 걷기는 걸음마다 다시 불린다. 다리를 처음으로 되돌리지 않고 시간만 늘린다 —
       // 안 그러면 한 걸음이 끝나는 자리에서 숨으로 떨어져 다리가 끊긴다.
-      if (clip === 'walk') this.hold = 0.34;
+      if (clip === 'walk') {
+        this.hold = STEP;
+        this.act.setEffectiveTimeScale(this.walkScale());   // 빠르게 보기를 눌렀을 수 있다
+      }
       return;
     }
     const nx = this.mixer.clipAction(a);
@@ -351,18 +415,22 @@ class Shade {
     nx.clampWhenFinished = true;
     if (this.act && this.act !== nx) this.act.fadeOut(0.25);      // ShadeView3D.Fade
     nx.reset().setEffectiveWeight(1).fadeIn(this.act ? 0.25 : 0).play();
-    nx.setEffectiveTimeScale(this.tempo);
+    // 걷기만은 제 박자가 아니라 땅의 속도를 따른다. 박자를 지키면 발이 미끄러진다.
+    nx.setEffectiveTimeScale(clip === 'walk' ? this.walkScale() : this.tempo);
     // 도는 동작은 저마다 다른 곳에서 시작한다. 안 그러면 스물셋이 한 숨을 쉰다.
     if (loop) nx.time = this.phase * a.duration;
     this.act = nx; this.name = clip;
     this.hold = loop ? 0 : a.duration / this.tempo;
     // 한 번 휘두르고 나면 숨을 돌린다. 사람마다 다른 참이라 다시 겹치지 않는다.
     this.rest = clip === 'attack' ? this.breath : 0;
-    if (clip === 'walk') this.hold = 0.34;                        // ShadeView.Play 와 같은 값
+    if (clip === 'walk') this.hold = STEP;                        // ShadeView.Play 와 같은 값
   }
   moveRig(p, seconds) {
     this.from.copy(this.root.position); this.to.copy(p);
     this.dur = Math.max(0.02, seconds); this.left = this.dur;
+    // 실제로 땅이 지나가는 속도다. 한 칸을 STEP 초가 아니라 STEP*0.85 에 건너가고
+    // 남는 참은 서 있으므로, 걷는 동안은 이쪽이 빠르다. 다리는 이 값에 맞춘다.
+    this.speed = this.to.distanceTo(this.from) / this.dur;
     this.faceTo(p);
     this.play('walk', true);
   }
@@ -603,8 +671,8 @@ function playStep() {
 const btnPlay = document.getElementById('play'), btnSpeed = document.getElementById('speed');
 btnPlay.onclick = () => { paused = !paused; btnPlay.textContent = paused ? '재생' : '멈춤'; };
 btnSpeed.onclick = () => {                                    // GardenDirector.CycleSpeed
-  STEP = STEP > 0.10 ? STEP/2 : 0.34;
-  btnSpeed.textContent = Math.round(0.34/STEP) + '배';
+  STEP = STEP > 0.15 ? STEP/2 : STEP0;
+  btnSpeed.textContent = Math.round(STEP0/STEP) + '배';
 };
 document.getElementById('wide').onclick = e => {
   follow = -1; e.target.classList.add('on');
@@ -628,6 +696,7 @@ btnSil.onclick = () => {
   for (let k = 0; k < to; k++) playStep();
   if (to) for (const v of views.values()) v.settle();
   if (Q.get('stop') === '1') { paused = true; btnPlay.textContent = '재생'; }
+  if (Q.get('sil') === '1') btnSil.click();   // 실루엣으로 뜬다. 유니티 쪽과 견줄 때 쓴다
   const who = Q.get('who');
   if (who) {
     const c = CAST.find(x => x.id === who || String(x.idx) === who);

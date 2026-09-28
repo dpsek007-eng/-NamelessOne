@@ -41,6 +41,11 @@ namespace Irem.Game
         // 공식이 두 벌이 되면 같은 뜰이 두 가지로 움직인다(docs/10 계산 한 벌).
         float _phase = 0f, _tempo = 1f, _breath = 0f;
 
+        // 걸음폭 — 발이 몸 기준으로 앞뒤로 오간 길이(m). 한 바퀴에 그 두 배만큼
+        // 땅이 지나가야 디딘 발이 제자리에 선다. 0 이면 아직 못 쟀다는 뜻이고
+        // 그때는 제 박자를 그대로 쓴다. viewer/garden.html measureStride 와 같은 계산이다.
+        float _stride, _speed;
+
         // 그 사람만의 자세. 클립이 뼈를 다 쓴 뒤에 얹는 층이다 (CastLoad.Stance 가 만든다).
         Stand[] _stand;
 
@@ -71,7 +76,8 @@ namespace Irem.Game
             _phase = phase; _tempo = Mathf.Max(0.1f, tempo); _breath = Mathf.Max(0f, breath);
             if (_to.IsValid())
             {
-                _to.SetSpeed(_tempo);
+                // 걷기만은 제 박자가 아니라 땅의 속도를 따른다. 박자를 지키면 발이 미끄러진다.
+            _to.SetSpeed(clip == "walk" ? WalkScale() : _tempo);
                 if (Loops(_name)) _to.SetTime(_phase * _to.GetAnimationClip().length);
             }
         }
@@ -123,7 +129,11 @@ namespace Irem.Game
             if (_name == clip && (Loops(clip) || _hold > 0))
             {
                 // 걷기는 걸음마다 다시 불린다. 다리를 되돌리지 않고 시간만 늘린다.
-                if (clip == "walk") _hold = 0.34f;
+                if (clip == "walk")
+                {
+                    _hold = StepSeconds;
+                    if (_to.IsValid()) _to.SetSpeed(WalkScale());   // 빠르게 보기를 눌렀을 수 있다
+                }
                 return;
             }
             Begin(clip, false);
@@ -139,6 +149,9 @@ namespace Irem.Game
             }
             _target = p;
             _moveLeft = Mathf.Max(0.02f, seconds);
+            // 실제로 땅이 지나가는 속도다. 한 칸을 StepSeconds 가 아니라 그 0.85 에
+            // 건너가고 남는 참은 서 있으므로, 걷는 동안은 이쪽이 빠르다.
+            _speed = d.magnitude / _moveLeft;
             Play("walk", true);
         }
 
@@ -176,6 +189,47 @@ namespace Irem.Game
         // ── 속 ───────────────────────────────────────────────────────
         static bool Loops(string clip) => clip == "idle" || clip == "walk";
 
+        /// 한 걸음의 길이. 연출자가 제 값을 넣어 준다(GardenDirector.StepSeconds).
+        /// 안 넣어 주면 아직 아무도 안 걸었다는 뜻이라 기본값을 쓴다.
+        public float StepSeconds = 0.82f;
+
+        /// 지금 땅이 지나가는 속도에 다리를 맞춘다. 실측(브라우저): 걸음폭 0.786~0.882m,
+        /// 한 바퀴 1.375초 → 다리는 1.14~1.28 m/s 를 낸다. 예전에는 한 칸(1m)을
+        /// 0.34초에 옮겼으므로 2.94 m/s 였다 — 두 배 반을 끌려갔고, 그래서 다리는
+        /// 걷는 시늉만 하고 몸은 미끄러졌다.
+        float WalkScale()
+        {
+            if (!_clips.TryGetValue("walk", out var c) || c == null) return _tempo;
+            if (_stride <= 0.05f) _stride = MeasureStride(c);
+            if (_stride <= 0.05f) return _tempo;
+            float ground = _speed > 0.01f ? _speed : 1f / Mathf.Max(0.05f, StepSeconds);
+            return ground * c.length / (2f * _stride);
+        }
+
+        /// 걸음폭을 잰다 — 발이 몸 기준으로 앞뒤로 오간 길이. 클립을 직접 찍어서 본다.
+        /// **이 서버에서 확인할 수 없다** — 유니티가 없다. 브라우저 쪽은 같은 계산으로
+        /// 0.786~0.882m 가 나왔으니, 에디터에서 이 값이 그 근처가 아니면 여기가 틀린 것이다.
+        float MeasureStride(AnimationClip c)
+        {
+            var smr = GetComponentInChildren<SkinnedMeshRenderer>();
+            if (smr == null || smr.bones == null) return 0f;
+            var foot = System.Array.Find(smr.bones, b => b != null && b.name == "foot_l");
+            if (foot == null) return 0f;
+
+            bool on = _anim.enabled; _anim.enabled = false;   // 찍는 동안은 그래프를 멈춘다
+            float lo = float.MaxValue, hi = float.MinValue;
+            const int N = 48;
+            for (int i = 0; i <= N; i++)
+            {
+                c.SampleAnimation(gameObject, c.length * i / N);
+                float z = transform.InverseTransformPoint(foot.position).z;
+                if (z < lo) lo = z;
+                if (z > hi) hi = z;
+            }
+            _anim.enabled = on;
+            return hi - lo;
+        }
+
         void Begin(string clip, bool first)
         {
             var c = _clips[clip];
@@ -189,7 +243,8 @@ namespace Irem.Game
             }
             _to = AnimationClipPlayable.Create(_graph, c);
             _to.SetApplyFootIK(false);
-            _to.SetSpeed(_tempo);
+            // 걷기만은 제 박자가 아니라 땅의 속도를 따른다. 박자를 지키면 발이 미끄러진다.
+            _to.SetSpeed(clip == "walk" ? WalkScale() : _tempo);
             // 도는 동작은 저마다 다른 곳에서 시작한다. 안 그러면 스물셋이 한 숨을 쉰다.
             if (Loops(clip)) _to.SetTime(_phase * c.length);
             _mix.ConnectInput(1, _to, 0);
@@ -201,7 +256,7 @@ namespace Irem.Game
             _hold = Loops(clip) ? 0f : Mathf.Max(0.05f, c.length) / _tempo;
             // 한 번 휘두르고 나면 숨을 돌린다. 사람마다 다른 참이라 다시 겹치지 않는다.
             _rest = clip == "attack" ? _breath : 0f;
-            if (clip == "walk") _hold = 0.34f;           // 2D 와 같은 값 (ShadeView.Play)
+            if (clip == "walk") _hold = StepSeconds;     // 한 걸음 (GardenDirector.StepSeconds)
             if (clip == "fall") _dead = true;
         }
 

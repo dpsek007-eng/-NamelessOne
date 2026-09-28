@@ -28,8 +28,10 @@ namespace Irem.Game
         public GardenTables T;
         public Garden G;
 
-        /// 한 걸음의 길이. 걷는 동작이 0.34초짜리라(ShadeView3D) 그것에 맞춰 둔 값이다.
-        public float StepSeconds = 0.34f;
+        /// 한 걸음의 길이. 0.34초면 한 칸(1m)을 2.94 m/s 로 지나간다 — 그건 걷기가
+        /// 아니라 달리기다. 실측(브라우저, tools/probe.py --stride): 걸음폭 0.786~0.882m 에
+        /// 한 바퀴 1.375초라 다리는 1.14~1.28 m/s 를 낸다. 그 가운데에 맞춘 값이다.
+        public float StepSeconds = 0.82f;
         public int TileVariants = 5;
 
         /// 내려보는 각. 정한 값이다 — 잰 값이 아니다. 낮추면 뜰이 넓어 보이고
@@ -57,10 +59,11 @@ namespace Irem.Game
         public string Summary { get; private set; } = "";
         public int Following => _follow;
 
-        public string SpeedLabel => Mathf.RoundToInt(0.34f / Mathf.Max(0.01f, StepSeconds)).ToString();
+        public const float Step0 = 0.82f;
+        public string SpeedLabel => Mathf.RoundToInt(Step0 / Mathf.Max(0.01f, StepSeconds)).ToString();
         public IShadeView ViewOf(int idx) => _views.TryGetValue(idx, out var v) ? v : null;
         public void TogglePause() => Paused = !Paused;
-        public void CycleSpeed() => StepSeconds = StepSeconds > 0.10f ? StepSeconds / 2f : 0.34f;
+        public void CycleSpeed() => StepSeconds = StepSeconds > 0.15f ? StepSeconds / 2f : Step0;
         /// 같은 사람을 다시 누르면 놓는다
         public void Follow(int idx) => _follow = _follow == idx ? -1 : idx;
 
@@ -149,6 +152,7 @@ namespace Irem.Game
 
                 var v = go.GetComponent<ShadeView3D>();
                 v.Breathe(s.Phase, s.Tempo, s.Breath);   // 저마다 다른 박자로 숨을 쉰다
+                v.StepSeconds = StepSeconds;             // 다리를 땅 속도에 맞추는 데 쓴다
                 v.Warp(CellPos(s.X, s.Y));
                 v.FaceTo(Center);
                 _views[s.Idx] = v;
@@ -207,6 +211,8 @@ namespace Irem.Game
             if (Paused || G == null) return;
             _t += dt;
             int guard = 0;
+            // 빠르게 보기를 누르면 땅이 빨라진다. 다리도 같이 빨라져야 안 미끄러진다.
+            foreach (var sv in _views.Values) if (sv != null) sv.StepSeconds = StepSeconds;
             while (_t >= StepSeconds && guard++ < 8)
             {
                 _t -= StepSeconds;
