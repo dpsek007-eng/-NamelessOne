@@ -428,10 +428,15 @@ function bubble(idx, text, sec = 2.2) {
   b.el.textContent = text; b.el.style.display = ''; b.until = now + sec;
 }
 const lines = [];
+/* 같은 줄이 이어지면 겹쳐 세어 적는다. 카브릴과 레안은 정말 여러 번 다가갔고
+   그 걸음은 저마다 다르지만, 같은 문장을 다섯 줄 쌓으면 읽는 쪽에는 고장으로 보인다. */
 function feed(s) {
   if (!s) return;
-  lines.push(s); while (lines.length > 5) lines.shift();
-  document.getElementById('lines').innerHTML = lines.map(x => `<div>${x}</div>`).join('');
+  const last = lines[lines.length - 1];
+  if (last && last.t === s) last.n++;
+  else { lines.push({ t: s, n: 1 }); while (lines.length > 5) lines.shift(); }
+  document.getElementById('lines').innerHTML =
+    lines.map(x => `<div>${x.t}${x.n > 1 ? ` <span style="color:#8b8279">× ${x.n}</span>` : ''}</div>`).join('');
 }
 
 /* ── 오른쪽 목록 ─────────────────────────────────────────────────── */
@@ -566,16 +571,45 @@ if (missBody || missProp)
 
 const clock = new THREE.Clock();
 const vv = new THREE.Vector3();
-function project(p, el, up) {
+/* ── 글자를 화면에 놓는다 ──────────────────────────────────────────
+   유니티에는 없는 문제가 하나 있다. 이름표는 사람이 아니라 화면의 물건이라
+   기록관에 넷이 모이면 네 이름이 한 자리에 포개져 한 덩어리가 된다(실측:
+   기록관 4명 · 우물 3명 · 담 2명 · 채석장 2명이 같은 칸 언저리에 선다).
+   그래서 놓기 전에 자리를 잡아 본다 — 겹치면 한 줄씩 올리고, 네 줄을
+   올려도 자리가 없으면 가린다. 손잡이(.pane) 밑에 깔리는 것도 가린다.
+   가리는 순서는 부르는 순서다: 말풍선 → 가까운 사람 → 먼 사람 → 일터.
+   말은 사건이라 절대 가리지 않고, 앞사람에 몸이 가린 사람의 이름을
+   지우는 것이 덜 잃는다. */
+function screen(p, up) {
   vv.copy(p); vv.y += up; vv.project(cam);
-  if (vv.z > 1) { el.style.display = 'none'; return false; }
+  if (vv.z > 1) return null;
+  return { x: (vv.x*0.5 + 0.5)*innerWidth, y: (-vv.y*0.5 + 0.5)*innerHeight, z: vv.z };
+}
+const hits = (a, b) => a.l < b.r && b.l < a.r && a.t < b.b && b.t < a.b;
+let panes = [], taken = [];
+function clearPlaces() {
+  panes = [...document.querySelectorAll('.pane')].map(el => {
+    const r = el.getBoundingClientRect();
+    return { l:r.left - 4, r:r.right + 4, t:r.top - 4, b:r.bottom + 4 };
+  });
+  taken.length = 0;
+}
+function place(el, s) {
+  if (!s) { el.style.display = 'none'; return false; }
   /* 화면 밖으로 새면 글자만 반쯤 걸린다. 가장자리 안쪽에 가둔다. */
   const w = el.offsetWidth || 60, h = el.offsetHeight || 16;
-  const x = Math.min(innerWidth  - w/2 - 4, Math.max(w/2 + 4, ( vv.x*0.5 + 0.5)*innerWidth));
-  const y = Math.min(innerHeight - 4,       Math.max(h + 4,    (-vv.y*0.5 + 0.5)*innerHeight));
-  el.style.left = x + 'px'; el.style.top = y + 'px';
-  el.style.display = '';
-  return true;
+  const x = Math.min(innerWidth - w/2 - 4, Math.max(w/2 + 4, s.x));
+  for (let lift = 0; lift < 4; lift++) {
+    const y = Math.min(innerHeight - 4, Math.max(h + 4, s.y - lift*(h + 3)));
+    const r = { l:x - w/2 - 2, r:x + w/2 + 2, t:y - h - 2, b:y + 2 };
+    if (panes.some(q => hits(r, q))) continue;
+    if (taken.some(q => hits(r, q))) continue;
+    taken.push(r);
+    el.style.left = x + 'px'; el.style.top = y + 'px'; el.style.display = '';
+    return true;
+  }
+  el.style.display = 'none';
+  return false;
 }
 (function loop() {
   requestAnimationFrame(loop);
@@ -598,18 +632,25 @@ function project(p, el, up) {
   }
   ctrl.update();
 
-  /* 이름표 · 말풍선 */
+  /* 이름표 · 말풍선 — 자리를 먼저 잡고 한꺼번에 놓는다 */
+  clearPlaces();
+  const say = [], name = [];
   for (const [idx, el] of tags) {
-    const v = views.get(idx); if (!v) { el.style.display = 'none'; continue; }
+    const v = views.get(idx);
     const b = bubs.get(idx), hasBub = talk && b && b.until > now;
-    el.style.display = hasBub ? 'none' : '';                   // 말할 때는 이름표를 숨긴다
-    if (!hasBub) project(v.pos(), el, 1.95);
-    if (b) {
-      if (hasBub) { b.el.style.display = ''; project(v.pos(), b.el, 2.0); }
-      else b.el.style.display = 'none';
+    if (b && !hasBub) b.el.style.display = 'none';
+    if (!v) { el.style.display = 'none'; continue; }
+    if (hasBub) {                                  // 말할 때는 이름표 대신 말풍선
+      el.style.display = 'none';
+      say.push([b.el, screen(v.pos(), 2.0)]);
+    } else {
+      name.push([el, screen(v.pos(), 1.95)]);
     }
   }
-  NST.forEach((s, j) => { stags[j].style.display = ''; project(cell(s.x, s.y), stags[j], 1.1); });
+  name.sort((a, c) => (a[1] ? a[1].z : 9) - (c[1] ? c[1].z : 9));   // 가까운 사람부터
+  for (const [el, sp] of say)  place(el, sp);
+  for (const [el, sp] of name) place(el, sp);
+  NST.forEach((st, j) => place(stags[j], screen(cell(st.x, st.y), 1.1)));
 
   document.getElementById('turn').textContent = shownTurn;
   rend.render(sc, cam);
