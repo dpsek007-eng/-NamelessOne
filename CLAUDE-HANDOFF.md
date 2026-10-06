@@ -9,7 +9,8 @@
 
 - **원본 서버** 경로: `/media/hdd8/justin/my_project/TOP`
 - **이사 번들** 경로: `/media/hdd8/justin/my_project/이사/`
-  - 번들에 커밋 전부(`6061c42` 포함)가 들어 있다 — 2026-10-06 재생성
+  - 번들 안의 최신 커밋은 `git bundle list-heads <번들> | grep refs/heads/main` 으로 잰다
+    (해시를 여기 박아 두면, 그 문장을 커밋하는 순간 번들이 한 칸 낡는다. 그래서 안 박는다)
 - **깃허브**(`dpsek007-eng/-NamelessOne`): **push 된다.** 2026-10-06 실측 — `git ls-remote origin` 의 `refs/heads/main` 이 `6061c42` 로 로컬 HEAD 와 같다
   - 미푸시 **0개** (`git rev-list --count origin/main..HEAD` 로 언제든 다시 잰다)
   - ※ 종전 「권한 문제로 push 불가」는 폐기 — 그 뒤로 세 번(2026-09-14, 2026-09-27, 2026-10-06 확인) 실제로 올라갔다
@@ -37,7 +38,7 @@ git init
 git remote add origin old-server:/media/hdd8/justin/my_project/TOP
 git fetch origin
 git bundle unbundle /tmp/00-저장소.bundle
-git checkout 6061c42
+git checkout main          # 번들이 refs/heads/main 을 들고 온다
 
 # 4. 부산물 풀기 (chars/out/cast/ 이 없을 때만)
 tar xf /tmp/05-캐릭터.tar
@@ -50,7 +51,7 @@ tar xf /tmp/05-캐릭터.tar
 >
 > | 짐 | 기준 | 비고 |
 > |---|---|---|
-> | `00-저장소.bundle` | 2026-10-06 | 73M · `6061c42` 까지 |
+> | `00-저장소.bundle` | 2026-10-06 | 73M · 그날의 `main` 끝까지 |
 > | `01-초상.tar` | 2026-10-06 | 744M · 항목 519→648 (`faces.py` 재작성분 반영) |
 > | `05-캐릭터.tar` | 2026-10-06 | 219M · 항목 463→472 (머리카락 포함) |
 > | `02-소품` `03-소품이미지` `04-역할실험` `06-초점` | 2026-09-09 | 원본 무변경 |
